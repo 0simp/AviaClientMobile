@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.0
+// @version     1.1
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.5 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,66 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-03-28T13:36:47.049Z';
+'@preserve - Built on 2026-04-01T13:17:17.935Z';
+
+/* --- 3TapRely.js --- */
+if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=true;
+
+(function () {
+  if (window.__3_TAP_REPLY__) return;
+  window.__3_TAP_REPLY__ = true;
+
+  function threeTapReply() {
+    const messages = document.querySelectorAll('div[class=\'group pos_relative d_flex flex-d_column p_2px_0 bg_transparent bdr_var(--borderRadius-md) min-h_1em trs_background-color_var(--transitions-fast) [&_a:hover]:td_underline [&:hover_.Toolbar]:d_flex mt_var(--message-group-spacing)! [&:hover]:bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface)\']')
+    const messages2 = document.querySelectorAll('div[class=\'group pos_relative d_flex flex-d_column p_2px_0 bg_transparent bdr_var(--borderRadius-md) min-h_1em trs_background-color_var(--transitions-fast) [&_a:hover]:td_underline [&:hover_.Toolbar]:d_flex mt_0 [&:hover]:bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface)\']')
+    messages.forEach(message=>{
+        let clicks = 0
+        message.addEventListener('click',()=>{
+            clicks = clicks+1
+            if(clicks==3){
+                message.children[0].children[0].click()
+                clicks = 0
+            }
+            setTimeout(() => {
+                clicks=0
+            }, 1000);
+        });
+    });
+
+    messages2.forEach(message=>{
+        let clicks = 0
+        message.addEventListener('click',()=>{
+            clicks = clicks+1
+            if(clicks==3){
+                message.children[0].children[0].click()
+                clicks = 0
+            }
+            setTimeout(() => {
+                clicks=0
+            }, 1000);
+        });
+    });
+  }
+
+  const observer = new MutationObserver(() => {
+      threeTapReply();
+  });
+
+  function init() {
+    threeTapReply();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+
 
 /* --- aviaclientcategory.user.js --- */
 if(window.__US_BUILDER_AVIACLIENTCATEGORY_USER_JS__){return;}window.__US_BUILDER_AVIACLIENTCATEGORY_USER_JS__=true;
@@ -480,6 +539,67 @@ injectButton();
 })();
 
 
+/* --- ButtonFix.js --- */
+if(window.__US_BUILDER_BUTTONFIX_JS__){return;}window.__US_BUILDER_BUTTONFIX_JS__=true;
+
+(function () {
+    if (window.__BUTTON_FIX__) return;
+    window.__BUTTON_FIX__ = true;
+
+    function uninjectButton(button){
+        if(button){
+            button.parentElement.removeChild(button)
+        }
+    }
+    
+    const observer = new MutationObserver(()=>{
+        let balls = [];
+        document.querySelectorAll('div[class=\'flex-sh_0 d_flex ai_end jc_center w_42px\']').forEach(element=>{
+        if(element.id?.includes('avia')){
+            balls.push(element)
+        }
+        })
+        
+        const gifSpan = [...document.querySelectorAll("span.material-symbols-outlined")]
+        .find(s => s.textContent.trim() === "gif");
+
+        if(!gifSpan){
+            balls.forEach(element=>{
+                uninjectButton(element)
+            })
+        }
+    });
+    observer.observe(document.documentElement, {childList: true, subtree: true })
+})();
+
+
+/* --- ChunkyMembers.js --- */
+if(window.__US_BUILDER_CHUNKYMEMBERS_JS__){return;}window.__US_BUILDER_CHUNKYMEMBERS_JS__=true;
+
+(function () {
+  if (window.__CHUNKY_MEMBERS__) return;
+  window.__CHUNKY_MEMBERS__ = true;
+
+  function fuckwank(mutationsList, observer){
+    mutationsList.forEach(mutation=>{
+      if(mutation.type=='childList'){
+        for(let node of mutation.addedNodes){
+          if(node.className=='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)'){
+            node.style.width = `${node.clientWidth+node.previousSibling.clientWidth}px`
+          }
+        }
+      }
+    })
+  }
+
+  const fuckyshit = new MutationObserver(fuckwank)
+  fuckyshit.observe(document.documentElement,{
+    childList: true,
+    subtree: true,
+  })
+})();
+
+
 /* --- CollapseSettingsSidebar.js --- */
 if(window.__US_BUILDER_COLLAPSESETTINGSSIDEBAR_JS__){return;}window.__US_BUILDER_COLLAPSESETTINGSSIDEBAR_JS__=true;
 
@@ -544,6 +664,245 @@ let fuckyou = [];
 })();
 
 
+/* --- __COLLAPSE_SETTINGS_SIDEBAR_FULLSCREEN__.js --- */
+if(window.__US_BUILDER_COLLAPSE_SETTINGS_SIDEBAR_FULLSCREEN_JS__){return;}window.__US_BUILDER_COLLAPSE_SETTINGS_SIDEBAR_FULLSCREEN_JS__=true;
+
+(function(){
+if(window.__COLLAPSE_SETTINGS_SIDEBAR_FULLSCREEN__) return;
+window.__COLLAPSE_SETTINGS_SIDEBAR_FULLSCREEN__ = true;
+
+function getPanel(){
+  return document.getElementsByClassName('d_flex flex_1_0_218px pl_8px jc_flex-end').item(0);
+}
+
+function getContentPanel(){
+  return document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden min-w_0 flex_1_1_800px').item(0);
+}
+
+function getSettingsRoot(){
+  // the flex row that contains both the sidebar panel and content panel
+  const panel = getPanel();
+  if(!panel) return null;
+  return panel.parentElement;
+}
+
+function ensureReopenBtn(){
+  if(document.getElementById('avia-settings-reopen-btn')) return;
+
+  const btn = document.createElement('div');
+  btn.id = 'avia-settings-reopen-btn';
+  Object.assign(btn.style, {
+    position: 'fixed',
+    top: '12px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: '999999',
+    background: 'var(--md-sys-color-surface-container-high, #2a2a2a)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: '0 0 8px 8px',
+    padding: '4px 16px 6px',
+    cursor: 'pointer',
+    display: 'none',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    color: 'var(--md-sys-color-on-surface, #fff)',
+    fontSize: '12px',
+    fontWeight: '500',
+  });
+
+  // down chevron + label
+  btn.innerHTML = `
+    <svg stroke-width="0" fill="currentColor" viewBox="0 0 24 24" height="16" width="16" xmlns="http://www.w3.org/2000/svg">
+      <path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/>
+    </svg>
+    <span>Settings</span>
+  `;
+
+  btn.addEventListener('click', () => {
+    const panel = getPanel();
+    if(!panel) return;
+
+    // restore sidebar
+    panel.style.display = '';
+    Object.assign(panel.style, {
+      position: '',
+      top: '',
+      left: '',
+      width: '',
+      height: '',
+      zIndex: '',
+    });
+
+    // hide content again
+    const content = getContentPanel();
+    if(content) content.style.display = 'none';
+
+    btn.style.display = 'none';
+  });
+
+  document.body.appendChild(btn);
+}
+
+function applyFullscreenSidebar(){
+  const panel = getPanel();
+  //ignore on tablets/ipads
+  if(!panel || panel.__avia_fullscreen_applied__||window.outerHeight<window.outerWidth) return;
+  panel.__avia_fullscreen_applied__ = true;
+
+  // make the sidebar fill the screen, centered
+  Object.assign(panel.style, {
+    position: 'fixed',
+    top: '0',
+    left: '0',
+    width: '100vw',
+    height: '100vh',
+    zIndex: '99997',
+    display: 'flex',
+    justifyContent: 'center',
+    background: 'var(--md-sys-color-surface, #1e1e1e)',
+    overflowY: 'auto',
+  });
+
+  const content = getContentPanel();
+  if(content) content.style.display = 'none';
+}
+
+function resetFullscreenSidebar(){
+  const panel = getPanel();
+  if(!panel) return;
+  panel.__avia_fullscreen_applied__ = false;
+  Object.assign(panel.style, {
+    position: '',
+    top: '',
+    left: '',
+    width: '',
+    height: '',
+    zIndex: '',
+    display: '',
+    justifyContent: '',
+    background: '',
+    overflowY: '',
+  });
+}
+
+function syncReopenBtn(){
+  const btn = document.getElementById('avia-settings-reopen-btn');
+  if(!btn) return;
+  const panel = getPanel();
+  // if not in settings at all, hide the btn
+  if(!panel){
+    btn.style.display = 'none';
+    return;
+  }
+
+  if(panel.style.display !== 'none'){
+    btn.style.display = 'none';
+  }
+}
+
+function hijack(){
+  const panel = getPanel();
+  if(!panel) return;
+
+  applyFullscreenSidebar();
+
+  const collapseBtn = panel.querySelector('[aria-label="Collapse"]');
+  if(!collapseBtn || collapseBtn.__avia_fs_hijacked__) return;
+  collapseBtn.__avia_fs_hijacked__ = true;
+
+  collapseBtn.addEventListener('click', (e) => {
+    e.stopImmediatePropagation();
+
+    // hide sidebar
+    panel.style.display = 'none';
+
+    // show content panel
+    const content = getContentPanel();
+    if(content){
+      content.style.display = '';
+      // center it nicely
+      Object.assign(content.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100vw',
+        height: '100vh',
+        zIndex: '99996',
+        overflowY: 'auto',
+      });
+    }
+
+    const reopenBtn = document.getElementById('avia-settings-reopen-btn');
+    if(reopenBtn) reopenBtn.style.display = 'flex';
+  }, true);
+}
+
+ensureReopenBtn();
+
+let lastInSettings = false;
+
+new MutationObserver(() => {
+  ensureReopenBtn();
+
+  const inSettings = !!getPanel();
+
+  if(inSettings && !lastInSettings){
+    // just entered settings — reset any stale state
+    const content = getContentPanel();
+    if(content){
+      Object.assign(content.style, {
+        position: '',
+        top: '',
+        left: '',
+        width: '',
+        height: '',
+        zIndex: '',
+        overflowY: '',
+      });
+    }
+  }
+
+  if(!inSettings && lastInSettings){
+    // just left settings
+    const btn = document.getElementById('avia-settings-reopen-btn');
+    if(btn) btn.style.display = 'none';
+  }
+
+  lastInSettings = inSettings;
+
+  hijack();
+  syncReopenBtn();
+
+}).observe(document.body, { childList: true, subtree: true });
+
+hijack();
+
+})();
+
+
+/* --- GifAutoPlayfix.js --- */
+if(window.__US_BUILDER_GIFAUTOPLAYFIX_JS__){return;}window.__US_BUILDER_GIFAUTOPLAYFIX_JS__=true;
+
+(function () {
+    if (window.__GIF_AUTOPLAY_FIX__) return;
+    window.__GIF_AUTOPLAY_FIX__ = true;
+
+    function fixGifAutoPlay(){
+        document.querySelectorAll('video').forEach(video=>{
+            if(video.className=='w_200px h_120px cursor_pointer obj-f_cover'||video.className=='cursor_pointer'){
+                video.setAttribute('playsinline','true')
+            }
+        });
+    }
+    
+    const observer = new MutationObserver(()=>{
+        fixGifAutoPlay()
+    });
+    observer.observe(document.documentElement, {childList: true, subtree: true })
+})();
+
+
 /* --- HideServerList.js --- */
 if(window.__US_BUILDER_HIDESERVERLIST_JS__){return;}window.__US_BUILDER_HIDESERVERLIST_JS__=true;
 
@@ -567,6 +926,7 @@ if(window.__US_BUILDER_HIDESERVERLIST_JS__){return;}window.__US_BUILDER_HIDESERV
           }
         }
   }
+
   const observer = new MutationObserver(() => {
       hideServerList();
   });
@@ -627,9 +987,9 @@ if(window.__US_BUILDER_HIDEUNSENTMESSAGES_JS__){return;}window.__US_BUILDER_HIDE
     }
 
     function hideUnsentMessages(){
-        const deletedmessages = document.getElementsByClassName('group pos_relative d_flex flex-d_column p_2px_0 bg_transparent bdr_var(--borderRadius-md) min-h_1em trs_background-color_var(--transitions-fast) [&_a:hover]:td_underline [&:hover_.Toolbar]:d_flex mt_var(--message-group-spacing)! [&:hover]:bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-error)')
-        if(deletedmessages.item(0)){
-            for(const message of deletedmessages){
+        const unsentmessages = document.getElementsByClassName('group pos_relative d_flex flex-d_column p_2px_0 bg_transparent bdr_var(--borderRadius-md) min-h_1em trs_background-color_var(--transitions-fast) [&_a:hover]:td_underline [&:hover_.Toolbar]:d_flex mt_var(--message-group-spacing)! [&:hover]:bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-error)')
+        if(unsentmessages.item(0)){
+            for(const message of unsentmessages){
                 if(localStorage.getItem('hideunsentmessages')=='true'){
                     message.style.display='none'
                 }
@@ -955,7 +1315,7 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     el.appendChild(element)
                     element.outerHTML = `
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
-                                Avia Client Mobile 1.0<br>
+                                Avia Client Mobile 1.1<br>
                                 <span style="font-size:10px;opacity:0.7;">
                                     Based on Avia Client 1.5
                                 </span>
@@ -2812,6 +3172,54 @@ injectSettingsButton();
 })();
 
 
+/* --- ServerContextMenuFix.js --- */
+if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__=true;
+
+(function () {
+  if (window.__SERVER_CONTEXT_MENU_FIX__) return;
+  window.__SERVER_CONTEXT_MENU_FIX__ = true;
+
+  function serverContextMenuFix() {
+    const idkwhattofuckingcallthisshit = document.getElementsByClassName('flex-g_1 min-w_0 ov_hidden white-space_nowrap tov_ellipsis').item(0)
+    if(!idkwhattofuckingcallthisshit) return;
+    idkwhattofuckingcallthisshit.$$click = function(){
+        //This shit will break if literally ANYTHING gets added to or removed from the sidebar. If that happens, just try replacing 4 with random numbers until it works again
+        const servers = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll flex-g_1').item(0).children[4].children
+        let currentServer;
+        for(const server of servers){
+            if(server.children[0].children[0].href==document.baseURI){
+                currentServer=server
+                break;
+            }
+        }
+        const balls = new Event('contextmenu',{
+            bubbles:true,
+            button:2
+        })
+        currentServer.children[0].children[0].dispatchEvent(balls)
+    }
+  }
+
+  const observer = new MutationObserver(() => {
+    serverContextMenuFix();
+  });
+
+  function init() {
+    serverContextMenuFix();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+
+
 /* --- ServerListScrollLock.js --- */
 if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__=true;
 
@@ -2918,6 +3326,7 @@ if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SE
       color: scrollLockEnabled
         ? 'var(--md-sys-color-primary, #80cbc4)'
         : '',
+        position:'inherit',
     });
   }
 
@@ -2934,9 +3343,21 @@ if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SE
   }
 
   function inject() {
+    const sidebar = document.getElementsByClassName('d_flex flex-d_column fill_var(--md-sys-color-on-surface)').item(0)
+    if(!sidebar) return;
+    const clone = sidebar.cloneNode()
+    Object.assign(clone.style,{
+      width:`${sidebar.clientWidth/2}px`
+    })
+
     const wrapper = document.querySelector('[aria-label="Switch back to legacy app"]');
     if (!wrapper) return;
     const wrapper2 = wrapper.cloneNode(true)
+    Object.assign(wrapper2.style,{
+      width:`${wrapper.clientWidth/2}px`,
+      position:'fixed',
+      left:`${sidebar.clientWidth*0.75}px`
+    })
 
     wrapper2.dataset.scrollLockPatched = 'true';
     wrapper2.setAttribute('aria-label', 'Toggle server list scroll lock');
@@ -2963,7 +3384,8 @@ if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SE
       }
     });
     if(!document.getElementById('serverlistscrolllock')){
-      wrapper.parentElement.insertBefore(wrapper2,wrapper.parentElement.children[3])
+      clone.appendChild(wrapper2)
+      sidebar.parentElement.insertBefore(clone,sidebar.nextSibling)
     }
   }
 
@@ -2981,6 +3403,88 @@ if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SE
 
 })();
 
+
+/* --- ShiftNewLine.js --- */
+if(window.__US_BUILDER_SHIFTNEWLINE_JS__){return;}window.__US_BUILDER_SHIFTNEWLINE_JS__=true;
+
+(function () {
+
+  function hookEditor(editor) {
+    if (editor.__shiftNewLineHooked) return;
+    editor.__shiftNewLineHooked = true;
+
+    editor.addEventListener("keydown", (e) => {
+
+      if (e.key !== "Enter") return;
+
+      if(e.shiftKey){
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        let text = ''
+        const firstLine = document.getElementsByClassName('cm-line').item(0)
+        for(const child of firstLine.parentElement.children){
+          text = text+`${child.children[0].textContent}\n`
+        }
+        editor.textContent = text
+      }
+
+    }, true);
+
+  }
+
+  const observer = new MutationObserver(() => {
+    const editor = document.querySelector(".cm-content[contenteditable='true']");
+    if (editor) hookEditor(editor);
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
+})();
+
+
+/* --- ShrinkAviaPanels.js --- */
+if(window.__US_BUILDER_SHRINKAVIAPANELS_JS__){return;}window.__US_BUILDER_SHRINKAVIAPANELS_JS__=true;
+
+(function () {
+    if (window.__SHRINK_AVIA_PANELS__) return;
+    window.__SHRINK_AVIA_PANELS__ = true;
+
+    function shrinkAviaPanels(){
+        const aviaPanels = document.querySelectorAll('[style*="z-index: 999999"],[style*=\'z-index: 999998\']')
+        const ids = ['avia-local-plugins-panel','avia-plugins-panel','avia-themes-panel','avia-official-repo-window','avia-local-editor-panel','avia-monaco-panel','avia-theme-editor','avia-quickcss-panel','avia-settings-reopen-btn']
+        aviaPanels.forEach(panel=>{
+            if(panel.id=='avia-settings-reopen-btn') return;
+            panel.style.right='0px'
+            panel.style.bottom='12px'
+            for(const child of panel.children){
+                if(child.children){
+                    for(const child2 of child.children){
+                        if(child2.nextSibling?.placeholder?.toLowerCase().includes('url')&&!child.nextSibling?.style?.width&&panel.id!='avia-masq-panel'){
+                            child2.style.width='90px'
+                            child2.nextSibling.style.width=`${((window.outerWidth-72)/10)+30}px`
+                        }
+                    }
+                }
+            }
+
+            const width = Number(panel.style.width.replaceAll('px',''))
+            if(window.outerWidth<width+52&&!ids.includes(panel.id)){
+                panel.style.width=`${window.outerWidth-52}px`
+                panel.style.height=`${window.outerWidth-72}px`
+
+            }
+        })
+    }
+    
+    const observer = new MutationObserver(()=>{
+        shrinkAviaPanels()
+    });
+    observer.observe(document.documentElement, {childList: true, subtree: true })
+})();
 
 
 /* --- ShrinkEmojis.js --- */
@@ -3041,11 +3545,11 @@ if(window.__US_BUILDER_SHRINKGIFPANEL_JS__){return;}window.__US_BUILDER_SHRINKGI
                 gifPanel.style.setProperty('width',`${window.outerWidth-66}px`)
                 gifPanel.style.setProperty('height',`${window.outerWidth-66}px`)
                 for(const child of gifPanel.children[0].children[1].children[1].children[1].children[0].children){
-                    if(child.className=='d_flex ai_center px_var(--gap-md) w_calc(40px_*_10)!'){
-                        const list = child.style.getPropertyValue('transform').substring(9).replaceAll('(','').replaceAll(')','').replaceAll('px','').split(', ')
+                    if(child?.className=='d_flex ai_center px_var(--gap-md) w_calc(40px_*_10)!'){
+                        const list = child?.style?.getPropertyValue('transform').substring(9).replaceAll('(','').replaceAll(')','').replaceAll('px','').split(', ')
                         if(list[0]!=0){
                             list[0]=0
-                            child.style.setProperty('transform',`translate(${list.map(item=>`${item}px`).join(', ')})`)
+                            child?.style?.setProperty('transform',`translate(${list.map(item=>`${item}px`).join(', ')})`)
                         }
                     }
                 }
@@ -3060,6 +3564,78 @@ if(window.__US_BUILDER_SHRINKGIFPANEL_JS__){return;}window.__US_BUILDER_SHRINKGI
   const observer = new MutationObserver(() => shrinkGifPanel());
   observer.observe(document.documentElement, { childList: true, subtree: true });
 })();
+
+
+/* --- swipe-sidebar.js --- */
+if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SIDEBAR_JS__=true;
+
+(function () {
+  if (window.__SWIPE_SIDEBAR__) return;
+  window.__SWIPE_SIDEBAR__ = true;
+
+  const SWIPE_THRESHOLD = 80;   // minimum px to count as a swipe
+  const EDGE_ZONE = 20;         // px from left edge to trigger open swipe
+
+  let touchStartX = null;
+  let touchStartY = null;
+
+  function getSidebar() {
+    const wrap = document.getElementsByClassName(
+      'd_flex h_100% min-w_0 c_var(--md-sys-color-outline) bg_var(--md-sys-color-surface-container-high)'
+    ).item(0);
+    return wrap && wrap.firstChild && wrap.firstChild.children[1]
+      ? wrap.firstChild
+      : null;
+  }
+
+  function showSidebar(sidebar) {
+    sidebar.style.display = 'flex';
+  }
+
+  function hideSidebar(sidebar) {
+    sidebar.style.display = 'none';
+  }
+
+  function onTouchStart(e) {
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+  }
+
+  function onTouchEnd(e) {
+    if (touchStartX === null) return;
+
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStartX;
+    const dy = touch.clientY - touchStartY;
+
+    if (Math.abs(dy) > Math.abs(dx)) {
+      touchStartX = null;
+      touchStartY = null;
+      return;
+    }
+
+    const sidebar = getSidebar();
+    if (!sidebar) return;
+
+    if (dx > SWIPE_THRESHOLD) {
+
+      if (touchStartX <= EDGE_ZONE || sidebar.style.display === 'none') {
+        showSidebar(sidebar);
+      }
+    } else if (dx < -SWIPE_THRESHOLD) {
+
+      hideSidebar(sidebar);
+    }
+
+    touchStartX = null;
+    touchStartY = null;
+  }
+
+  document.addEventListener('touchstart', onTouchStart, { passive: true });
+  document.addEventListener('touchend', onTouchEnd, { passive: true });
+})();
+
 
 
 /* --- themes.user.js --- */
