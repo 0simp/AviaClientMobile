@@ -1,15 +1,15 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.1
-// @description Avia Client Mobile by 0simp. Based on Avia Client 1.5 by AvaLilac
+// @version     1.2
+// @description Avia Client Mobile by 0simp. Based on Avia Client 1.6 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-04-01T13:17:17.935Z';
+'@preserve - Built on 2026-04-08T19:12:09.791Z';
 
 /* --- 3TapRely.js --- */
 if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=true;
@@ -539,6 +539,41 @@ injectButton();
 })();
 
 
+/* --- aviaserverbutton.js --- */
+if(window.__US_BUILDER_AVIASERVERBUTTON_JS__){return;}window.__US_BUILDER_AVIASERVERBUTTON_JS__=true;
+
+(function(){
+
+if (window.__AVIA_SERVER_BUTTON__) return;
+window.__AVIA_SERVER_BUTTON__ = true;
+
+const AVIA_INVITE = "https://stt.gg/0MPSAx8x";
+
+function apply(){
+   const homebuttons = document.getElementsByClassName('gap_8px p_8px d_flex bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface-variant) bg_var(--md-sys-color-surface-variant)')
+    .item(0)
+    if(!homebuttons) return;
+    const button = homebuttons.children[0].children[1]
+    const title = button.querySelector("div.flex-g_1 > div");
+    if(!title.textContent.includes('ACM Server')){
+      title.textContent = title.textContent.replace('Stoat Lounge','ACM Server')
+      button.addEventListener('click',(e)=>{
+        e.preventDefault();
+        e.stopPropagation()
+        window.open(AVIA_INVITE,'_blank')
+      },true)
+    }
+}
+
+const observer = new MutationObserver(apply);
+observer.observe(document.body,{childList:true,subtree:true});
+
+apply();
+
+})();
+
+
+
 /* --- ButtonFix.js --- */
 if(window.__US_BUILDER_BUTTONFIX_JS__){return;}window.__US_BUILDER_BUTTONFIX_JS__=true;
 
@@ -600,6 +635,187 @@ if(window.__US_BUILDER_CHUNKYMEMBERS_JS__){return;}window.__US_BUILDER_CHUNKYMEM
 })();
 
 
+/* --- clientBackup.js --- */
+if(window.__US_BUILDER_CLIENTBACKUP_JS__){return;}window.__US_BUILDER_CLIENTBACKUP_JS__=true;
+
+(function () {
+  if (window.__clientBackup) return;
+  window.__clientBackup = true;
+
+  const TARGET_TEXT = "Plugins v2 Placeholder";
+  const CLONE_KEY   = "data-lsbackup-cloned";
+
+  function exportLS() {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      data[key] = localStorage.getItem(key);
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = "localstorage-backup.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importLS(file, onDone) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        let count = 0;
+        for (const [key, value] of Object.entries(data)) {
+          localStorage.setItem(key, value);
+          count++;
+        }
+        onDone(null, count);
+      } catch (err) {
+        onDone(err);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function buildPanel() {
+    const panel = document.createElement("div");
+    panel.style.cssText = `
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: var(--md-sys-color-surface-container-highest);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      font-size: 12px;
+      color: var(--md-sys-color-on-surface);
+    `;
+
+    const btnStyle = `
+      padding: 5px 12px;
+      border-radius: 4px;
+      border: none;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    `;
+
+    const status = document.createElement("span");
+    status.style.cssText = "font-size: 11px; opacity: 0.7; min-height: 14px;";
+
+    const exportBtn = document.createElement("button");
+    exportBtn.textContent = "⬇ Export localStorage";
+    exportBtn.style.cssText = btnStyle + `
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+    `;
+    exportBtn.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      exportLS();
+      status.textContent = `✓ Exported ${localStorage.length} keys`;
+    });
+
+    const fileInput = document.createElement("input");
+    fileInput.type   = "file";
+    fileInput.accept = ".json";
+    fileInput.style.cssText = "display: none;";
+    fileInput.addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      importLS(file, (err, count) => {
+        if (err) {
+          status.textContent = "✗ Invalid JSON file";
+        } else {
+          status.textContent = `✓ Imported ${count} keys`;
+        }
+        fileInput.value = "";
+      });
+    });
+
+    const importBtn = document.createElement("button");
+    importBtn.textContent = "⬆ Import localStorage";
+    importBtn.style.cssText = btnStyle + `
+      background: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface);
+      border: 1px solid var(--md-sys-color-outline-variant);
+    `;
+    importBtn.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      fileInput.click();
+    });
+
+    panel.appendChild(exportBtn);
+    panel.appendChild(importBtn);
+    panel.appendChild(fileInput);
+    panel.appendChild(status);
+    return panel;
+  }
+
+  function tryInject() {
+    document.querySelectorAll("a.pos_relative").forEach(btn => {
+      if (
+        btn.hasAttribute(CLONE_KEY) ||
+        btn.hasAttribute("data-lsbackup-entry") ||
+        !btn.innerText.includes(TARGET_TEXT)
+      ) return;
+
+      btn.setAttribute(CLONE_KEY, "true");
+
+      const clone = btn.cloneNode(true);
+      clone.removeAttribute(CLONE_KEY);
+      clone.setAttribute("data-lsbackup-entry", "true");
+
+      const title = clone.querySelector("div.d_flex.flex-g_1.flex-d_column > div");
+      if (title) title.textContent = "AviaClient Backup";
+
+      const desc = clone.querySelector("div.d_flex.flex-g_1.flex-d_column > span");
+      if (desc) desc.textContent = "Backup or Restore all client data";
+
+      const iconBtn = document.createElement("div");
+      iconBtn.title = "LocalStorage Backup";
+      iconBtn.style.cssText = "cursor: pointer; z-index: 10; flex-shrink: 0;";
+      iconBtn.innerHTML = `
+        <div class="fill_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-dim) w_36px h_36px d_flex flex-sh_0 ai_center jc_center bdr_var(--borderRadius-full)">
+          <span aria-hidden="true" class="material-symbols-outlined fs_inherit fw_undefined!" style="display: block; font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0;">database</span>
+        </div>
+      `;
+
+      const existingIcon = clone.querySelector("div.fill_var\\(--md-sys-color-on-surface\\)");
+      if (existingIcon) {
+        existingIcon.replaceWith(iconBtn);
+      } else {
+        clone.prepend(iconBtn);
+      }
+
+      clone.addEventListener("click", e => {
+        e.preventDefault();
+        e.stopPropagation();
+        panel.style.display = panel.style.display === "flex" ? "none" : "flex";
+      });
+
+      const wrapper = document.createElement("div");
+      wrapper.style.cssText = "display: flex; flex-direction: column;";
+
+      const panel = buildPanel();
+
+      wrapper.appendChild(clone);
+      wrapper.appendChild(panel);
+
+      btn.parentNode.insertBefore(wrapper, btn.nextSibling);
+    });
+  }
+
+  tryInject();
+
+  const observer = new MutationObserver(() => tryInject());
+  observer.observe(document.body, { childList: true, subtree: true });
+})();
+
+
+
 /* --- CollapseSettingsSidebar.js --- */
 if(window.__US_BUILDER_COLLAPSESETTINGSSIDEBAR_JS__){return;}window.__US_BUILDER_COLLAPSESETTINGSSIDEBAR_JS__=true;
 
@@ -623,24 +839,27 @@ let fuckyou = [];
         collapsebutton.addEventListener('click',()=>{
             document.getElementsByClassName('d_flex flex_1_0_218px pl_8px jc_flex-end').item(0).style.display ='none'
         });
-        fuckyou.push(thing.children[0]!==collapsebutton)
-        if(fuckyou.length===1){
-          if(thing.children[0].className=='d_flex flex-d_column flex-g_initial m_0 ai_initial jc_initial gap_var(--gap-s)'){
-            if(thing.children[0]!==collapsebutton&&fuckyou.length==1&&thing.children.length<8){
-              thing.insertBefore(collapsebutton,thing.children[0])
-            }
-          }else{
-            if(thing.children[0].children[1].children.length==3){
-              if(thing.children.length<3){
-                thing.insertBefore(collapsebutton,thing.children[0])
-              }
-            }else{
-              if(thing.children.length<5){
-                thing.insertBefore(collapsebutton,thing.children[0])
-              }
+
+        if(!document.querySelector('div[aria-label=\'Collapse\']')&&window.outerWidth<window.outerHeight){
+          thing.insertBefore(collapsebutton,thing.children[0])
+        }
+  
+        document.querySelectorAll(`a[class='pos_relative min-w_0 d_flex ai_center p_6px_8px bdr_8px fw_500 me_12px fs_15px us_none trs_background-color_0.1s_ease-in-out c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg_unset [&_svg]:flex-sh_0']`).forEach(e=>{
+          if(e.children[1].children[0]?.children[0]?.getAttribute('d')=='m17 8-1.41 1.41L17.17 11H9v2h8.17l-1.58 1.58L17 16l4-4zM5 5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h7v-2H5z'
+          ||e.children[1].children[0]?.children[0]?.getAttribute('d')=='M18.5 3H6c-1.1 0-2 .9-2 2v5.71c0 3.83 2.95 7.18 6.78 7.29 3.96.12 7.22-3.06 7.22-7v-1h.5c1.93 0 3.5-1.57 3.5-3.5S20.43 3 18.5 3M16 5v3H6V5zm0 5v1c0 2.76-2.24 5-5 5s-5-2.24-5-5v-1m12.5-2H18V5h.5c.83 0 1.5.67 1.5 1.5S19.33 8 18.5 8M4 19h16v2H4z'
+          ||e.children[1].children[0]?.children[0]?.getAttribute('d')=='M15 9H9v6h6zm-2 4h-2v-2h2zm8-2V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9v2H7c-1.1 0-2 .9-2 2v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2zm-4 6H7V7h10z'
+          ||e.textContent.includes('Avia')){
+              return;
+          }
+          const oldClick = e.$$click
+          e.$$click = async function(){
+            await oldClick()
+            const collapsebutton = document.querySelector('div[aria-label=\'Collapse\']')
+            if(collapsebutton){
+              collapsebutton.click()
             }
           }
-        }
+      })
     }
   }
 
@@ -878,6 +1097,43 @@ new MutationObserver(() => {
 
 hijack();
 
+})();
+
+
+/* --- CustomTitle.js --- */
+if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE_JS__=true;
+
+(function () {
+  if (window.__CUSTOM_TITLE__) return;
+  window.__CUSTOM_TITLE__ = true;
+
+  function customTitle() {
+    const icon = document.querySelector('link[rel=\'shortcut icon\']')
+    if(!icon) return;
+    icon.href='https://cdn.stoatusercontent.com/icons/vnGRb1M_UiP4-oj1qfqQODDCsyYOWa3f92ib3ac-K_/original'
+
+    if(document.title!='Stoat (Avia Client Mobile 1.2)'){
+        document.title='Stoat (Avia Client Mobile 1.2)'
+    }
+  }
+
+  const observer = new MutationObserver(() => {
+    customTitle();
+  });
+
+  function init() {
+    customTitle();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
 })();
 
 
@@ -1315,9 +1571,9 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     el.appendChild(element)
                     element.outerHTML = `
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
-                                Avia Client Mobile 1.1<br>
+                                Avia Client Mobile 1.2<br>
                                 <span style="font-size:10px;opacity:0.7;">
-                                    Based on Avia Client 1.5
+                                    Based on Avia Client 1.6
                                 </span>
                             </span>
                     `
@@ -1553,6 +1809,37 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
         closeBtn.onmouseleave = () => closeBtn.style.opacity = "0.7";
         closeBtn.onclick = () => panel.remove();
 
+        const clearBtn = document.createElement('div');
+        clearBtn.textContent = 'Clear';
+        Object.assign(clearBtn.style,{
+            position:'absolute',
+            top:'12px',
+            right:'86px',
+            cursor:'pointer',
+            color:'#fff'
+        });
+
+        const pasteBtn = document.createElement('div');
+        pasteBtn.textContent = 'Paste';
+        Object.assign(pasteBtn.style,{
+            position:'absolute',
+            top:'12px',
+            right:'36px',
+            cursor:'pointer',
+            color:'#fff'
+        });
+
+        pasteBtn.addEventListener('click',async ()=>{
+            navigator.clipboard.readText().then(text=>{
+                const value = monaco.editor.getEditors()[0].getValue()
+                monaco.editor.getEditors()[0].setValue(value+'\n'+text)
+            })
+        });
+
+        clearBtn.addEventListener('click',async ()=>{
+            monaco.editor.getEditors()[0].setValue('')
+        });
+
         const toolbar = document.createElement("div");
         Object.assign(toolbar.style, {
             padding: "8px 16px",
@@ -1577,6 +1864,8 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
         editorContainer.style.flex = "1";
 
         panel.appendChild(header);
+        panel.appendChild(clearBtn)
+        panel.appendChild(pasteBtn)
         panel.appendChild(closeBtn);
         panel.appendChild(toolbar);
         panel.appendChild(editorContainer);
@@ -1748,8 +2037,46 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
             renderLocalPanel();
         };
 
+        const importBtn = document.createElement("button");
+        importBtn.textContent = "Import";
+        styleLocalBtn(importBtn, "#2d6a4f");
+        importBtn.onmouseenter = () => importBtn.style.opacity = "0.75";
+        importBtn.onmouseleave = () => importBtn.style.opacity = "1";
+
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = ".js";
+        fileInput.multiple = true;
+        fileInput.style.display = "none";
+
+        importBtn.onclick = () => fileInput.click();
+
+        fileInput.onchange = async () => {
+            const files = [...fileInput.files];
+            if (!files.length) return;
+
+            const plugins = getLocalPlugins();
+
+            for (const file of files) {
+                const text = await file.text();
+                const name = file.name.replace(/\.js$/i, "");
+                plugins.push({
+                    id: "local_" + Date.now() + "_" + Math.random(),
+                    name,
+                    code: text,
+                    enabled: false
+                });
+            }
+
+            setLocalPlugins(plugins);
+            fileInput.value = "";
+            renderLocalPanel();
+        };
+
         controlsBar.appendChild(nameInput);
         controlsBar.appendChild(addBtn);
+        controlsBar.appendChild(importBtn);
+        controlsBar.appendChild(fileInput);
 
         const content = document.createElement("div");
         content.id = "avia-local-plugins-content";
@@ -1764,6 +2091,79 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
         panel.appendChild(controlsBar);
         panel.appendChild(content);
         document.body.appendChild(panel);
+
+        const dropOverlay = document.createElement("div");
+        dropOverlay.textContent = "Import JS files";
+        Object.assign(dropOverlay.style, {
+            position: "absolute",
+            inset: "0",
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "18px",
+            fontWeight: "600",
+            color: "#fff",
+            opacity: "0",
+            pointerEvents: "none",
+            transition: "opacity 0.15s ease",
+            borderRadius: "16px"
+        });
+        panel.appendChild(dropOverlay);
+
+        let dragDepth = 0;
+
+        panel.addEventListener("dragenter", e => {
+            e.preventDefault();
+            e.stopPropagation();
+            dragDepth++;
+            dropOverlay.style.opacity = "1";
+            panel.style.border = "1px dashed rgba(255,255,255,0.4)";
+        });
+
+        panel.addEventListener("dragover", e => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        panel.addEventListener("dragleave", e => {
+            e.preventDefault();
+            e.stopPropagation();
+            dragDepth--;
+            if (dragDepth <= 0) {
+                dropOverlay.style.opacity = "0";
+                panel.style.border = "1px solid rgba(255,255,255,0.08)";
+                dragDepth = 0;
+            }
+        });
+
+        panel.addEventListener("drop", async e => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            dropOverlay.style.opacity = "0";
+            panel.style.border = "1px solid rgba(255,255,255,0.08)";
+            dragDepth = 0;
+
+            const files = [...e.dataTransfer.files].filter(f => f.name.endsWith(".js"));
+            if (!files.length) return;
+
+            const plugins = getLocalPlugins();
+
+            for (const file of files) {
+                const text = await file.text();
+                const name = file.name.replace(/\.js$/i, "");
+                plugins.push({
+                    id: "local_" + Date.now() + "_" + Math.random(),
+                    name,
+                    code: text,
+                    enabled: false
+                });
+            }
+
+            setLocalPlugins(plugins);
+            renderLocalPanel();
+        });
 
         let isDragging = false, offsetX, offsetY;
         header.addEventListener("mousedown", e => {
@@ -1988,6 +2388,401 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
 
 
 
+/* --- LoginWithToken.js --- */
+if(window.__US_BUILDER_LOGINWITHTOKEN_JS__){return;}window.__US_BUILDER_LOGINWITHTOKEN_JS__=true;
+
+(function () {
+  if (window.__LOGIN_WITH_TOKEN__) return;
+  window.__LOGIN_WITH_TOKEN__ = true;
+
+  async function loginWithToken(token) {
+    const res = await fetch('https://stoat.chat/api/users/@me', {
+      headers: { 'x-session-token': token }
+    });
+    if (!res.ok) throw new Error('Invalid token');
+    const user = await res.json();
+
+    const db = await new Promise((resolve, reject) => {
+      const r = indexedDB.open('localforage');
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+    });
+
+    const tx = db.transaction('keyvaluepairs', 'readwrite');
+    await new Promise((resolve, reject) => {
+      const r = tx.objectStore('keyvaluepairs').put({
+        session: {
+          _id: user._id,
+          token: token,
+          userId: user._id,
+          valid: true
+        }
+      }, 'auth');
+      r.onsuccess = () => resolve();
+      r.onerror = () => reject(r.error);
+    });
+
+    location.reload();
+  }
+
+  function openTokenDialog() {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'top_0 left_0 right_0 bottom_0 pos_fixed z_100 max-h_100% d_grid us_none place-items_center pointer-events_all anim-n_scrimFadeIn anim-dur_0.1s anim-fm_forwards trs_var(--transitions-medium)_all p_80px ov-y_auto';
+    backdrop.style.cssText = '--background: rgba(0, 0, 0, 0.6);';
+
+    backdrop.innerHTML = `
+      <div style="opacity: 1; --motion-translateY: 0px; transform: translateY(var(--motion-translateY));">
+        <div class="p_24px min-w_280px max-w_560px bdr_28px d_flex flex-d_column c_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-container-high)">
+          <span class="lh_2rem fs_1.5rem ls_0 fw_400 mbe_16px">Login With Token</span>
+          <div class="c_var(--md-sys-color-on-surface-variant) lh_1.25rem fs_0.875rem ls_0.015625rem fw_400">
+            <div class="d_flex flex-d_column flex-g_initial m_0 ai_initial jc_initial gap_var(--gap-md)">
+              <mdui-text-field id="lwt-token-input" variant="filled" type="password" name="token" required label="Session Token"></mdui-text-field>
+            </div>
+          </div>
+          <div class="gap_8px d_flex jc_end mbs_24px">
+            <button id="lwt-close-btn" type="button" class="lh_1.25rem fs_0.875rem ls_0.015625rem fw_400 pos_relative px_16px flex-sh_0 d_flex ai_center jc_center ff_inherit cursor_pointer bd_none trs_var(--transitions-medium)_all c_var(--color) fill_var(--color) h_40px bdr_var(--borderRadius-full) --color_var(--md-sys-color-primary)">
+              <md-ripple aria-hidden="true"></md-ripple>Close
+            </button>
+            <button id="lwt-login-btn" type="button" class="lh_1.25rem fs_0.875rem ls_0.015625rem fw_400 pos_relative px_16px flex-sh_0 d_flex ai_center jc_center ff_inherit cursor_pointer bd_none trs_var(--transitions-medium)_all c_var(--color) fill_var(--color) h_40px bdr_var(--borderRadius-full) --color_var(--md-sys-color-on-primary) bg_var(--md-sys-color-primary)">
+              <md-ripple aria-hidden="true"></md-ripple>Login
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(backdrop);
+
+    const closeBtn = backdrop.querySelector('#lwt-close-btn');
+    const loginBtn = backdrop.querySelector('#lwt-login-btn');
+    const tokenInput = backdrop.querySelector('#lwt-token-input');
+
+    function close() { backdrop.remove(); }
+
+    function setLoading(loading) {
+      loginBtn.disabled = loading;
+      loginBtn.style.cursor = loading ? 'not-allowed' : 'pointer';
+      const ripple = loginBtn.querySelector('md-ripple');
+      loginBtn.textContent = loading ? 'Logging in…' : 'Login';
+      if (ripple) loginBtn.prepend(ripple);
+    }
+
+    function setError(msg) {
+      loginBtn.disabled = false;
+      loginBtn.style.cursor = 'pointer';
+      const ripple = loginBtn.querySelector('md-ripple');
+      loginBtn.textContent = msg;
+      if (ripple) loginBtn.prepend(ripple);
+      setTimeout(() => {
+        loginBtn.textContent = 'Login';
+        if (ripple) loginBtn.prepend(ripple);
+      }, 2000);
+    }
+
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
+    closeBtn.addEventListener('click', close);
+
+    loginBtn.addEventListener('click', async () => {
+      const token = tokenInput.value?.trim();
+      if (!token) {
+        setError('Enter a token!');
+        return;
+      }
+      setLoading(true);
+      try {
+        await loginWithToken(token);
+      } catch (err) {
+        setError('Invalid token!');
+      }
+    });
+  }
+
+  function injectLoginButton() {
+    const signUpBtn = [...document.querySelectorAll('button')]
+      .find(b => b.textContent.trim() === 'Sign Up');
+    if (!signUpBtn) return;
+
+    const parent = signUpBtn.parentElement;
+    if (parent.querySelector('[data-lwt-btn]')) return;
+
+    const clone = signUpBtn.cloneNode(false);
+    clone.dataset.lwtBtn = 'true';
+    clone.textContent = 'Login With Token';
+
+    const ripple = document.createElement('md-ripple');
+    ripple.setAttribute('aria-hidden', 'true');
+    clone.prepend(ripple);
+
+    clone.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openTokenDialog();
+    });
+
+    signUpBtn.insertAdjacentElement('afterend', clone);
+  }
+
+  let debounceTimer = null;
+  new MutationObserver(() => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(injectLoginButton, 150);
+  }).observe(document.body, { childList: true, subtree: true });
+
+  injectLoginButton();
+})();
+
+
+
+/* --- MobileCSSPlus.js --- */
+if(window.__US_BUILDER_MOBILECSSPLUS_JS__){return;}window.__US_BUILDER_MOBILECSSPLUS_JS__=true;
+
+(function(){
+
+    if(window.__AVIA_MONACO_CLONE_MOBILE__)return;
+    window.__AVIA_MONACO_CLONE_MOBILE__=true;
+
+    const hideStyle=document.createElement("style");
+    hideStyle.id="hide-stoat-quickcss";
+    hideStyle.textContent=`
+    #stoat-fake-quickcss{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+    }
+    `;
+    document.head.appendChild(hideStyle);
+
+    function preloadMonaco(){
+        return new Promise(resolve=>{
+        if(window.monaco)return resolve();
+        const loader=document.createElement("script");
+        loader.src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js";
+        loader.onload=function(){
+        require.config({
+            paths:{vs:"https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs"}
+        });
+        require(["vs/editor/editor.main"],()=>resolve());
+        };
+        document.head.appendChild(loader);
+        });
+    }
+
+    function setIcon(button){
+        const oldSvg=button.querySelector("svg");
+        if(oldSvg)oldSvg.remove();
+        const pathData="M8.7 16.3L4.4 12l4.3-4.3 1.4 1.4L7.2 12l2.9 2.9-1.4 1.4zm6.6 0l-1.4-1.4L16.8 12l-2.9-2.9 1.4-1.4L19.6 12l-4.3 4.3z";
+        const svgNS="http://www.w3.org/2000/svg";
+        const svg=document.createElementNS(svgNS,"svg");
+        svg.setAttribute("viewBox","0 0 24 24");
+        svg.setAttribute("width","20");
+        svg.setAttribute("height","20");
+        svg.setAttribute("fill","currentColor");
+        svg.style.marginRight="8px";
+        const path=document.createElementNS(svgNS,"path");
+        path.setAttribute("d",pathData);
+        svg.appendChild(path);
+        button.insertBefore(svg,button.firstChild);
+    }
+
+    async function openMonacoPanel(){
+        await preloadMonaco();
+        let panel=document.getElementById("avia-monaco-panel");
+        if(panel){
+            panel.style.display=panel.style.display==="none"?"flex":"none";
+            return;
+        }
+        
+        panel=document.createElement("div");
+        panel.id="avia-monaco-panel";
+        if(window.outerWidth<716){
+            Object.assign(panel.style,{
+                position:"fixed",
+                bottom:"12px",
+                right:"0px",
+                width:`${window.outerWidth-66}px`,
+                height:`${window.outerWidth-130}px`,
+                background:"var(--md-sys-color-surface,#1e1e1e)",
+                borderRadius:"16px",
+                boxShadow:"0 8px 28px rgba(0,0,0,0.35)",
+                zIndex:"999999",
+                display:"flex",
+                flexDirection:"column",
+                overflow:"hidden",
+                border:"1px solid rgba(255,255,255,0.08)",
+                backdropFilter:"blur(12px)"
+            });
+        }else{
+            Object.assign(panel.style,{
+                position:"fixed",
+                bottom:"12px",
+                right:"0px",
+                width:`650px`,
+                height:`420px`,
+                background:"var(--md-sys-color-surface,#1e1e1e)",
+                borderRadius:"16px",
+                boxShadow:"0 8px 28px rgba(0,0,0,0.35)",
+                zIndex:"999999",
+                display:"flex",
+                flexDirection:"column",
+                overflow:"hidden",
+                border:"1px solid rgba(255,255,255,0.08)",
+                backdropFilter:"blur(12px)"
+            });
+        }
+
+        const header=document.createElement("div");
+        header.textContent="Monaco QuickCSS";
+        Object.assign(header.style,{
+            padding:"14px 16px",
+            fontWeight:"600",
+            fontSize:"14px",
+            letterSpacing:"0.3px",
+            background:"var(--md-sys-color-surface-container,rgba(255,255,255,0.04))",
+            borderBottom:"1px solid rgba(255,255,255,0.08)",
+            cursor:"move",
+            color:"#fff"
+        });
+
+        const closeBtn=document.createElement("div");
+        closeBtn.textContent="✕";
+        Object.assign(closeBtn.style,{
+            position:"absolute",
+            top:"12px",
+            right:"16px",
+            cursor:"pointer",
+            opacity:"0.7",
+            color:"#fff"
+        });
+
+        closeBtn.onmouseenter=()=>closeBtn.style.opacity="1";
+        closeBtn.onmouseleave=()=>closeBtn.style.opacity="0.7";
+        closeBtn.onclick=()=>panel.style.display="none";
+
+        const editorContainer=document.createElement("div");
+        editorContainer.style.flex="1";
+
+        const clearBtn = document.createElement('div');
+        clearBtn.textContent = 'Clear';
+        Object.assign(clearBtn.style,{
+            position:'absolute',
+            top:'12px',
+            right:'86px',
+            cursor:'pointer',
+            color:'#fff'
+        });
+
+        const pasteBtn = document.createElement('div');
+        pasteBtn.textContent = 'Paste';
+        Object.assign(pasteBtn.style,{
+            position:'absolute',
+            top:'12px',
+            right:'36px',
+            cursor:'pointer',
+            color:'#fff'
+        });
+
+        const editor=monaco.editor.create(editorContainer,{
+            value:localStorage.getItem("avia_quickcss")||"",
+            language:"css",
+            theme:"vs-dark",
+            automaticLayout:true,
+            minimap:{enabled:false},
+            fontSize:13,
+            scrollBeyondLastLine:false,
+            wordWrap:"on"
+        });
+
+        pasteBtn.addEventListener('click',async ()=>{
+            navigator.clipboard.readText().then(text=>{
+                const value = monaco.editor.getEditors()[0].getValue()
+                monaco.editor.getEditors()[0].setValue(value+'\n'+text)
+            })
+        });
+
+        clearBtn.addEventListener('click',async ()=>{
+            monaco.editor.getEditors()[0].setValue('')
+        });
+
+        panel.appendChild(header);
+        panel.appendChild(clearBtn)
+        panel.appendChild(pasteBtn)
+        panel.appendChild(closeBtn);
+        panel.appendChild(editorContainer);
+        document.body.appendChild(panel);
+
+        editor.onDidChangeModelContent(()=>{
+            const value=editor.getValue();
+            localStorage.setItem("avia_quickcss",value);
+            let styleTag=document.getElementById("avia-quickcss-style");
+            if(!styleTag){
+                styleTag=document.createElement("style");
+                styleTag.id="avia-quickcss-style";
+                document.head.appendChild(styleTag);
+            }
+            styleTag.textContent=value;
+        });
+
+        let isDragging=false,offsetX,offsetY;
+        header.addEventListener("mousedown",e=>{
+            isDragging=true;
+            offsetX=e.clientX-panel.offsetLeft;
+            offsetY=e.clientY-panel.offsetTop;
+            document.body.style.userSelect="none";
+        });
+
+        document.addEventListener("mouseup",()=>{
+            isDragging=false;
+            document.body.style.userSelect="";
+        });
+
+        document.addEventListener("mousemove",e=>{
+            if(!isDragging)return;
+            panel.style.left=(e.clientX-offsetX)+"px";
+            panel.style.top=(e.clientY-offsetY)+"px";
+            panel.style.right="auto";
+            panel.style.bottom="auto";
+        });
+        
+    }
+
+    function injectButton(){
+        const appearanceBtn=Array.from(document.querySelectorAll("a"))
+        .find(a=>a.textContent.trim()==="Appearance");
+        if(!appearanceBtn)return;
+        if(document.getElementById("stoat-monaco-quickcss"))return;
+        const removeFontBtn=document.getElementById("stoat-fake-removefont");
+        if(!removeFontBtn)return;
+        const monacoBtn=appearanceBtn.cloneNode(true);
+        monacoBtn.id="stoat-monaco-quickcss";
+        const textNode=Array.from(monacoBtn.querySelectorAll("div"))
+        .find(d=>d.children.length===0);
+        if(textNode)textNode.textContent="(Avia) QuickCSS";
+        setIcon(monacoBtn);
+        monacoBtn.addEventListener("click",openMonacoPanel);
+        removeFontBtn.parentElement.insertBefore(monacoBtn,removeFontBtn.nextSibling);
+    }
+
+    function waitForBody(callback){
+        if(document.body)callback();
+        else new MutationObserver((obs)=>{
+            if(document.body){
+                obs.disconnect();
+                callback();
+            }
+        }).observe(document.documentElement,{childList:true});
+    }
+
+    waitForBody(()=>{
+        const observer=new MutationObserver(()=>injectButton());
+        observer.observe(document.body,{childList:true,subtree:true});
+        injectButton();
+    });
+
+    preloadMonaco();
+
+})();
+
+
 /* --- NoAnnoyingTooltips.js --- */
 if(window.__US_BUILDER_NOANNOYINGTOOLTIPS_JS__){return;}window.__US_BUILDER_NOANNOYINGTOOLTIPS_JS__=true;
 
@@ -2079,6 +2874,57 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
     const getPlugins = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
     const setPlugins = (data) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 
+    function normalizePluginUrl(url) {
+        try {
+            const u = new URL(url);
+
+            if (u.hostname === "github.com") {
+
+                const m = u.pathname.match(/^\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/);
+                if (m) {
+                    return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
+                }
+
+                return url;
+            }
+
+
+            if (u.hostname === "raw.githubusercontent.com") return url;
+
+
+            if (u.hostname === "raw.codeberg.page") return url;
+
+            if (u.hostname === "codeberg.org") {
+                const parts = u.pathname.split("/").filter(Boolean);
+
+                if (parts.length >= 5 && (parts[2] === "raw" || parts[2] === "src")) {
+                    const user       = parts[0];
+                    const repo       = parts[1];
+
+                    const branchName = parts[3] === "branch" || parts[3] === "commit" || parts[3] === "tag"
+                        ? parts[4]
+                        : parts[3]; 
+                    const fileStart  = parts[3] === "branch" || parts[3] === "commit" || parts[3] === "tag"
+                        ? 5
+                        : 4;
+                    const filePath   = parts.slice(fileStart).join("/");
+                    return `https://raw.codeberg.page/${user}/${repo}/@${branchName}/${filePath}`;
+                }
+
+                if (parts.length >= 4 && parts[2] === "raw") {
+                    const user       = parts[0];
+                    const repo       = parts[1];
+                    const branchName = parts[3];
+                    const filePath   = parts.slice(4).join("/");
+                    return `https://raw.codeberg.page/${user}/${repo}/@${branchName}/${filePath}`;
+                }
+            }
+        } catch (_) {
+
+        }
+        return url;
+    }
+
     async function processQueue() {
         if (processQueue.running) return;
         processQueue.running = true;
@@ -2098,7 +2944,8 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
         if (runningPlugins[plugin.url] && !force) return;
         if (force) stopPlugin(plugin);
         try {
-            const res = await fetch(plugin.url);
+            const fetchUrl = normalizePluginUrl(plugin.url);
+            const res = await fetch(fetchUrl);
             if (!res.ok) throw new Error("Fetch failed");
             const code = await res.text();
             delete pluginErrors[plugin.url];
@@ -2270,7 +3117,8 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
 
         let code;
         try {
-            const res = await fetch(plugin.url);
+            const fetchUrl = normalizePluginUrl(plugin.url);
+            const res = await fetch(fetchUrl);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             code = await res.text();
         } catch (err) {
@@ -2396,7 +3244,7 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
         styleInput(urlInput);
         urlInput.style.flex = '1';
         if(window.outerWidth<572){
-            urlInput.style.width=`${((window.outerWidth-72)/10)+30}px`
+            urlInput.style.width=`${((window.outerWidth-72)/10)+50}px`
         }
 
         const addBtn = document.createElement('button');
@@ -3182,8 +4030,12 @@ if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SE
   function serverContextMenuFix() {
     const idkwhattofuckingcallthisshit = document.getElementsByClassName('flex-g_1 min-w_0 ov_hidden white-space_nowrap tov_ellipsis').item(0)
     if(!idkwhattofuckingcallthisshit) return;
-    idkwhattofuckingcallthisshit.$$click = function(){
-        //This shit will break if literally ANYTHING gets added to or removed from the sidebar. If that happens, just try replacing 4 with random numbers until it works again
+    const oldclick = idkwhattofuckingcallthisshit.$$click
+    idkwhattofuckingcallthisshit.addEventListener('click',(e)=>{
+      e.preventDefault()
+      e.stopPropagation()
+      e.stopImmediatePropagation()
+      //This shit will break if literally ANYTHING gets added to or removed from the sidebar. If that happens, just try replacing 4 with random numbers until it works again
         const servers = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll flex-g_1').item(0).children[4].children
         let currentServer;
         for(const server of servers){
@@ -3197,7 +4049,34 @@ if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SE
             button:2
         })
         currentServer.children[0].children[0].dispatchEvent(balls)
-    }
+
+        const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none')
+        .item(0)
+        if(!contextmenu) return;
+
+        const clone = contextmenu.lastChild.cloneNode()
+        clone.id = 'viewserverinfobutton'
+        const svgclone = contextmenu.lastChild.children[0].cloneNode(true)
+        svgclone.children[1].setAttribute('d','M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8')
+        for(const child of svgclone.children){
+          if(child.getAttribute('d')!='M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8'||!child.getAttribute('d')){
+            child.remove()
+          }
+        }
+        svgclone.lastChild.remove()
+        const span = document.createElement('span')
+        span.className='lh_1.25rem fs_0.875rem ls_0.015625rem fw_400'
+        span.textContent='View Server Info'
+        clone.appendChild(svgclone)
+        clone.appendChild(span)
+        clone.addEventListener('click',()=>{
+          oldclick()
+        })
+
+        if(!document.getElementById('viewserverinfobutton')){
+          contextmenu.appendChild(clone)
+        }
+    })
   }
 
   const observer = new MutationObserver(() => {
@@ -3457,7 +4336,7 @@ if(window.__US_BUILDER_SHRINKAVIAPANELS_JS__){return;}window.__US_BUILDER_SHRINK
         const aviaPanels = document.querySelectorAll('[style*="z-index: 999999"],[style*=\'z-index: 999998\']')
         const ids = ['avia-local-plugins-panel','avia-plugins-panel','avia-themes-panel','avia-official-repo-window','avia-local-editor-panel','avia-monaco-panel','avia-theme-editor','avia-quickcss-panel','avia-settings-reopen-btn']
         aviaPanels.forEach(panel=>{
-            if(panel.id=='avia-settings-reopen-btn') return;
+            if(panel.id=='avia-settings-reopen-btn'||ids.includes(panel.id)) return;
             panel.style.right='0px'
             panel.style.bottom='12px'
             for(const child of panel.children){
@@ -3554,7 +4433,10 @@ if(window.__US_BUILDER_SHRINKGIFPANEL_JS__){return;}window.__US_BUILDER_SHRINKGI
                     }
                 }
             }
-            document.getElementsByClassName('min-h_0 d_flex flex-d_column').item(1).children[0].setAttribute('readonly',false)
+            const searchbar = document.querySelector(`[placeholder='Search for GIFs...'],[placeholder='Search for emojis...']`)
+            if(searchbar){
+                searchbar.setAttribute('contenteditable',true)
+            }
         }
     }
   }
@@ -3563,6 +4445,50 @@ if(window.__US_BUILDER_SHRINKGIFPANEL_JS__){return;}window.__US_BUILDER_SHRINKGI
 
   const observer = new MutationObserver(() => shrinkGifPanel());
   observer.observe(document.documentElement, { childList: true, subtree: true });
+})();
+
+
+/* --- ShrinkHomeButtons.js --- */
+if(window.__US_BUILDER_SHRINKHOMEBUTTONS_JS__){return;}window.__US_BUILDER_SHRINKHOMEBUTTONS_JS__=true;
+
+(function () {
+  if (window.__SHRINK_HOME_BUTTONS__) return;
+  window.__SHRINK_HOME_BUTTONS__ = true;
+
+  function shrinkHomeButtons() {
+    const homebuttons = document.getElementsByClassName('gap_8px p_8px d_flex bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface-variant) bg_var(--md-sys-color-surface-variant)')
+    .item(0)
+    if(!homebuttons||window.outerWidth>homebuttons.clientWidth) return;
+    homebuttons.style.setProperty('width',`${window.outerWidth-100}px`)
+    homebuttons.style.setProperty(`position`,'fixed')
+    homebuttons.style.setProperty(`right`,`100px`)
+
+    for(const child of homebuttons.children){
+        for(const child2 of child.children){
+            for(const child3 of child2.lastChild.children){
+                child3.style.setProperty(`font-size`,`10px`)
+            }
+        }
+    }
+  }
+
+  const observer = new MutationObserver(() => {
+    shrinkHomeButtons();
+  });
+
+  function init() {
+    shrinkHomeButtons();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
 })();
 
 
@@ -3657,7 +4583,8 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
     window.__AVIA_THEMES_LOADED__ = true;
 
     const STORAGE_KEY = "avia_themes";
-    let editingTheme = null;
+    let editingThemeId = null;
+    let monacoEditorInstance = null;
 
     const TEMPLATE = `/*
 @name Whatever name here
@@ -3671,6 +4598,19 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
     const getThemes = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
     const setThemes = (data) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 
+    function preloadMonaco() {
+        return new Promise(resolve => {
+            if (window.monaco) return resolve();
+            const loader = document.createElement("script");
+            loader.src = "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js";
+            loader.onload = function () {
+                require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" } });
+                require(["vs/editor/editor.main"], () => resolve());
+            };
+            document.head.appendChild(loader);
+        });
+    }
+
     function parseMeta(css){
         const name = css.match(/@name\s+(.+)/)?.[1] || "Unknown Theme";
         const author = css.match(/@author\s+(.+)/)?.[1] || "Unknown";
@@ -3678,6 +4618,26 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
         const rawDescription = css.match(/@description\s+(.+)/)?.[1] || "No Description Available";
         const description = rawDescription.trim() === "*/" ? "No Description Available" : rawDescription;
         return {name,author,version,description};
+    }
+
+    function sanitizeFilename(name) {
+        return name
+            .replace(/[<>:"/\\|?*\x00-\x1f]/g, "")
+            .replace(/\s+/g, "_")
+            .replace(/\.+$/, "")
+            .trim() || "theme";
+    }
+
+    function downloadTheme(theme) {
+        const name = parseMeta(theme.css).name;
+        const filename = sanitizeFilename(name) + ".css";
+        const blob = new Blob([theme.css], { type: "text/css" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
     }
 
     function applyThemes(){
@@ -3726,12 +4686,23 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
         });
     }
 
-    function openThemeEditor(theme){
-        editingTheme = theme;
+    async function openThemeEditor(themeId){
+        await preloadMonaco()
+        editingThemeId = themeId;
+        const themes = getThemes();
+        const theme = themes.find(t => t.id === themeId);
+        if (!theme) return;
+
+        const meta = parseMeta(theme.css);
         let panel = document.getElementById('avia-theme-editor');
         if(panel){
             panel.style.display="flex";
-            panel.querySelector("textarea").value = theme.css;
+            panel.querySelector("#avia-theme-editor-title").textContent = "Theme Editor — " + meta.name;
+            if (monacoEditorInstance) {
+                monacoEditorInstance._aviaThemeId = themeId;
+                const model = monacoEditorInstance.getModel();
+                if (model) model.setValue(theme.css || "");
+            }
             return;
         }
         panel=document.createElement("div");
@@ -3797,32 +4768,65 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
         close.onmouseenter=()=>close.style.opacity="1";
         close.onmouseleave=()=>close.style.opacity="0.6";
         close.onclick=()=>panel.style.display="none";
-        const textarea=document.createElement("textarea");
-        Object.assign(textarea.style,{
-            flex:"1",
-            border:"none",
-            outline:"none",
-            resize:"none",
-            padding:"16px",
-            background:"transparent",
-            color:"inherit",
-            fontFamily:"monospace",
-            fontSize:"13px"
+        
+        const editorContainer = document.createElement("div");
+        editorContainer.style.flex = "1";
+
+        const clearBtn = document.createElement('div');
+        clearBtn.textContent = 'Clear';
+        Object.assign(clearBtn.style,{
+            position:'absolute',
+            top:'12px',
+            right:'86px',
+            cursor:'pointer',
+            color:'#fff'
         });
-        textarea.value=theme.css;
-        textarea.addEventListener("input",()=>{
-            const themes=getThemes();
-            const t=themes.find(x=>x.id===editingTheme.id);
-            if(!t) return;
-            t.css=textarea.value;
-            setThemes(themes);
-            applyThemes();
-            if(window.__avia_refresh_themes_panel){window.__avia_refresh_themes_panel();}
+
+        const pasteBtn = document.createElement('div');
+        pasteBtn.textContent = 'Paste';
+        Object.assign(pasteBtn.style,{
+            position:'absolute',
+            top:'12px',
+            right:'36px',
+            cursor:'pointer',
+            color:'#fff'
         });
+
         panel.appendChild(header);
+        panel.appendChild(clearBtn)
+        panel.appendChild(pasteBtn)
         panel.appendChild(close);
-        panel.appendChild(textarea);
+        panel.appendChild(editorContainer);
         document.body.appendChild(panel);
+
+        monacoEditorInstance = monaco.editor.create(editorContainer, {
+            value: theme.css || "",
+            language: "css",
+            theme: "vs-dark",
+            automaticLayout: true,
+            minimap: { enabled: false },
+            fontSize: 13,
+            scrollBeyondLastLine: false,
+            wordWrap: "on"
+        });
+
+        monacoEditorInstance._aviaThemeId = themeId;
+
+        monacoEditorInstance.onDidChangeModelContent(() => {
+            const id = monacoEditorInstance._aviaThemeId;
+            if (!id) return;
+            const value = monacoEditorInstance.getValue();
+            const all = getThemes();
+            const target = all.find(t => t.id === id);
+            if (!target) return;
+            target.css = value;
+            setThemes(all);
+            applyThemes();
+            header.textContent = "Theme Editor — " + parseMeta(value).name;
+            if (typeof window.__avia_refresh_themes_panel === "function") {
+                window.__avia_refresh_themes_panel();
+            }
+        });
     }
 
     function toggleThemesPanel(){
@@ -3999,7 +5003,16 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
                 const edit=document.createElement("button");
                 edit.textContent="Edit";
                 styleBtn(edit, "rgba(100,160,255,0.15)");
-                edit.onclick=()=>openThemeEditor(theme);
+                edit.onclick=()=>openThemeEditor(theme.id);
+
+                const dlBtn = document.createElement("button");
+                dlBtn.textContent = "Export";
+                styleBtn(dlBtn, "rgba(80,200,120,0.15)");
+                dlBtn.title = "Download theme as .css";
+                dlBtn.onclick = e => {
+                    e.stopPropagation();
+                    downloadTheme(theme);
+                };
 
                 const del=document.createElement("button");
                 del.textContent="✕";
@@ -4013,6 +5026,7 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
 
                 controls.appendChild(toggle);
                 controls.appendChild(edit);
+                controls.appendChild(dlBtn);
                 controls.appendChild(del);
                 card.appendChild(left);
                 card.appendChild(controls);
@@ -4073,7 +5087,7 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
 
 /* --- Embedded Themes --- */
 const __BUILDER_THEMES__ = [
-  {id:"CSS_CSS",name:"css.css",css:"/*Fixs Attachment files with text showing inside to only show half way*/\n.d_grid[style*=\"width: 420px\"]:has(pre code) {\n  width: 100% !important;\n  max-width: 100% !important;\n  height: auto !important;\n}\n\n/* Fix bio overflow, showing the full bio */\n#floating div.will-change_transform > div > div.ov_hidden:last-child {\n    aspect-ratio: unset;\n}\n\n/* Makes scrolling server and channel lists without accidentally reordering them possible */\n.scr-bar-w_none {\n    scrollbar-width: thin;\n    overflow-x:hidden;\n}\n\n/* Align Voice Call button to top right */\n[class=\"top_var(--gap-md) p_var(--gap-md) w_100% pos_absolute z_2 us_none d_flex ai_center flex-d_column\"] {\n    align-items: end;\n}\n\n/*Make Voice Call button smaller*/\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px {\n\n  width: 240px !important;   /* was 360px */ /*Now 240*/\n  height: 80px !important;   /* was 120px */ /*Now 80*/\n\n  border-radius: 12px;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px span {\n  \n  font-size: 0.85rem !important;\n  line-height: 1.1 !important;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px .material-symbols-outlined {\n  \n  font-size: 18px !important;\n}\n/*Normal Version*/\n\n/* Shrink placeholder text */\n.cm-placeholder {\n    font-size: 10px !important;\n}\n\n/*Shrink text in chat bar */\n[class='cm-line']{\n    font-size : 10px;\n}\n\n/*Fixes join button on invites going off the screen */\n[class='lh_1.25rem fs_0.875rem ls_0.015625rem fw_500 pos_relative px_var(--padding-inline) flex-sh_0 d_flex ai_center jc_center ff_inherit cursor_not-allowed bd_none trs_var(--transitions-medium)_all c_var(--color) fill_var(--color) h_40px --padding-inline_16px bdr_48px bg_color-mix(in_srgb,_10%_var(--md-sys-color-on-surface),_transparent) --color_color-mix(in_srgb,_38%_var(--md-sys-color-on-surface),_transparent)']{\n    position:fixed;\n    left:260px;\n    font-size:6.3px;\n}\n\n/*Shrink search bar placeholder text*/\n[class='h_40px w_240px px_16px bdr_var(--borderRadius-full) bg_var(--md-sys-color-surface-container-high)']{\n    font-size:10px;\n}\n\n/*Shrink channel names*/\n[class='white-space_nowrap [&_*]:white-space_nowrap lh_1.5rem fs_1rem ls_0.009375rem fw_550']{\n    font-size:10px;\n}\n[class='gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0']{\n    font-size:10px;\n}",enabled:true},
+  {id:"CSS_CSS",name:"css.css",css:"/*Fixs Attachment files with text showing inside to only show half way*/\n.d_grid[style*=\"width: 420px\"]:has(pre code) {\n  width: 100% !important;\n  max-width: 100% !important;\n  height: auto !important;\n}\n\n/* Fix bio overflow, showing the full bio */\n#floating div.will-change_transform > div > div.ov_hidden:last-child {\n    aspect-ratio: unset;\n}\n\n/* Makes scrolling server and channel lists without accidentally reordering them possible */\n.scr-bar-w_none {\n    scrollbar-width: thin;\n    overflow-x:hidden;\n}\n\n/* Align Voice Call button to top right */\n[class=\"top_var(--gap-md) p_var(--gap-md) w_100% pos_absolute z_2 us_none d_flex ai_center flex-d_column\"] {\n    align-items: end;\n}\n\n/*Make Voice Call button smaller*/\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px {\n\n  width: 240px !important;   /* was 360px */ /*Now 240*/\n  height: 80px !important;   /* was 120px */ /*Now 80*/\n\n  border-radius: 12px;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px span {\n  \n  font-size: 0.85rem !important;\n  line-height: 1.1 !important;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px .material-symbols-outlined {\n  \n  font-size: 18px !important;\n}\n/*Normal Version*/\n\n/* Shrink placeholder text */\n.cm-placeholder {\n    font-size: 10px !important;\n}\n\n/*Shrink text in chat bar */\n[class='cm-line']{\n    font-size : 10px;\n}\n\n/*Fixes join button on invites going off the screen */\n[class='lh_1.25rem fs_0.875rem ls_0.015625rem fw_500 pos_relative px_var(--padding-inline) flex-sh_0 d_flex ai_center jc_center ff_inherit cursor_not-allowed bd_none trs_var(--transitions-medium)_all c_var(--color) fill_var(--color) h_40px --padding-inline_16px bdr_48px bg_color-mix(in_srgb,_10%_var(--md-sys-color-on-surface),_transparent) --color_color-mix(in_srgb,_38%_var(--md-sys-color-on-surface),_transparent)'][type=button]{\n    position:relative;\n    left:-15%;\n    font-size:6.3px;\n}\n\n/*Shrink search bar placeholder text*/\n[class='h_40px w_240px px_16px bdr_var(--borderRadius-full) bg_var(--md-sys-color-surface-container-high)']{\n    font-size:10px;\n}\n\n/*Shrink channel names*/\n[class='white-space_nowrap [&_*]:white-space_nowrap lh_1.5rem fs_1rem ls_0.009375rem fw_550']{\n    font-size:10px;\n}\n[class='gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0']{\n    font-size:10px;\n}",enabled:true},
 ];
 ;(function(){
   try{
