@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.2
+// @version     1.3
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.6 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-04-08T19:12:09.791Z';
+'@preserve - Built on 2026-04-12T16:00:44.730Z';
 
 /* --- 3TapRely.js --- */
 if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=true;
@@ -608,6 +608,67 @@ if(window.__US_BUILDER_BUTTONFIX_JS__){return;}window.__US_BUILDER_BUTTONFIX_JS_
 })();
 
 
+/* --- ChannelContextMenuFix.js --- */
+if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__=true;
+
+(function () {
+  if (window.__CHANNEL_CONTEXT_MENU_FIX__) return;
+  window.__CHANNEL_CONTEXT_MENU_FIX__ = true;
+
+  function channelContextMenuFix() {
+    const balls = new Event('contextmenu',{
+        bubbles:true,
+        button:2
+    });
+
+    let channelList = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll').item(1)
+    if(!channelList) return;
+    channelList = channelList.children[0]
+    for(const child of channelList.children){
+        child.ondblclick = function(){
+          child.dispatchEvent(balls)
+        }
+
+        if(child.children[1]?.clientHeight!=0){
+            let cum;
+            if(child.firstChild.getAttribute('role')){
+                cum = child.firstChild
+            }else{
+                cum = child.children[1]
+            }
+
+            for(const child2 of cum.children){
+                child2.firstChild.firstChild.ondblclick = function(e){
+                  e.preventDefault()
+                  e.stopPropagation()
+                  e.stopImmediatePropagation()
+                    child2.firstChild.firstChild.firstChild.dispatchEvent(balls)
+                };
+            }
+        }
+    }
+  }
+
+  const observer = new MutationObserver(() => {
+    channelContextMenuFix();
+  });
+
+  function init() {
+    channelContextMenuFix();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+
+
 /* --- ChunkyMembers.js --- */
 if(window.__US_BUILDER_CHUNKYMEMBERS_JS__){return;}window.__US_BUILDER_CHUNKYMEMBERS_JS__=true;
 
@@ -1112,8 +1173,8 @@ if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE
     if(!icon) return;
     icon.href='https://cdn.stoatusercontent.com/icons/vnGRb1M_UiP4-oj1qfqQODDCsyYOWa3f92ib3ac-K_/original'
 
-    if(document.title!='Stoat (Avia Client Mobile 1.2)'){
-        document.title='Stoat (Avia Client Mobile 1.2)'
+    if(document.title!='Stoat (Avia Client Mobile 1.3)'){
+        document.title='Stoat (Avia Client Mobile 1.3)'
     }
   }
 
@@ -1571,7 +1632,7 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     el.appendChild(element)
                     element.outerHTML = `
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
-                                Avia Client Mobile 1.2<br>
+                                Avia Client Mobile 1.3<br>
                                 <span style="font-size:10px;opacity:0.7;">
                                     Based on Avia Client 1.6
                                 </span>
@@ -4035,10 +4096,15 @@ if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SE
       e.preventDefault()
       e.stopPropagation()
       e.stopImmediatePropagation()
-      //This shit will break if literally ANYTHING gets added to or removed from the sidebar. If that happens, just try replacing 4 with random numbers until it works again
-        const servers = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll flex-g_1').item(0).children[4].children
+        let servers;
+        for(const child of document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll flex-g_1').item(0).children){
+          if(child.getAttribute('role')=='list'){
+            servers = child;
+          }
+        }
+        
         let currentServer;
-        for(const server of servers){
+        for(const server of servers.children){
             if(server.children[0].children[0].href==document.baseURI){
                 currentServer=server
                 break;
@@ -4198,10 +4264,10 @@ if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SE
     }
   }
 
-  function updateButtonIcon(span) {
-    span.textContent = scrollLockEnabled ? 'check' : 'close';
+  function updateButtonIcon(button) {
+    button.textContent = scrollLockEnabled ? '✓' : 'x';
 
-    Object.assign(span.style, {
+    Object.assign(button.style, {
       color: scrollLockEnabled
         ? 'var(--md-sys-color-primary, #80cbc4)'
         : '',
@@ -4209,7 +4275,7 @@ if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SE
     });
   }
 
-  function toggle(span) {
+  function toggle(button) {
     scrollLockEnabled = !scrollLockEnabled;
 
     if (scrollLockEnabled) {
@@ -4218,43 +4284,41 @@ if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SE
       removeOverlay();
     }
 
-    updateButtonIcon(span);
+    updateButtonIcon(button);
   }
 
   function inject() {
     const sidebar = document.getElementsByClassName('d_flex flex-d_column fill_var(--md-sys-color-on-surface)').item(0)
     if(!sidebar) return;
-    const clone = sidebar.cloneNode()
-    Object.assign(clone.style,{
+    const sidebarclone = sidebar.cloneNode()
+    Object.assign(sidebarclone.style,{
       width:`${sidebar.clientWidth/2}px`
     })
-
-    const wrapper = document.querySelector('[aria-label="Switch back to legacy app"]');
-    if (!wrapper) return;
-    const wrapper2 = wrapper.cloneNode(true)
-    Object.assign(wrapper2.style,{
-      width:`${wrapper.clientWidth/2}px`,
+    const button = sidebar.firstChild.firstChild
+    const clone = button.cloneNode()
+    Object.assign(clone.style,{
+      width:`${button.clientWidth/2}px`,
       position:'fixed',
       left:`${sidebar.clientWidth*0.75}px`
     })
+    button.dataset.scrollLockPatched = 'true';
+    clone.removeAttribute('href')
+    clone.style.cursor = 'pointer'
+    clone.textContent= '✓'
+    clone.id='serverlistscrolllock'
+    clone.setAttribute('aria-label', 'Toggle server list scroll lock');
+    updateButtonIcon(clone)
 
-    wrapper2.dataset.scrollLockPatched = 'true';
-    wrapper2.setAttribute('aria-label', 'Toggle server list scroll lock');
-    wrapper2.id='serverlistscrolllock'
-
-    const link = wrapper2.querySelector('a');
-    const span = wrapper2.querySelector('span.material-symbols-outlined');
-    if (!link || !span) return;
-
-    link.removeAttribute('href');
-    link.style.cursor = 'pointer';
-    updateButtonIcon(span);
-
-    link.addEventListener('click', (e) => {
+    clone.addEventListener('click',(e)=>{
       e.preventDefault();
       e.stopPropagation();
-      toggle(span);
+      toggle(clone);
     });
+
+    if(!document.getElementById('serverlistscrolllock')){
+      sidebarclone.appendChild(clone)
+      sidebar.parentElement.insertBefore(sidebarclone,sidebar.nextSibling)
+    }
 
     window.addEventListener('resize', () => {
       if (scrollLockEnabled) {
@@ -4262,14 +4326,10 @@ if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SE
         createOverlay();
       }
     });
-    if(!document.getElementById('serverlistscrolllock')){
-      clone.appendChild(wrapper2)
-      sidebar.parentElement.insertBefore(clone,sidebar.nextSibling)
-    }
   }
 
   const observer = new MutationObserver(() => {
-    const target = document.querySelector('[aria-label="Switch back to legacy app"]');
+    const target = document.getElementsByClassName('d_flex flex-d_column fill_var(--md-sys-color-on-surface)').item(0).firstChild.firstChild
     if (target && !target.dataset.scrollLockPatched) {
       inject();
     }
