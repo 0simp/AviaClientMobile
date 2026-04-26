@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.3
+// @version     1.4
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.6 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-04-12T16:00:44.730Z';
+'@preserve - Built on 2026-04-26T19:43:20.842Z';
 
 /* --- 3TapRely.js --- */
 if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=true;
@@ -56,6 +56,125 @@ if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=
 
   function init() {
     threeTapReply();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+
+
+/* --- AttachmentContextMenuFix.js --- */
+if(window.__US_BUILDER_ATTACHMENTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_ATTACHMENTCONTEXTMENUFIX_JS__=true;
+
+(function () {
+  if (window.__ATTACHMENT_CONTEXT_MENU_FIX__) return;
+  window.__ATTACHMENT_CONTEXT_MENU_FIX__ = true;
+
+  function attachmentContextMenuFix() {
+    const videos = document.querySelectorAll('video')
+    const images = document.querySelectorAll('img[class=\'cursor_pointer\']')
+    if(videos){
+        videos.forEach(video=>{
+            let timer;
+            let long = false;
+
+            function start() {
+                timer = setTimeout(() => {
+                long = true
+                }, 500);
+            }
+
+            function stop() {
+                clearTimeout(timer);
+                long = false
+            }
+
+            if(!video.dataset.patched){
+                video.addEventListener('touchstart', function(e){
+                start()
+                });
+                video.addEventListener('touchend', function(e){
+                if(long){
+                    const rect = video.getBoundingClientRect();
+
+                    const contextMenuX = rect.left + rect.width / 2;
+                    const contextMenuY = rect.top + rect.height / 2;
+
+                    const contextMenuEvent = new MouseEvent('contextmenu', {
+                        bubbles: true,
+                        cancelable: true,
+                        clientX: contextMenuX,
+                        clientY: contextMenuY
+                    });
+                    video.dispatchEvent(contextMenuEvent);
+                }
+                stop()
+                });
+                video.addEventListener('touchcancel',stop);
+                video.addEventListener('touchmove',stop);
+                video.dataset.patched=true
+            }
+        })
+    }
+
+    if(images){
+        images.forEach(image=>{
+            let timer;
+            let long = false;
+
+            function start() {
+                timer = setTimeout(() => {
+                long = true
+                }, 500);
+            }
+
+            function stop() {
+                clearTimeout(timer);
+                long = false
+            }
+
+            if(!image.dataset.patched){
+                image.addEventListener('touchstart', function(e){
+                start()
+                });
+                image.addEventListener('touchend', function(e){
+                if(long){
+                    const rect = image.getBoundingClientRect();
+
+                    const contextMenuX = rect.left + rect.width / 2;
+                    const contextMenuY = rect.top + rect.height / 2;
+
+                    const contextMenuEvent = new MouseEvent('contextmenu', {
+                        bubbles: true,
+                        cancelable: true,
+                        clientX: contextMenuX,
+                        clientY: contextMenuY
+                    });
+                    image.dispatchEvent(contextMenuEvent);
+                }
+                stop()
+                });
+                image.addEventListener('touchcancel',stop);
+                image.addEventListener('touchmove',stop);
+                image.dataset.patched=true
+            }
+        })
+    }
+  }
+
+  const observer = new MutationObserver(() => {
+    attachmentContextMenuFix();
+  });
+
+  function init() {
+    attachmentContextMenuFix();
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
@@ -624,9 +743,79 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
     let channelList = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll').item(1)
     if(!channelList) return;
     channelList = channelList.children[0]
-    for(const child of channelList.children){
-        child.ondblclick = function(){
-          child.dispatchEvent(balls)
+    if(channelList.querySelector('a[href=\'/app\']')){
+      for(const child of channelList.lastChild.children){
+        let timer;
+        let long = false;
+
+        function start() {
+          timer = setTimeout(() => {
+            long = true
+          }, 500);
+        }
+
+        function stop() {
+            clearTimeout(timer);
+            long = false
+        }
+
+        if(!child.dataset.patched){
+          child.addEventListener('touchstart', function(e){
+                start()
+          });
+          child.addEventListener('touchend', function(e){
+          if(long){
+              const rect = child.getBoundingClientRect();
+
+              const contextMenuX = rect.left + rect.width / 2;
+              const contextMenuY = rect.top + rect.height / 2;
+
+              const contextMenuEvent = new MouseEvent('contextmenu', {
+                  bubbles: true,
+                  cancelable: true,
+                  clientX: contextMenuX,
+                  clientY: contextMenuY
+              });
+              setTimeout(() => {
+                child.firstChild.firstChild.dispatchEvent(contextMenuEvent)
+              }, 100);
+          }
+          stop()
+          });
+          child.addEventListener('touchcancel',stop);
+          child.dataset.patched=true
+        }
+      }
+    }else{
+      for(const child of channelList.children){
+        let timer;
+        let long = false;
+
+        function start() {
+          timer = setTimeout(() => {
+            long = true
+          }, 500);
+        }
+
+        function stop() {
+            clearTimeout(timer);
+            long = false
+        }
+
+        if(!child.dataset.patched){
+          child.addEventListener('touchstart', function(e){
+                start()
+          });
+          child.addEventListener('touchend', function(e){
+          if(long){
+              setTimeout(() => {
+                child.dispatchEvent(balls)
+              }, 100);
+          }
+          stop()
+          });
+          child.addEventListener('touchcancel',stop);
+          child.dataset.patched=true
         }
 
         if(child.children[1]?.clientHeight!=0){
@@ -638,14 +827,38 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
             }
 
             for(const child2 of cum.children){
-                child2.firstChild.firstChild.ondblclick = function(e){
-                  e.preventDefault()
-                  e.stopPropagation()
-                  e.stopImmediatePropagation()
-                    child2.firstChild.firstChild.firstChild.dispatchEvent(balls)
-                };
+                let timer;
+                let long = false;
+
+                function start() {
+                  timer = setTimeout(() => {
+                    long = true
+                  }, 500);
+                }
+
+                function stop() {
+                    clearTimeout(timer);
+                    long = false
+                }
+
+                if(!child2.dataset.patched){
+                  child2.firstChild.firstChild.addEventListener('touchstart', function(e){
+                        start()
+                  });
+                  child2.firstChild.firstChild.addEventListener('touchend', function(e){
+                  if(long){
+                      setTimeout(() => {
+                        child2.firstChild.firstChild.firstChild.dispatchEvent(balls)
+                      }, 100);
+                  }
+                  stop()
+                  });
+                  child2.firstChild.firstChild.addEventListener('touchcancel',stop);
+                  child2.dataset.patched=true
+                }
             }
         }
+      }
     }
   }
 
@@ -1173,8 +1386,8 @@ if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE
     if(!icon) return;
     icon.href='https://cdn.stoatusercontent.com/icons/vnGRb1M_UiP4-oj1qfqQODDCsyYOWa3f92ib3ac-K_/original'
 
-    if(document.title!='Stoat (Avia Client Mobile 1.3)'){
-        document.title='Stoat (Avia Client Mobile 1.3)'
+    if(document.title!='Stoat (Avia Client Mobile 1.4)'){
+        document.title='Stoat (Avia Client Mobile 1.4)'
     }
   }
 
@@ -1184,6 +1397,39 @@ if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE
 
   function init() {
     customTitle();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+
+
+/* --- EmojiFix.js --- */
+if(window.__US_BUILDER_EMOJIFIX_JS__){return;}window.__US_BUILDER_EMOJIFIX_JS__=true;
+
+(function () {
+  if (window.__EMOJI_FIX__) return;
+  window.__EMOJI_FIX__ = true;
+
+  function emojiFix() {
+    for(const element of document.getElementsByClassName('fill_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-dim) w_36px h_36px d_flex flex-sh_0 ai_center jc_center bdr_var(--borderRadius-md)')){
+        element.replaceChild(element.firstChild.firstChild.firstChild.firstChild.firstChild,element.firstChild)
+    }
+  }
+
+  const observer = new MutationObserver(() => {
+    emojiFix();
+  });
+
+  function init() {
+    emojiFix();
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
@@ -1632,7 +1878,7 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     el.appendChild(element)
                     element.outerHTML = `
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
-                                Avia Client Mobile 1.3<br>
+                                Avia Client Mobile 1.4<br>
                                 <span style="font-size:10px;opacity:0.7;">
                                     Based on Avia Client 1.6
                                 </span>
@@ -2844,6 +3090,43 @@ if(window.__US_BUILDER_MOBILECSSPLUS_JS__){return;}window.__US_BUILDER_MOBILECSS
 })();
 
 
+/* --- MoveChannelSettingsButton.js --- */
+if(window.__US_BUILDER_MOVECHANNELSETTINGSBUTTON_JS__){return;}window.__US_BUILDER_MOVECHANNELSETTINGSBUTTON_JS__=true;
+
+(function () {
+    if (window.__MOVE_CHANNEL_SETTINGS_BUTTON__) return;
+    window.__MOVE_CHANNEL_SETTINGS_BUTTON__ = true;
+
+    function moveChannelSettingsButton(){
+        const settingsbutton = document.querySelector(`[aria-label='Channel Settings']`)
+        if(settingsbutton){
+            settingsbutton.style.display='none'
+            const channelinfo = [...document.getElementsByClassName('p_24px min-w_280px max-w_560px bdr_28px d_flex flex-d_column c_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-container-high)')]
+            .find(e=>e.textContent.includes('#'))
+
+            if(channelinfo&&!channelinfo.dataset.patched){
+                const clone = channelinfo.lastChild.firstChild.cloneNode(true)
+                clone.textContent='Settings'
+                clone.onclick = function(){
+                    clone.nextSibling.click()
+                    setTimeout(() => {
+                        settingsbutton.click()
+                    }, 100);
+                }
+
+                channelinfo.lastChild.insertBefore(clone,channelinfo.lastChild.firstChild)
+                channelinfo.dataset.patched=true
+            }
+        }
+    }
+    
+    const observer = new MutationObserver(()=>{
+        moveChannelSettingsButton()
+    });
+    observer.observe(document.documentElement, {childList: true, subtree: true })
+})();
+
+
 /* --- NoAnnoyingTooltips.js --- */
 if(window.__US_BUILDER_NOANNOYINGTOOLTIPS_JS__){return;}window.__US_BUILDER_NOANNOYINGTOOLTIPS_JS__=true;
 
@@ -2940,36 +3223,35 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
             const u = new URL(url);
 
             if (u.hostname === "github.com") {
-
                 const m = u.pathname.match(/^\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/);
                 if (m) {
                     return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
                 }
-
                 return url;
             }
 
-
             if (u.hostname === "raw.githubusercontent.com") return url;
-
 
             if (u.hostname === "raw.codeberg.page") return url;
 
             if (u.hostname === "codeberg.org") {
+
+                if (u.pathname.startsWith("/api/v1/repos/")) return url;
+
                 const parts = u.pathname.split("/").filter(Boolean);
 
                 if (parts.length >= 5 && (parts[2] === "raw" || parts[2] === "src")) {
                     const user       = parts[0];
                     const repo       = parts[1];
-
                     const branchName = parts[3] === "branch" || parts[3] === "commit" || parts[3] === "tag"
                         ? parts[4]
-                        : parts[3]; 
+                        : parts[3];
                     const fileStart  = parts[3] === "branch" || parts[3] === "commit" || parts[3] === "tag"
                         ? 5
                         : 4;
                     const filePath   = parts.slice(fileStart).join("/");
-                    return `https://raw.codeberg.page/${user}/${repo}/@${branchName}/${filePath}`;
+
+                    return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branchName}`;
                 }
 
                 if (parts.length >= 4 && parts[2] === "raw") {
@@ -2977,12 +3259,19 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
                     const repo       = parts[1];
                     const branchName = parts[3];
                     const filePath   = parts.slice(4).join("/");
-                    return `https://raw.codeberg.page/${user}/${repo}/@${branchName}/${filePath}`;
+
+                    return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branchName}`;
+                }
+
+                if (parts.length >= 5 && parts[2] === "src" && parts[3] === "branch") {
+                    const user     = parts[0];
+                    const repo     = parts[1];
+                    const branch   = parts[4];
+                    const filePath = parts.slice(5).join("/");
+                    return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branch}`;
                 }
             }
-        } catch (_) {
-
-        }
+        } catch (_) {}
         return url;
     }
 
@@ -3543,37 +3832,93 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
 })();
 
 
-/* --- ReplaceSearchPlaceholder.js --- */
-if(window.__US_BUILDER_REPLACESEARCHPLACEHOLDER_JS__){return;}window.__US_BUILDER_REPLACESEARCHPLACEHOLDER_JS__=true;
+/* --- ReplaceSearchbar.js --- */
+if(window.__US_BUILDER_REPLACESEARCHBAR_JS__){return;}window.__US_BUILDER_REPLACESEARCHBAR_JS__=true;
 
 (function () {
-  if (window.__REPLACE_SEARCH_PLACEHOLDER__) return;
-  window.__REPLACE_SEARCH_PLACEHOLDER__ = true;
+    if (window.__AVIA_SEARCH__) return;
+    window.__AVIA_SEARCH__ = true;
 
-  function replaceSearchPlaceholder() {
-    const searchbar = document.getElementsByClassName('h_40px w_240px px_16px bdr_var(--borderRadius-full) bg_var(--md-sys-color-surface-container-high)')
-    .item(0)
-    if(searchbar&&searchbar.placeholder=='Search messages...'){
-        searchbar.placeholder = 'Search'
+    function injectHideStyle() {
+        if (document.getElementById("avia-search-hide")) return;
+        const style = document.createElement("style");
+        style.id = "avia-search-hide";
+        style.textContent = `input[placeholder="Search messages..."] { display: none !important; }`;
+        document.head.appendChild(style);
     }
-  }
-  const observer = new MutationObserver(() => {
-      replaceSearchPlaceholder();
-  });
 
-  function init() {
-    replaceSearchPlaceholder();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
+    function removeHideStyle() {
+        document.getElementById("avia-search-hide")?.remove();
+    }
+
+    injectHideStyle();
+
+    function findSearchInput() {
+        return document.querySelector('input[placeholder="Search messages..."]');
+    }
+
+    function findPinButton() {
+        return document.querySelector('button[aria-label="View pinned messages"]');
+    }
+
+    function findInjectedBtn() {
+        return document.querySelector("[data-avia-search-btn]");
+    }
+
+    function injectSearchButton() {
+        if (findInjectedBtn()) return;
+
+        const searchInput = findSearchInput();
+        const pinBtn = findPinButton();
+        if (!searchInput || !pinBtn) return;
+
+        const btn = pinBtn.cloneNode(false);
+        btn.setAttribute("data-avia-search-btn", "true");
+        btn.setAttribute("aria-label", "Search messages");
+
+        const ripple = document.createElement("md-ripple");
+        ripple.setAttribute("aria-hidden", "true");
+        btn.appendChild(ripple);
+
+        const icon = document.createElement("span");
+        icon.className = "material-symbols-outlined";
+        icon.style.cssText = "display:block;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;font-size:24px;";
+        icon.textContent = "search";
+        btn.appendChild(icon);
+
+        let isOpen = false;
+
+        btn.addEventListener("click", () => {
+            isOpen = !isOpen;
+
+            if (isOpen) {
+                removeHideStyle();
+                icon.style.fontVariationSettings = "'FILL' 1,'wght' 400,'GRAD' 0";
+                requestAnimationFrame(() => findSearchInput()?.focus());
+            } else {
+                injectHideStyle();
+                icon.style.fontVariationSettings = "'FILL' 0,'wght' 400,'GRAD' 0";
+                const input = findSearchInput();
+                if (input) {
+                    input.value = "";
+                    input.dispatchEvent(new Event("input", { bubbles: true }));
+                }
+            }
+        });
+
+        searchInput.insertAdjacentElement("beforebegin", btn);
+    }
+
+    const observer = new MutationObserver(() => {
+        if (!findInjectedBtn()) {
+            injectHideStyle();
+            injectSearchButton();
+        }
     });
-  }
 
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    injectSearchButton();
 })();
 
 
@@ -4081,6 +4426,79 @@ injectSettingsButton();
 })();
 
 
+/* --- SelectMenuFix.js --- */
+if(window.__US_BUILDER_SELECTMENUFIX_JS__){return;}window.__US_BUILDER_SELECTMENUFIX_JS__=true;
+
+(function () {
+  if (window.__SELECT_MENU_FIX__) return;
+  window.__SELECT_MENU_FIX__ = true;
+
+  const originalFetch = window.fetch.bind(window);
+
+  window.fetch = async function (resource, config = {}) {
+      try {
+          const url = resource?.toString?.() || "";
+          if(config.method=="PATCH"&&url.includes('/server')&&!url.includes('/role')&&config.body&&typeof config.body=='string'){
+              const selectmenus = document.querySelectorAll('select')
+              selectmenus.forEach(select=>{
+                const text = select.previousSibling.textContent.toLowerCase()
+                if(text.includes('user')){
+                  const parsed = JSON.parse(config.body)
+                  if(parsed){
+                    if(select.value!='none'){
+                      parsed.system_messages[`${text.replaceAll(' ','_')}`]=select.value
+                    }else if(parsed.system_messages[`${text.replaceAll(' ','_')}`]){
+                      delete parsed.system_messages[`${text.replaceAll(' ','_')}`]
+                    }
+                    config = { ...config, body: JSON.stringify(parsed) };
+                  }
+                }
+              });
+            }
+        } catch (e) { console.log(e); }
+          return originalFetch(resource, config)
+    };
+
+  function selectMenuFix() {
+    if(!document.querySelector('path[d=\'M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z\']')) return;
+    document.querySelectorAll('mdui-select').forEach(element=>{
+      console.log(element.oninput)
+        const select = document.createElement('select')
+        if(element.id){
+          select.id=element.id
+        }
+        for(const child of element.children){
+          const option = document.createElement('option')
+          option.value=child.value
+          option.textContent = child.textContent
+          select.appendChild(option)
+        }
+
+       element.parentElement.replaceChild(select,element)
+       select.value = element.value
+    })
+  }
+
+  const observer = new MutationObserver(() => {
+    selectMenuFix();
+  });
+
+  function init() {
+    selectMenuFix();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+
+
 /* --- ServerContextMenuFix.js --- */
 if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__=true;
 
@@ -4089,60 +4507,54 @@ if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SE
   window.__SERVER_CONTEXT_MENU_FIX__ = true;
 
   function serverContextMenuFix() {
-    const idkwhattofuckingcallthisshit = document.getElementsByClassName('flex-g_1 min-w_0 ov_hidden white-space_nowrap tov_ellipsis').item(0)
-    if(!idkwhattofuckingcallthisshit) return;
-    const oldclick = idkwhattofuckingcallthisshit.$$click
-    idkwhattofuckingcallthisshit.addEventListener('click',(e)=>{
-      e.preventDefault()
-      e.stopPropagation()
-      e.stopImmediatePropagation()
-        let servers;
-        for(const child of document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll flex-g_1').item(0).children){
-          if(child.getAttribute('role')=='list'){
-            servers = child;
-          }
-        }
-        
-        let currentServer;
-        for(const server of servers.children){
-            if(server.children[0].children[0].href==document.baseURI){
-                currentServer=server
-                break;
-            }
-        }
-        const balls = new Event('contextmenu',{
-            bubbles:true,
-            button:2
-        })
-        currentServer.children[0].children[0].dispatchEvent(balls)
+    if(!document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll flex-g_1').item(0)) return;
+    let servers;
+    for(const child of document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll flex-g_1').item(0).children){
+      if(child.getAttribute('role')=='list'){
+        servers = child;
+      }
+    }
 
-        const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none')
-        .item(0)
-        if(!contextmenu) return;
+    for(const server of servers.children){
+      let timer;
+      let long = false;
 
-        const clone = contextmenu.lastChild.cloneNode()
-        clone.id = 'viewserverinfobutton'
-        const svgclone = contextmenu.lastChild.children[0].cloneNode(true)
-        svgclone.children[1].setAttribute('d','M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8')
-        for(const child of svgclone.children){
-          if(child.getAttribute('d')!='M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8'||!child.getAttribute('d')){
-            child.remove()
-          }
-        }
-        svgclone.lastChild.remove()
-        const span = document.createElement('span')
-        span.className='lh_1.25rem fs_0.875rem ls_0.015625rem fw_400'
-        span.textContent='View Server Info'
-        clone.appendChild(svgclone)
-        clone.appendChild(span)
-        clone.addEventListener('click',()=>{
-          oldclick()
+      function start() {
+          timer = setTimeout(() => {
+          long = true
+          }, 500);
+      }
+
+      function stop() {
+          clearTimeout(timer);
+          long = false
+      }
+
+      if(!server.dataset.patched){
+        server.addEventListener('touchstart',()=>{
+          start()
         })
 
-        if(!document.getElementById('viewserverinfobutton')){
-          contextmenu.appendChild(clone)
-        }
-    })
+        server.addEventListener('touchend',()=>{
+          if(long){
+            const balls = new Event('contextmenu',{
+              bubbles:true,
+              button:2
+            })
+            setTimeout(() => {
+              server.children[0].children[0].dispatchEvent(balls)
+            }, 100);
+          }
+          stop()
+        });
+
+        server.addEventListener('touchcancel',()=>{
+            stop()
+        })
+
+        server.dataset.patched=true
+      }
+    }
   }
 
   const observer = new MutationObserver(() => {
@@ -5145,9 +5557,339 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
 
 
 
+/* --- UnsentMessageContextMenuFix.js --- */
+if(window.__US_BUILDER_UNSENTMESSAGECONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_UNSENTMESSAGECONTEXTMENUFIX_JS__=true;
+
+(function () {
+  if (window.__UNSENT_MESSAGE_CONTEXT_MENU_FIX__) return;
+  window.__UNSENT_MESSAGE_CONTEXT_MENU_FIX__ = true;
+
+  function unsentMessageContextMenuFix() {
+    const messages = document.querySelectorAll(`[class='group pos_relative d_flex flex-d_column p_2px_0 bg_transparent bdr_var(--borderRadius-md) min-h_1em trs_background-color_var(--transitions-fast) [&_a:hover]:td_underline [&:hover_.Toolbar]:d_flex mt_var(--message-group-spacing)! [&:hover]:bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-error)']`)
+    for(const message of messages){
+        const bar = document.createElement('div')
+        bar.className='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar'
+        const dots = document.createElement('div')
+        dots.className='cursor_pointer pos_relative p_var(--gap-sm)'
+        const ripple = document.createElement('md-ripple')
+        ripple.ariaHidden = true
+        const svg = document.createElement('svg')
+        dots.appendChild(ripple)
+        dots.appendChild(svg)
+        svg.outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2m0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2"></path></svg>`
+        bar.appendChild(dots)
+
+        bar.onclick = function(){
+            const rect = message.getBoundingClientRect();
+
+            const contextMenuX = rect.left + rect.width / 2;
+            const contextMenuY = rect.top + rect.height / 2;
+
+            const contextMenuEvent = new MouseEvent('contextmenu', {
+                bubbles: true,
+                cancelable: true,
+                clientX: contextMenuX,
+                clientY: contextMenuY
+            });
+            setTimeout(() => {
+                message.dispatchEvent(contextMenuEvent);
+            }, 100);
+        }
+
+        if(!message.dataset.patched){
+            message.appendChild(bar)
+            message.dataset.patched=true
+        }
+    }
+  }
+
+  const observer = new MutationObserver(() => {
+    unsentMessageContextMenuFix();
+  });
+
+  function init() {
+    unsentMessageContextMenuFix();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+
+
+/* --- VideoThumbnailFix.js --- */
+if(window.__US_BUILDER_VIDEOTHUMBNAILFIX_JS__){return;}window.__US_BUILDER_VIDEOTHUMBNAILFIX_JS__=true;
+
+(function () {
+  if (window.__VIDEO_THUMBNAIL_FIX__) return;
+  window.__VIDEO_THUMBNAIL_FIX__ = true;
+
+  function videoThumbnailFix() {
+    document.querySelectorAll('video').forEach(element=>{
+      element.addEventListener('play',()=>{
+        element.dataset.played=true
+      });
+      if(!element.dataset.played&&!element.src.includes('#t=0.1')){
+        element.src=element.src+`#t=0.1`
+      }
+    })
+  }
+
+  const observer = new MutationObserver(() => {
+    videoThumbnailFix();
+  });
+
+  function init() {
+    videoThumbnailFix();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+
+
+/* --- Whisper.js --- */
+if(window.__US_BUILDER_WHISPER_JS__){return;}window.__US_BUILDER_WHISPER_JS__=true;
+
+(function () {
+    if (window.__WHISPER__) return;
+    window.__WHISPER__ = true;
+
+    const style = document.createElement("style");
+    style.id = "whisper-hide";
+    style.textContent = `
+        [style*="position: fixed"] div.w_360px.h_120px {
+            visibility: hidden !important;
+            pointer-events: none !important;
+            transition: none !important;
+        }
+    `;
+
+    function isDM() {
+        return window.location.pathname.startsWith("/channel/");
+    }
+
+    function applyCSS() {
+        if (isDM()) {
+            if (!document.getElementById("whisper-hide")) {
+                document.head.appendChild(style);
+            }
+        } else {
+            document.getElementById("whisper-hide")?.remove();
+        }
+    }
+
+    function findVoiceCard() {
+        return [...document.querySelectorAll("div.cursor_pointer")]
+            .find(el => el.classList.contains("w_360px") && el.classList.contains("h_120px"));
+    }
+
+    function findVoiceInner() {
+        return findVoiceCard()?.querySelector("div.pos_relative");
+    }
+
+    function findVoiceWrapper() {
+        let el = findVoiceCard()?.parentElement;
+        while (el) {
+            if (el.style?.position === "fixed") return el;
+            el = el.parentElement;
+        }
+        return null;
+    }
+
+    function findActiveCall() {
+        return [...document.querySelectorAll("div.pointer-events_all")]
+            .find(el => el.classList.contains("h_40vh") && el.classList.contains("w_100%"));
+    }
+
+    function findPinButton() {
+        return document.querySelector('button[aria-label="View pinned messages"]');
+    }
+
+    function findInjectedBtn() {
+        return document.querySelector("[data-avia-voice-btn]");
+    }
+
+    function showVoiceWrapper() {
+        const wrapper = findVoiceWrapper();
+        if (!wrapper) return;
+        wrapper.style.transition = "none";
+        wrapper.style.visibility = "visible";
+        wrapper.style.pointerEvents = "none";
+    }
+
+    function restoreVoiceWrapper() {
+        const wrapper = findVoiceWrapper();
+        if (!wrapper) return;
+        wrapper.style.transition = "";
+        wrapper.style.visibility = "";
+        wrapper.style.pointerEvents = "";
+    }
+
+    function removeInjectedBtn() {
+        findInjectedBtn()?.remove();
+    }
+
+    // Tooltip
+    let whisperTooltip = null;
+
+    function getTooltip() {
+        if (!whisperTooltip) {
+            whisperTooltip = document.createElement("div");
+            whisperTooltip.style.cssText = "position:fixed;z-index:999;display:none;pointer-events:none;";
+            const inner = document.createElement("div");
+            inner.className = "c_white bg_black p_var(--gap-md) bdr_var(--borderRadius-md) lh_0.875rem fs_0.6875rem ls_0.03125rem fw_500";
+            inner.textContent = "Start voice call";
+            whisperTooltip.appendChild(inner);
+            document.body.appendChild(whisperTooltip);
+        }
+        return whisperTooltip;
+    }
+
+    function showTooltip(btn) {
+        const t = getTooltip();
+        t.style.display = "block";
+        const rect = btn.getBoundingClientRect();
+        // Position below the button, centered
+        requestAnimationFrame(() => {
+            const tw = t.getBoundingClientRect().width;
+            const x = rect.left + (rect.width / 2) - (tw / 2);
+            const y = rect.bottom + 6;
+            t.style.left = x + "px";
+            t.style.top  = y + "px";
+        });
+    }
+
+    function hideTooltip() {
+        getTooltip().style.display = "none";
+    }
+
+    function onRouteChange() {
+        applyCSS();
+        if (!isDM()) {
+            removeInjectedBtn();
+            restoreVoiceWrapper();
+        }
+    }
+
+    const _pushState = history.pushState.bind(history);
+    const _replaceState = history.replaceState.bind(history);
+
+    history.pushState = function (...args) {
+        _pushState(...args);
+        onRouteChange();
+    };
+
+    history.replaceState = function (...args) {
+        _replaceState(...args);
+        onRouteChange();
+    };
+
+    window.addEventListener("popstate", onRouteChange);
+
+    function injectVoiceButton() {
+        if (!isDM()) {
+            removeInjectedBtn();
+            restoreVoiceWrapper();
+            return;
+        }
+
+        const voiceCard = findVoiceCard();
+        const pinBtn    = findPinButton();
+
+        if (!voiceCard) {
+            removeInjectedBtn();
+            return;
+        }
+
+        if (!pinBtn) return;
+        if (findInjectedBtn()) return;
+
+        const btn = pinBtn.cloneNode(false);
+        btn.setAttribute("data-avia-voice-btn", "true");
+        btn.setAttribute("aria-label", "Start voice call");
+
+        const ripple = document.createElement("md-ripple");
+        ripple.setAttribute("aria-hidden", "true");
+        btn.appendChild(ripple);
+
+        const icon = document.createElement("span");
+        icon.className = "material-symbols-outlined";
+        icon.style.cssText = "display:block;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;font-size:24px;";
+        icon.textContent = "call";
+        btn.appendChild(icon);
+
+        btn.addEventListener("mouseenter", () => showTooltip(btn));
+        btn.addEventListener("mouseleave", hideTooltip);
+
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            hideTooltip();
+
+            if (findActiveCall()) return;
+
+            const inner = findVoiceInner();
+            if (!inner) return;
+
+            showVoiceWrapper();
+
+            const eventOpts = { bubbles: true, cancelable: true, view: window };
+            inner.dispatchEvent(new PointerEvent("pointerenter", eventOpts));
+            inner.dispatchEvent(new PointerEvent("pointerdown",  { ...eventOpts, pointerId: 1, isPrimary: true }));
+            inner.dispatchEvent(new PointerEvent("pointerup",    { ...eventOpts, pointerId: 1, isPrimary: true }));
+            inner.dispatchEvent(new MouseEvent("click",          eventOpts));
+
+            setTimeout(() => {
+                if (findActiveCall()) {
+                    restoreVoiceWrapper();
+                } else {
+                    applyCSS();
+                }
+            }, 300);
+        });
+
+        pinBtn.insertAdjacentElement("afterend", btn);
+    }
+
+    function enforceHidden() {
+        if (!isDM()) {
+            restoreVoiceWrapper();
+            return;
+        }
+        if (findActiveCall()) return;
+        applyCSS();
+    }
+
+    const observer = new MutationObserver(() => {
+        injectVoiceButton();
+        enforceHidden();
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    applyCSS();
+    injectVoiceButton();
+    enforceHidden();
+})();
+
+
 /* --- Embedded Themes --- */
 const __BUILDER_THEMES__ = [
-  {id:"CSS_CSS",name:"css.css",css:"/*Fixs Attachment files with text showing inside to only show half way*/\n.d_grid[style*=\"width: 420px\"]:has(pre code) {\n  width: 100% !important;\n  max-width: 100% !important;\n  height: auto !important;\n}\n\n/* Fix bio overflow, showing the full bio */\n#floating div.will-change_transform > div > div.ov_hidden:last-child {\n    aspect-ratio: unset;\n}\n\n/* Makes scrolling server and channel lists without accidentally reordering them possible */\n.scr-bar-w_none {\n    scrollbar-width: thin;\n    overflow-x:hidden;\n}\n\n/* Align Voice Call button to top right */\n[class=\"top_var(--gap-md) p_var(--gap-md) w_100% pos_absolute z_2 us_none d_flex ai_center flex-d_column\"] {\n    align-items: end;\n}\n\n/*Make Voice Call button smaller*/\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px {\n\n  width: 240px !important;   /* was 360px */ /*Now 240*/\n  height: 80px !important;   /* was 120px */ /*Now 80*/\n\n  border-radius: 12px;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px span {\n  \n  font-size: 0.85rem !important;\n  line-height: 1.1 !important;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px .material-symbols-outlined {\n  \n  font-size: 18px !important;\n}\n/*Normal Version*/\n\n/* Shrink placeholder text */\n.cm-placeholder {\n    font-size: 10px !important;\n}\n\n/*Shrink text in chat bar */\n[class='cm-line']{\n    font-size : 10px;\n}\n\n/*Fixes join button on invites going off the screen */\n[class='lh_1.25rem fs_0.875rem ls_0.015625rem fw_500 pos_relative px_var(--padding-inline) flex-sh_0 d_flex ai_center jc_center ff_inherit cursor_not-allowed bd_none trs_var(--transitions-medium)_all c_var(--color) fill_var(--color) h_40px --padding-inline_16px bdr_48px bg_color-mix(in_srgb,_10%_var(--md-sys-color-on-surface),_transparent) --color_color-mix(in_srgb,_38%_var(--md-sys-color-on-surface),_transparent)'][type=button]{\n    position:relative;\n    left:-15%;\n    font-size:6.3px;\n}\n\n/*Shrink search bar placeholder text*/\n[class='h_40px w_240px px_16px bdr_var(--borderRadius-full) bg_var(--md-sys-color-surface-container-high)']{\n    font-size:10px;\n}\n\n/*Shrink channel names*/\n[class='white-space_nowrap [&_*]:white-space_nowrap lh_1.5rem fs_1rem ls_0.009375rem fw_550']{\n    font-size:10px;\n}\n[class='gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0']{\n    font-size:10px;\n}",enabled:true},
+  {id:"CSS_CSS",name:"css.css",css:"/*Fixs Attachment files with text showing inside to only show half way*/\n.d_grid[style*=\"width: 420px\"]:has(pre code) {\n  width: 100% !important;\n  max-width: 100% !important;\n  height: auto !important;\n}\n\n/* Fix bio overflow, showing the full bio */\n#floating div.will-change_transform > div > div.ov_hidden:last-child {\n    aspect-ratio: unset;\n}\n\n/* Makes scrolling server and channel lists without accidentally reordering them possible */\n.scr-bar-w_none {\n    scrollbar-width: thin;\n    overflow-x:hidden;\n}\n\n/* Align Voice Call button to top right */\n[class=\"top_var(--gap-md) p_var(--gap-md) w_100% pos_absolute z_2 us_none d_flex ai_center flex-d_column\"] {\n    align-items: end;\n}\n\n/*Make Voice Call button smaller*/\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px {\n\n  width: 240px !important;   /* was 360px */ /*Now 240*/\n  height: 80px !important;   /* was 120px */ /*Now 80*/\n\n  border-radius: 12px;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px span {\n  \n  font-size: 0.85rem !important;\n  line-height: 1.1 !important;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px .material-symbols-outlined {\n  \n  font-size: 18px !important;\n}\n/*Normal Version*/\n\n/* Shrink placeholder text */\n.cm-placeholder {\n    font-size: 10px !important;\n}\n\n/*Shrink text in chat bar */\n[class='cm-line']{\n    font-size : 10px;\n}\n\n/*Fixes join button on invites going off the screen */\n[class='lh_1.25rem fs_0.875rem ls_0.015625rem fw_500 pos_relative px_var(--padding-inline) flex-sh_0 d_flex ai_center jc_center ff_inherit cursor_not-allowed bd_none trs_var(--transitions-medium)_all c_var(--color) fill_var(--color) h_40px --padding-inline_16px bdr_48px bg_color-mix(in_srgb,_10%_var(--md-sys-color-on-surface),_transparent) --color_color-mix(in_srgb,_38%_var(--md-sys-color-on-surface),_transparent)'][type=button]{\n    position:relative;\n    left:-15%;\n    font-size:6.3px;\n}\n\n/*Shrink search bar placeholder text*/\n[class='h_40px w_240px px_16px bdr_var(--borderRadius-full) bg_var(--md-sys-color-surface-container-high)']{\n    font-size:10px;\n}\n\n/*Shrink channel names*/\n[class='white-space_nowrap [&_*]:white-space_nowrap lh_1.5rem fs_1rem ls_0.009375rem fw_550']{\n    font-size:10px;\n}\n[class='gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0']{\n    font-size:10px;\n}\n\nimg[class='cursor_pointer']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n}\n\na[href]{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n}",enabled:true},
 ];
 ;(function(){
   try{
