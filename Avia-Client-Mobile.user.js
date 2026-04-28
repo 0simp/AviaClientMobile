@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.4
+// @version     1.4.1
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.6 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-04-26T19:43:20.842Z';
+'@preserve - Built on 2026-04-28T21:31:57.551Z';
 
 /* --- 3TapRely.js --- */
 if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=true;
@@ -783,6 +783,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
           stop()
           });
           child.addEventListener('touchcancel',stop);
+          child.addEventListener('touchmove',stop);
           child.dataset.patched=true
         }
       }
@@ -815,6 +816,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
           stop()
           });
           child.addEventListener('touchcancel',stop);
+          child.addEventListener('touchmove',stop);
           child.dataset.patched=true
         }
 
@@ -854,6 +856,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
                   stop()
                   });
                   child2.firstChild.firstChild.addEventListener('touchcancel',stop);
+                  child2.firstChild.firstChild.addEventListener('touchmove',stop);
                   child2.dataset.patched=true
                 }
             }
@@ -1386,8 +1389,8 @@ if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE
     if(!icon) return;
     icon.href='https://cdn.stoatusercontent.com/icons/vnGRb1M_UiP4-oj1qfqQODDCsyYOWa3f92ib3ac-K_/original'
 
-    if(document.title!='Stoat (Avia Client Mobile 1.4)'){
-        document.title='Stoat (Avia Client Mobile 1.4)'
+    if(document.title!='Stoat (Avia Client Mobile 1.4.1)'){
+        document.title='Stoat (Avia Client Mobile 1.4.1)'
     }
   }
 
@@ -1878,7 +1881,7 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     el.appendChild(element)
                     element.outerHTML = `
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
-                                Avia Client Mobile 1.4<br>
+                                Avia Client Mobile 1.4.1<br>
                                 <span style="font-size:10px;opacity:0.7;">
                                     Based on Avia Client 1.6
                                 </span>
