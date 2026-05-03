@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-02T20:36:40.914Z';
+'@preserve - Built on 2026-05-03T10:50:23.739Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -5121,6 +5121,8 @@ if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SID
 
   let touchStartX = null;
   let touchStartY = null;
+  let startSelection = null;
+  let endSelection = null;
 
   function getSidebar() {
     const wrap = document.getElementsByClassName(
@@ -5140,12 +5142,14 @@ if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SID
   }
 
   function onTouchStart(e) {
+    startSelection = document.getSelection().toString()
     const touch = e.touches[0];
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
   }
 
   function onTouchEnd(e) {
+    endSelection = document.getSelection().toString()
     if (touchStartX === null) return;
 
     const touch = e.changedTouches[0];
@@ -5163,6 +5167,7 @@ if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SID
     const smallpopout = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll c_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-container-high) bx-sh_0_0_3px_var(--md-sys-color-shadow) w_340px h_400px bdr_var(--borderRadius-xl)').item(0)
     if (!sidebar) return;
     if(popout||smallpopout) return;
+    if(startSelection!=endSelection) return;
 
     if (dx > SWIPE_THRESHOLD) {
 
