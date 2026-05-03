@@ -2,14 +2,14 @@
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
 // @version     1.5
-// @description Avia Client Mobile by 0simp. Based on Avia Client 1.6 by AvaLilac
+// @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-03T10:50:23.739Z';
+'@preserve - Built on 2026-05-03T22:16:18.672Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -268,11 +268,212 @@ function extractYouTubeID(url) {
     return match ? match[1] : null;
 }
 
+function fallbackCopy(text) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;opacity:0;";
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try { document.execCommand("copy"); } catch {}
+    document.body.removeChild(ta);
+}
+
+function updateBadge() {
+    const badge = document.getElementById("avia-favorites-badge");
+    if (!badge) return;
+    const count = getFavorites().length;
+    badge.textContent = count;
+    badge.style.display = count > 0 ? "flex" : "none";
+}
+
+function showToast(card, msg) {
+    const old = card.querySelector(".fav-toast");
+    if (old) old.remove();
+    const toast = document.createElement("div");
+    toast.className = "fav-toast";
+    toast.textContent = msg || "Copied!";
+    Object.assign(toast.style, {
+        position: "absolute",
+        bottom: "6px",
+        left: "50%",
+        transform: "translateX(-50%)",
+        background: "rgba(0,0,0,0.85)",
+        padding: "3px 8px",
+        borderRadius: "6px",
+        fontSize: "10px",
+        color: "#fff",
+        opacity: "0",
+        transition: "opacity 0.15s",
+        pointerEvents: "none",
+        whiteSpace: "nowrap",
+        zIndex: "3"
+    });
+    card.appendChild(toast);
+    requestAnimationFrame(() => toast.style.opacity = "1");
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 150);
+    }, 1500);
+}
+
+function flashDupe(url) {
+    const card = document.querySelector(`[data-fav-url="${CSS.escape(url)}"]`);
+    if (!card) return;
+    card.style.outline = "2px solid rgba(255,80,80,0.9)";
+    setTimeout(() => { card.style.outline = ""; }, 700);
+    card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function buildCard(item, onRemove) {
+    const card = document.createElement("div");
+    card.dataset.favUrl = item.url;
+    Object.assign(card.style, {
+        position: "relative",
+        width: "90px",
+        height: "90px",
+        borderRadius: "12px",
+        overflow: "hidden",
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        cursor: "pointer",
+        flexShrink: "0",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "border-color 0.2s, transform 0.15s"
+    });
+
+    const removeBtn = document.createElement("div");
+    removeBtn.textContent = "✕";
+    Object.assign(removeBtn.style, {
+        position: "absolute",
+        top: "4px",
+        right: "5px",
+        fontSize: "10px",
+        cursor: "pointer",
+        background: "rgba(0,0,0,0.7)",
+        color: "#fff",
+        padding: "1px 4px",
+        borderRadius: "4px",
+        zIndex: "2",
+        opacity: "0",
+        transition: "opacity 0.15s"
+    });
+    removeBtn.onclick = e => {
+        e.stopPropagation();
+        onRemove(item.url);
+    };
+    card.appendChild(removeBtn);
+
+    card.addEventListener("mouseenter", () => {
+        card.style.borderColor = "rgba(255,255,255,0.25)";
+        card.style.transform = "scale(1.04)";
+        removeBtn.style.opacity = "1";
+    });
+    card.addEventListener("mouseleave", () => {
+        card.style.borderColor = "rgba(255,255,255,0.08)";
+        card.style.transform = "scale(1)";
+        removeBtn.style.opacity = "0";
+    });
+
+    const ytID = extractYouTubeID(item.url);
+    if (ytID) {
+        const img = new Image();
+        img.draggable = false;
+        img.src = `https://img.youtube.com/vi/${ytID}/hqdefault.jpg`;
+        Object.assign(img.style, { width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" });
+        img.onerror = () => fallback();
+        card.appendChild(img);
+    } else {
+        const ext = item.url.split(".").pop().split("?")[0].toLowerCase();
+        const isVideo = ["mp4", "webm", "mov", "gifv"].includes(ext);
+
+        if (isVideo) {
+            const video = document.createElement("video");
+            video.src = item.url.replace(".gifv", ".mp4");
+            video.autoplay = true; video.loop = true;
+            video.muted = true; video.playsInline = true;
+            video.draggable = false;
+            Object.assign(video.style, { width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" });
+            video.onerror = () => fallback();
+            card.appendChild(video);
+        } else {
+            const img = new Image();
+            img.draggable = false;
+            img.src = item.url;
+            Object.assign(img.style, { width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" });
+            img.onerror = () => fallback();
+            card.appendChild(img);
+        }
+    }
+
+    function fallback() {
+        [...card.children].forEach(c => { if (c !== removeBtn) c.remove(); });
+        const inner = document.createElement("div");
+        Object.assign(inner.style, {
+            display: "flex", flexDirection: "column", alignItems: "center",
+            justifyContent: "center", gap: "4px", padding: "6px",
+            width: "100%", height: "100%", boxSizing: "border-box", pointerEvents: "none"
+        });
+        const icon = document.createElement("span");
+        icon.className = "material-symbols-outlined";
+        icon.textContent = "link";
+        icon.style.cssText = "font-size:20px;opacity:0.35;color:#fff;display:block;";
+        inner.appendChild(icon);
+        const label = document.createElement("div");
+        if (item.title) {
+            label.textContent = item.title;
+        } else {
+            try { label.textContent = new URL(item.url).hostname.replace("www.", ""); } catch { label.textContent = "link"; }
+        }
+        Object.assign(label.style, {
+            fontSize: "9px", color: "#fff", opacity: "0.55",
+            textAlign: "center", wordBreak: "break-word", overflow: "hidden",
+            maxHeight: "36px", lineHeight: "1.3", padding: "0 4px"
+        });
+        inner.appendChild(label);
+        card.appendChild(inner);
+    }
+
+    if (item.title) {
+        const titleOverlay = document.createElement("div");
+        titleOverlay.textContent = item.title;
+        Object.assign(titleOverlay.style, {
+            position: "absolute",
+            bottom: "0",
+            width: "100%",
+            background: "rgba(0,0,0,0.6)",
+            fontSize: "11px",
+            padding: "4px",
+            textAlign: "center",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            zIndex: "1",
+            pointerEvents: "none"
+        });
+        card.appendChild(titleOverlay);
+    }
+
+    card.addEventListener("click", () => {
+        const done = () => showToast(card, "Copied!");
+        if (navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(item.url).then(done).catch(() => { fallbackCopy(item.url); done(); });
+        } else {
+            fallbackCopy(item.url); done();
+        }
+    });
+
+    return card;
+}
+
 function toggleFavoritesPanel() {
 
     let panel = document.getElementById("avia-favorites-panel");
     if (panel) {
-        panel.style.display = panel.style.display === "none" ? "flex" : "none";
+        const isHidden = panel.style.display === "none";
+        panel.style.display = isHidden ? "flex" : "none";
+        if (isHidden) renderGrid();
         return;
     }
 
@@ -301,8 +502,8 @@ function toggleFavoritesPanel() {
             position: "fixed",
             bottom: "12px",
             right: "0px",
-            width: "640px",
-            height: "580px",
+            width: "460px",
+            height: "400px",
             background: "#1e1e1e",
             color: "#fff",
             borderRadius: "20px",
@@ -316,26 +517,38 @@ function toggleFavoritesPanel() {
     }
 
     const header = document.createElement("div");
-    header.textContent = "Favorites";
     Object.assign(header.style, {
-        padding: "18px",
+        padding: "13px 16px",
         fontWeight: "600",
-        fontSize: "16px",
-        background: "rgba(255,255,255,0.04)",
+        fontSize: "14px",
+        background: "var(--md-sys-color-surface-container, rgba(255,255,255,0.04))",
         borderBottom: "1px solid rgba(255,255,255,0.08)",
         cursor: "move",
-        position: "relative",
-        userSelect: "none"
+        userSelect: "none",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        flexShrink: "0"
     });
+
+    const headerIcon = document.createElement("span");
+    headerIcon.className = "material-symbols-outlined";
+    headerIcon.textContent = "star";
+    headerIcon.style.cssText = "font-size:18px;opacity:0.7;display:block;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0;";
+    header.appendChild(headerIcon);
+
+    const headerTitle = document.createElement("span");
+    headerTitle.textContent = "Favorites";
+    header.appendChild(headerTitle);
 
     const close = document.createElement("div");
     close.textContent = "✕";
     Object.assign(close.style, {
-        position: "absolute",
-        right: "18px",
-        top: "16px",
-        cursor: "pointer"
+        marginLeft: "auto", cursor: "pointer", opacity: "0.5",
+        fontSize: "13px", lineHeight: "1"
     });
+    close.onmouseenter = () => close.style.opacity = "1";
+    close.onmouseleave = () => close.style.opacity = "0.5";
     close.onclick = () => panel.style.display = "none";
     header.appendChild(close);
 
@@ -350,20 +563,20 @@ function toggleFavoritesPanel() {
     urlInput.placeholder = "Paste link...";
     if(window.outerWidth<692){
         Object.assign(urlInput.style, {
-            flex: "2",
-            padding: "10px",
-            borderRadius: "10px",
-            border: "none",
-            outline: "none",
+            flex: "1", padding: "7px 10px", borderRadius: "8px",
+            border: "1px solid rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.05)",
+            color: "var(--md-sys-color-on-surface, #fff)",
+            fontSize: "12px", outline: "none", minWidth: "0",
             width:`${((window.outerWidth-72)/10)+30}px`
         });
     }else{
         Object.assign(urlInput.style, {
-            flex: "2",
-            padding: "10px",
-            borderRadius: "10px",
-            border: "none",
-            outline: "none",
+            flex: "1", padding: "7px 10px", borderRadius: "8px",
+            border: "1px solid rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.05)",
+            color: "var(--md-sys-color-on-surface, #fff)",
+            fontSize: "12px", outline: "none", minWidth: "0"
         });
     }
 
@@ -371,51 +584,53 @@ function toggleFavoritesPanel() {
     titleInput.placeholder = "Opt title";
     if(window.outerWidth<692){
         Object.assign(titleInput.style, {
-            flex: "1",
-            padding: "10px",
-            borderRadius: "10px",
-            border: "none",
-            outline: "none",
+            flexShrink: "0", padding: "7px 10px",
+            borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.05)",
+            color: "var(--md-sys-color-on-surface, #fff)",
+            fontSize: "12px", outline: "none",
             width:`${((window.outerWidth-72)/10)+40}px`
         });
     }else{
         Object.assign(titleInput.style, {
-            flex: "1",
-            padding: "10px",
-            borderRadius: "10px",
-            border: "none",
-            outline: "none",
+            width: "110px", flexShrink: "0", padding: "7px 10px",
+            borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.05)",
+            color: "var(--md-sys-color-on-surface, #fff)",
+            fontSize: "12px", outline: "none"
         });
     }
 
     const addBtn = document.createElement("button");
     addBtn.textContent = "Add";
     Object.assign(addBtn.style, {
-        padding: "10px 16px",
-        borderRadius: "10px",
-        border: "none",
-        cursor: "pointer"
+        padding: "7px 14px", borderRadius: "8px", border: "none",
+        background: "var(--md-sys-color-primary, rgba(255,255,255,0.15))",
+        color: "var(--md-sys-color-on-primary, #fff)",
+        fontSize: "12px", fontWeight: "600", cursor: "pointer",
+        flexShrink: "0", transition: "opacity 0.15s"
     });
 
     inputRow.appendChild(urlInput);
     inputRow.appendChild(titleInput);
     inputRow.appendChild(addBtn);
 
-    const grid = document.createElement("div");
-    Object.assign(grid.style, {
-        flex: "1",
-        minHeight: "0",
-        overflowY: "auto",
-        padding: "18px",
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, 120px)",
-        gap: "14px",
-        alignContent: "start"
+    const gridWrapper = document.createElement("div");
+    Object.assign(gridWrapper.style, {
+        flex: "1", minHeight: "0", overflowY: "auto",
+        padding: "14px", boxSizing: "border-box"
     });
 
+    const grid = document.createElement("div");
+    grid.id = "avia-favorites-grid";
+    Object.assign(grid.style, {
+        display: "flex", flexWrap: "wrap", gap: "10px", alignContent: "start"
+    });
+
+    gridWrapper.appendChild(grid);
     panel.appendChild(header);
     panel.appendChild(inputRow);
-    panel.appendChild(grid);
+    panel.appendChild(gridWrapper);
     document.body.appendChild(panel);
 
     let isDragging = false, offsetX, offsetY;
@@ -436,184 +651,61 @@ function toggleFavoritesPanel() {
         panel.style.bottom = "auto";
     });
 
-    function showToast(card) {
-        const toast = document.createElement("div");
-        toast.textContent = "Copied to clipboard";
-        Object.assign(toast.style, {
-            position: "absolute",
-            bottom: "6px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "rgba(0,0,0,0.85)",
-            padding: "6px 10px",
-            borderRadius: "8px",
-            fontSize: "11px",
-            opacity: "0",
-            transition: "opacity 0.2s",
-            pointerEvents: "none"
-        });
-        card.appendChild(toast);
-        requestAnimationFrame(() => toast.style.opacity = "1");
-        setTimeout(() => {
-            toast.style.opacity = "0";
-            setTimeout(() => toast.remove(), 200);
-        }, 2000);
-    }
-
-    function fallbackCopy(text) {
-        const textarea = document.createElement("textarea");
-        textarea.value = text;
-        textarea.style.position = "fixed";
-        textarea.style.opacity = "0";
-        document.body.appendChild(textarea);
-        textarea.focus();
-        textarea.select();
-        try { document.execCommand("copy"); } catch {}
-        document.body.removeChild(textarea);
-    }
-
-    function render() {
-
-        grid.innerHTML = "";
-        const favorites = getFavorites();
-
-        favorites.forEach(item => {
-
-            const card = document.createElement("div");
-            Object.assign(card.style, {
-                position: "relative",
-                width: "120px",
-                height: "120px",
-                borderRadius: "14px",
-                overflow: "hidden",
-                background: "rgba(255,255,255,0.05)",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
-            });
-
-            const remove = document.createElement("div");
-            remove.textContent = "✕";
-            Object.assign(remove.style, {
-                position: "absolute",
-                top: "6px",
-                right: "8px",
-                fontSize: "12px",
-                cursor: "pointer",
-                background: "rgba(0,0,0,0.6)",
-                padding: "2px 6px",
-                borderRadius: "6px",
-                zIndex: 2
-            });
-
-            remove.onclick = (e) => {
-                e.stopPropagation();
-                setFavorites(favorites.filter(f => f.url !== item.url));
-                render();
-            };
-
-            card.appendChild(remove);
-
-            let mediaAdded = false;
-
-            const ytID = extractYouTubeID(item.url);
-            if (ytID) {
-                const img = new Image();
-                img.src = `https://img.youtube.com/vi/${ytID}/hqdefault.jpg`;
-                Object.assign(img.style, { width:"100%", height:"100%", objectFit:"cover" });
-                card.appendChild(img);
-                mediaAdded = true;
-            }
-
-            if (!mediaAdded) {
-                const ext = item.url.split(".").pop().split("?")[0].toLowerCase();
-                const isVideo = ["mp4","webm","mov","gifv"].includes(ext);
-
-                if (isVideo) {
-                    const video = document.createElement("video");
-                    video.src = item.url.replace(".gifv",".mp4");
-                    video.autoplay = true;
-                    video.loop = true;
-                    video.muted = true;
-                    video.playsInline = true;
-                    Object.assign(video.style, { width:"100%", height:"100%", objectFit:"cover" });
-                    video.onerror = fallback;
-                    card.appendChild(video);
-                } else {
-                    const img = new Image();
-                    img.src = item.url;
-                    Object.assign(img.style, { width:"100%", height:"100%", objectFit:"cover" });
-                    img.onerror = fallback;
-                    card.appendChild(img);
-                }
-            }
-
-            function fallback() {
-                card.innerHTML = "";
-                card.appendChild(remove);
-                const text = document.createElement("div");
-                text.textContent = item.title || item.url;
-                Object.assign(text.style, {
-                    padding:"8px",
-                    fontSize:"11px",
-                    textAlign:"center",
-                    wordBreak:"break-word"
-                });
-                card.appendChild(text);
-            }
-
-            if (item.title) {
-                const titleOverlay = document.createElement("div");
-                titleOverlay.textContent = item.title;
-                Object.assign(titleOverlay.style, {
-                    position:"absolute",
-                    bottom:"0",
-                    width:"100%",
-                    background:"rgba(0,0,0,0.6)",
-                    fontSize:"11px",
-                    padding:"4px",
-                    textAlign:"center",
-                    whiteSpace:"nowrap",
-                    overflow:"hidden",
-                    textOverflow:"ellipsis"
-                });
-                card.appendChild(titleOverlay);
-            }
-
-            card.onclick = () => {
-                const doToast = () => showToast(card);
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(item.url)
-                        .then(doToast)
-                        .catch(() => {
-                            fallbackCopy(item.url);
-                            doToast();
-                        });
-                } else {
-                    fallbackCopy(item.url);
-                    doToast();
-                }
-            };
-
-            grid.appendChild(card);
-        });
-    }
-
-    addBtn.onclick = () => {
+    function tryAdd() {
         const url = urlInput.value.trim();
         const title = titleInput.value.trim();
         if (!url) return;
-        const favorites = getFavorites();
-        if (favorites.some(f => f.url === url)) return;
-        favorites.push({ url, title, addedAt: Date.now() });
-        setFavorites(favorites);
-        urlInput.value = "";
-        titleInput.value = "";
-        render();
+         const favs = getFavorites();
+        if (favs.some(f => f.url === url)) { flashDupe(url); return; }
+        favs.push({ url, title, addedAt: Date.now() });
+        setFavorites(favs);
+        urlInput.value = ""; titleInput.value = "";
+        updateBadge(); renderGrid();
+    
+    
+    }
+
+    addBtn.onclick = tryAdd;
+    urlInput.addEventListener("keydown", e => { if (e.key === "Enter") tryAdd(); });
+    titleInput.addEventListener("keydown", e => { if (e.key === "Enter") tryAdd(); });
+
+    renderGrid();
+
+}
+
+function renderGrid() {
+    const grid = document.getElementById("avia-favorites-grid");
+    if (!grid) return;
+    grid.innerHTML = "";
+    const favorites = getFavorites();
+
+    if(favorites.length==0){
+        const empty = document.createElement("div");
+        Object.assign(empty.style, {
+            width: "100%", padding: "24px 0", textAlign: "center",
+            opacity: "0.35", fontSize: "13px",
+            color: "var(--md-sys-color-on-surface, #fff)"
+        });
+        const emptyIcon = document.createElement("span");
+        emptyIcon.className = "material-symbols-outlined";
+        emptyIcon.textContent = "star_border";
+        emptyIcon.style.cssText = "display:block;font-size:32px;margin-bottom:6px;";
+        empty.appendChild(emptyIcon);
+        const emptyText = document.createElement("div");
+        emptyText.textContent = "No favorites yet";
+        empty.appendChild(emptyText);
+        grid.appendChild(empty);
+        return;
+        }
+
+    const onRemove = (url) => {
+        setFavorites(getFavorites().filter(f => f.url !== url));
+        updateBadge();
+        renderGrid();
     };
 
-    render();
+    favorites.forEach(item => grid.insertBefore(buildCard(item, onRemove), grid.firstChild));
+
 }
 
 function injectButton() {
@@ -690,6 +782,189 @@ observer.observe(document.body,{childList:true,subtree:true});
 
 apply();
 
+})();
+
+
+
+/* --- badges.js --- */
+if(window.__US_BUILDER_BADGES_JS__){return;}window.__US_BUILDER_BADGES_JS__=true;
+
+(function () {
+    if (window.__AVIA_PROFILE_BADGESV2__) return;
+    window.__AVIA_PROFILE_BADGESV2__ = true;
+
+    const BADGE_URL = "https://raw.githubusercontent.com/AvaLilac/AviaClientBadges/refs/heads/main/userbadgesbackend.js";
+
+    let badgeData = null, loadingPromise = null;
+
+    function loadBadges() {
+        if (badgeData) return Promise.resolve();
+        if (loadingPromise) return loadingPromise;
+
+        loadingPromise = fetch(BADGE_URL + "?t=" + Date.now())
+            .then(r => r.text())
+            .then(code => {
+                new Function(code)();
+                badgeData = window.AVIA_USER_BADGES || [];
+            })
+            .catch(() => { badgeData = []; });
+
+        return loadingPromise;
+    }
+
+    function getUsername(root) {
+        const tag = root.querySelector("span.fw_200");
+        if (!tag) return null;
+        const span = tag.parentElement;
+        return span ? span.textContent.trim() : null;
+    }
+
+    function getUserBadges(username) {
+        if (!badgeData) return [];
+        const clean = username.trim().toLowerCase();
+        return badgeData.filter(b =>
+            b.users.some(u => u.toLowerCase() === clean)
+        );
+    }
+
+    function findCardByTitle(root, title) {
+        return [...root.querySelectorAll("div.pos_relative")]
+            .find(c => {
+                const heading = c.querySelector("span.fw_550");
+                return heading && heading.textContent.trim() === title;
+            });
+    }
+
+    function makeBadgeSpan(b) {
+        const wrapper = document.createElement("span");
+        wrapper.setAttribute("aria-label", b.name);
+        wrapper.style.cssText = "display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;font-size:20px;line-height:1;cursor:default;position:relative;";
+        wrapper.textContent = b.icon;
+
+        let tip = null;
+
+        wrapper.addEventListener("mouseenter", () => {
+            tip = document.createElement("div");
+            tip.style.cssText = "position:fixed;z-index:99999;pointer-events:none;white-space:nowrap;";
+
+            const inner = document.createElement("div");
+            inner.className = "c_white bg_black p_var(--gap-md) bdr_var(--borderRadius-md) lh_0.875rem fs_0.6875rem ls_0.03125rem fw_500";
+            inner.style.cssText = "";
+
+            const color = b.color || "";
+            if (color.includes("gradient")) {
+                const textSpan = document.createElement("span");
+                textSpan.textContent = b.name;
+                textSpan.style.cssText = `background:${color};-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;`;
+                inner.appendChild(textSpan);
+            } else {
+                inner.textContent = b.name;
+                inner.style.color = color || "white";
+            }
+
+            tip.appendChild(inner);
+            document.body.appendChild(tip);
+
+            requestAnimationFrame(() => {
+                const badgeRect = wrapper.getBoundingClientRect();
+                const tipRect = tip.getBoundingClientRect();
+                const x = badgeRect.left + badgeRect.width / 2 - tipRect.width / 2;
+                const y = badgeRect.top - tipRect.height - 5;
+                tip.style.left = Math.max(4, x) + "px";
+                tip.style.top = Math.max(4, y) + "px";
+            });
+        });
+
+        wrapper.addEventListener("mouseleave", () => {
+            if (tip) { tip.remove(); tip = null; }
+        });
+
+        return wrapper;
+    }
+
+    function injectBadges(root, username) {
+        if (root.querySelector("[data-avia-badge-injected='true']")) return;
+
+        const badges = getUserBadges(username);
+        if (!badges.length) return;
+
+        const nativeBadgesCard = findCardByTitle(root, "Badges");
+        if (nativeBadgesCard) {
+            const grid = nativeBadgesCard.querySelector("div.d_flex.flex-wrap_wrap");
+            if (!grid) return;
+            badges.forEach(b => grid.appendChild(makeBadgeSpan(b)));
+            nativeBadgesCard.dataset.aviaBadgeInjected = "true";
+            return;
+        }
+
+        const joinedCard = findCardByTitle(root, "Joined");
+        if (!joinedCard) return;
+
+        const card = joinedCard.cloneNode(false);
+        card.removeAttribute("data-avia-badge-injected");
+        card.dataset.aviaBadgeInjected = "true";
+        card.style.cssText = "overflow:hidden;";
+        if (!card.classList.contains("asp_1/1")) card.classList.add("asp_1/1");
+
+        const titleSpan = joinedCard.querySelector("span.fw_550");
+        const title = titleSpan ? titleSpan.cloneNode(false) : document.createElement("span");
+        title.textContent = "Badges";
+        card.appendChild(title);
+
+        const grid = document.createElement("div");
+        grid.className = "gap_var(--gap-md) d_flex flex-wrap_wrap [&_img,_&_svg]:w_24px [&_img,_&_svg]:h_24px [&_img,_&_svg]:asp_1/1";
+        grid.style.overflow = "hidden";
+        badges.forEach(b => grid.appendChild(makeBadgeSpan(b)));
+        card.appendChild(grid);
+
+        joinedCard.insertAdjacentElement("afterend", card);
+    }
+
+    async function processProfile(root) {
+        await loadBadges();
+
+        const username = getUsername(root);
+        if (!username) return;
+
+        if (findCardByTitle(root, "Badges")) {
+            injectBadges(root, username);
+            return;
+        }
+
+        const obs = new MutationObserver(() => {
+            if (!findCardByTitle(root, "Joined")) return;
+            if (!findCardByTitle(root, "Bio")) return;
+            obs.disconnect();
+            injectBadges(root, username);
+        });
+
+        obs.observe(root, { childList: true, subtree: true });
+
+        if (findCardByTitle(root, "Joined") && findCardByTitle(root, "Bio")) {
+            obs.disconnect();
+            injectBadges(root, username);
+        }
+
+        setTimeout(() => obs.disconnect(), 10000);
+    }
+
+    const observer = new MutationObserver(muts => {
+        for (const m of muts) {
+            for (const n of m.addedNodes) {
+                if (!(n instanceof HTMLElement)) continue;
+
+                if (n.matches?.("div.will-change_transform")) processProfile(n);
+                if (n.matches?.("div.p_24px.min-w_280px.max-w_560px")) processProfile(n);
+
+                const small    = n.querySelector?.("div.will-change_transform");
+                const expanded = n.querySelector?.("div.p_24px.min-w_280px.max-w_560px");
+                if (small)    processProfile(small);
+                if (expanded) processProfile(expanded);
+            }
+        }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
 })();
 
 
@@ -789,6 +1064,52 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
         }
       }
     }else{
+      const categories = document.getElementsByClassName('d_flex ai_center gap_var(--gap-sm) p_0_var(--gap-sm) pl_calc(var(--gap-lg)_+_5px) pt_10px cursor_pointer us_none trs_var(--transitions-fast)_all --color_var(--md-sys-color-on-surface) c_var(--color) fill_var(--color) lh_0.875rem fs_13px ls_0.03125rem fw_500 [&:hover]:--color_var(--md-sys-color-on-surface-variant) [&_svg]:trs_var(--transitions-fast)_transform [&_svg]:trf_rotateZ(90deg)')
+      if(categories.item(0)){
+        for(const category of categories){
+          let timer;
+          let long = false;
+
+          function start() {
+            timer = setTimeout(() => {
+              long = true
+            }, 500);
+          }
+
+          function stop() {
+              clearTimeout(timer);
+              long = false
+          }
+          if(!category.dataset.patched){
+            category.addEventListener('touchstart',function (e){
+              start()
+            });
+
+            category.addEventListener('touchend',function(e){
+              if(long){
+                const rect = category.getBoundingClientRect();
+                const contextMenuX = rect.left + rect.width / 2;
+                const contextMenuY = rect.top + rect.height / 2;
+                const contextMenuEvent = new MouseEvent('contextmenu', {
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: contextMenuX,
+                    clientY: contextMenuY
+                });
+                setTimeout(() => {
+                  category.dispatchEvent(contextMenuEvent)
+                }, 100);
+              }
+              stop()
+            });
+
+            category.addEventListener('touchcancel',stop)
+            category.addEventListener('touchmove',stop)
+            category.dataset.patched=true
+          }
+        }
+      }
+
       for(const child of channelList.children){
         let timer;
         let long = false;
@@ -2022,7 +2343,7 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
                                 Avia Client Mobile 1.5<br>
                                 <span style="font-size:10px;opacity:0.7;">
-                                    Based on Avia Client 1.6
+                                    Based on Avia Client 1.7
                                 </span>
                             </span>
                     `
@@ -2153,9 +2474,9 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
         return new Promise(resolve => {
             if (window.monaco) return resolve();
             const loader = document.createElement("script");
-            loader.src = "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js";
+            loader.src = "https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs/loader.js";
             loader.onload = function () {
-                require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" } });
+                require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs" } });
                 require(["vs/editor/editor.main"], () => resolve());
             };
             document.head.appendChild(loader);
@@ -3005,10 +3326,10 @@ if(window.__US_BUILDER_MOBILECSSPLUS_JS__){return;}window.__US_BUILDER_MOBILECSS
         return new Promise(resolve=>{
         if(window.monaco)return resolve();
         const loader=document.createElement("script");
-        loader.src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js";
+        loader.src="https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs/loader.js";
         loader.onload=function(){
         require.config({
-            paths:{vs:"https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs"}
+            paths:{vs:"https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs"}
         });
         require(["vs/editor/editor.main"],()=>resolve());
         };
@@ -3468,9 +3789,9 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
         return new Promise(resolve => {
             if (window.monaco) return resolve();
             const loader = document.createElement("script");
-            loader.src = "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js";
+            loader.src = "https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs/loader.js";
             loader.onload = function () {
-                require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" } });
+                require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs" } });
                 require(["vs/editor/editor.main"], () => resolve());
             };
             document.head.appendChild(loader);
@@ -5227,9 +5548,9 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
         return new Promise(resolve => {
             if (window.monaco) return resolve();
             const loader = document.createElement("script");
-            loader.src = "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js";
+            loader.src = "https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs/loader.js";
             loader.onload = function () {
-                require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" } });
+                require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs" } });
                 require(["vs/editor/editor.main"], () => resolve());
             };
             document.head.appendChild(loader);
@@ -5773,6 +6094,185 @@ if(window.__US_BUILDER_UNSENTMESSAGECONTEXTMENUFIX_JS__){return;}window.__US_BUI
   } else {
     requestAnimationFrame(init);
   }
+})();
+
+
+/* --- UpdateChecker.js --- */
+if(window.__US_BUILDER_UPDATECHECKER_JS__){return;}window.__US_BUILDER_UPDATECHECKER_JS__=true;
+
+(function() {
+    if (window.__AVIA_USERSCRIPT_UPDATE_CHECKER__) return;
+    window.__AVIA_USERSCRIPT_UPDATE_CHECKER__ = true;
+
+    const SCRIPT_URL = "https://api.github.com/repos/0simp/AviaClientMobile/contents/Avia-Client-Mobile.user.js";
+    const RELEASES_URL = "https://github.com/0simp/AviaClientMobile/raw/refs/heads/main/Avia-Client-Mobile.user.js";
+    const STORAGE_KEY = "avia_userscript_update_checker_enabled";
+
+    function isEnabled() {
+        return localStorage.getItem(STORAGE_KEY) !== "false";
+    }
+
+    function setEnabled(val) {
+        localStorage.setItem(STORAGE_KEY, val ? "true" : "false");
+    }
+
+        function getInstalledVersion() {
+        try {
+            return window.__USERSCRIPT_VERSION__ || null;
+        } catch (_) {
+            return null;
+        }
+    }
+
+        async function fetchLatestVersion() {
+        const res = await fetch(SCRIPT_URL, {
+            headers: { "Accept": "application/vnd.github.v3.raw" }
+        });
+        const text = await res.text();
+        const match = text.match(/@version\s+([^\s]+)/);
+        return match ? match[1].trim() : null;
+    }
+
+    function showUpdateModal(installedVersion, latestVersion) {
+        if (document.getElementById("avia-userscript-update-modal")) return;
+
+        const backdrop = document.createElement("div");
+        backdrop.id = "avia-userscript-update-modal";
+        backdrop.className = "top_0 left_0 right_0 bottom_0 pos_fixed z_100 max-h_100% d_grid us_none place-items_center pointer-events_all anim-n_scrimFadeIn anim-dur_0.1s anim-fm_forwards trs_var(--transitions-medium)_all p_80px ov-y_auto";
+        backdrop.style.cssText = "--background: rgba(0, 0, 0, 0.6); background: rgba(0, 0, 0, 0.6);";
+
+        const motionWrap = document.createElement("div");
+        motionWrap.style.cssText = "opacity: 1; --motion-translateY: 0px; transform: translateY(var(--motion-translateY));";
+
+        const card = document.createElement("div");
+        card.style.cssText = "min-width: 320px; max-width: 480px; padding: 24px; border-radius: 28px; display: flex; flex-direction: column; color: var(--md-sys-color-on-surface); background: var(--md-sys-color-surface-container-high);";
+
+        const title = document.createElement("span");
+        title.textContent = "Avia Client Mobile Update Available";
+        title.style.cssText = "line-height: 2rem; font-size: 1.5rem; letter-spacing: 0; font-weight: 400; margin-bottom: 16px;";
+
+        const body = document.createElement("div");
+        body.style.cssText = "color: var(--md-sys-color-on-surface-variant); line-height: 1.25rem; font-size: 0.875rem; letter-spacing: 0.015625rem; font-weight: 400; display: flex; flex-direction: column; gap: 12px;";
+
+        const currentRow = document.createElement("div");
+        currentRow.style.cssText = "display: flex; flex-direction: column; gap: 2px;";
+        const currentLabel = document.createElement("span");
+        currentLabel.textContent = "Your installed version";
+        currentLabel.style.cssText = "font-size: 11px; opacity: 0.5; letter-spacing: 0.03em;";
+        const currentVersionEl = document.createElement("span");
+        currentVersionEl.textContent = installedVersion || "Unknown";
+        currentVersionEl.style.cssText = "font-size: 14px; font-weight: 500; color: var(--md-sys-color-on-surface);";
+        currentRow.appendChild(currentLabel);
+        currentRow.appendChild(currentVersionEl);
+
+        const latestRow = document.createElement("div");
+        latestRow.style.cssText = "display: flex; flex-direction: column; gap: 2px;";
+        const latestLabel = document.createElement("span");
+        latestLabel.textContent = "Latest version";
+        latestLabel.style.cssText = "font-size: 11px; opacity: 0.5; letter-spacing: 0.03em;";
+        const latestVersionEl = document.createElement("span");
+        latestVersionEl.textContent = latestVersion;
+        latestVersionEl.style.cssText = "font-size: 14px; font-weight: 600; color: var(--md-sys-color-primary);";
+        latestRow.appendChild(latestLabel);
+        latestRow.appendChild(latestVersionEl);
+
+        const message = document.createElement("span");
+        message.textContent = `You are currently on version ${installedVersion || "Unknown"}. The latest version of Avia Client Mobile is ${latestVersion}.`;
+
+        body.appendChild(currentRow);
+        body.appendChild(latestRow);
+        body.appendChild(message);
+
+        const btnRow = document.createElement("div");
+        btnRow.style.cssText = "gap: 8px; display: flex; justify-content: flex-end; margin-top: 24px;";
+
+        const closeBtn = document.createElement("button");
+        closeBtn.type = "button";
+        closeBtn.style.cssText = "line-height: 1.25rem; font-size: 0.875rem; font-weight: 400; position: relative; padding: 0 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: inherit; cursor: pointer; border: none; transition: var(--transitions-medium) all; color: var(--md-sys-color-primary); height: 40px; border-radius: var(--borderRadius-full); background: none;";
+        closeBtn.innerHTML = "<md-ripple aria-hidden='true'></md-ripple>Close";
+        closeBtn.onclick = () => backdrop.remove();
+
+        const updateBtn = document.createElement("button");
+        updateBtn.type = "button";
+        updateBtn.style.cssText = "line-height: 1.25rem; font-size: 0.875rem; font-weight: 400; position: relative; padding: 0 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: inherit; cursor: pointer; border: none; transition: var(--transitions-medium) all; color: var(--md-sys-color-on-primary); height: 40px; border-radius: var(--borderRadius-full); background: var(--md-sys-color-primary);";
+        updateBtn.innerHTML = "<md-ripple aria-hidden='true'></md-ripple>Update Now";
+        updateBtn.onclick = () => window.open(RELEASES_URL, "_blank");
+
+        btnRow.appendChild(closeBtn);
+        btnRow.appendChild(updateBtn);
+
+        card.appendChild(title);
+        card.appendChild(body);
+        card.appendChild(btnRow);
+        motionWrap.appendChild(card);
+        backdrop.appendChild(motionWrap);
+        document.body.appendChild(backdrop);
+    }
+
+    async function check() {
+        if (!isEnabled()) return;
+        const installedVersion = getInstalledVersion();
+        const latestVersion = await fetchLatestVersion().catch(() => null);
+        if (!latestVersion) return;
+        if (installedVersion === latestVersion) return;
+        showUpdateModal(installedVersion, latestVersion);
+    }
+
+    function applyToggleStyle(entry) {
+        const desc = entry.querySelector("span.lh_1rem");
+        const checkbox = entry.querySelector("mdui-checkbox");
+        if (isEnabled()) {
+            if (desc) desc.textContent = "Get notified when a new Avia Client Mobile version is available";
+            if (checkbox) checkbox.setAttribute("checked", "");
+        } else {
+            if (desc) desc.textContent = "Get notified when a new Avia Client Mobile version is available";
+            if (checkbox) checkbox.removeAttribute("checked");
+        }
+    }
+
+    function tryInject() {
+        if (document.querySelector("[data-userscript-update-entry]")) return;
+
+        const target = [...document.querySelectorAll("a.pos_relative")]
+            .find(a => a.innerText.includes("Plugins v2 Placeholder"));
+        if (!target) return;
+
+        const entry = target.cloneNode(true);
+        entry.setAttribute("data-userscript-update-entry", "true");
+
+        const iconWrap = entry.querySelector("div.w_36px.h_36px");
+        if (iconWrap) {
+            iconWrap.innerHTML = "";
+            const icon = document.createElement("span");
+            icon.className = "material-symbols-outlined";
+            icon.style.cssText = "display:block;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;font-size:20px;";
+            icon.textContent = "system_update_alt";
+            iconWrap.appendChild(icon);
+        }
+
+        const titleEl = entry.querySelector("div.d_flex.flex-g_1.flex-d_column > div");
+        if (titleEl) titleEl.textContent = "Avia Client Mobile Update Checker";
+
+        const descEl = entry.querySelector("span.lh_1rem");
+        if (descEl) descEl.setAttribute("data-userscript-desc", "true");
+
+        applyToggleStyle(entry);
+
+        entry.addEventListener("click", e => {
+            e.preventDefault();
+            e.stopPropagation();
+            setEnabled(!isEnabled());
+            applyToggleStyle(entry);
+        });
+
+        target.parentNode.insertBefore(entry, target.nextSibling);
+    }
+
+    check();
+
+    const observer = new MutationObserver(() => tryInject());
+    observer.observe(document.body, { childList: true, subtree: true });
+    tryInject();
 })();
 
 
