@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-04T11:34:58.478Z';
+'@preserve - Built on 2026-05-04T20:19:10.932Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -633,23 +633,26 @@ function toggleFavoritesPanel() {
     panel.appendChild(gridWrapper);
     document.body.appendChild(panel);
 
-    let isDragging = false, offsetX, offsetY;
+    /*let isDragging = false, offsetX, offsetY;
 
-    header.addEventListener("mousedown", e => {
+    header.addEventListener("touchstart", e => {
         isDragging = true;
-        offsetX = e.clientX - panel.offsetLeft;
-        offsetY = e.clientY - panel.offsetTop;
-    });
+        const touch = e.touches[0]
+        offsetX = touch.clientX - panel.offsetLeft;
+        offsetY = touch.clientY - panel.offsetTop;
+    },false);
 
-    document.addEventListener("mouseup", () => isDragging = false);
+    document.addEventListener("touchend", () => isDragging = false);
+    document.addEventListener("touchcancel", () => isDragging = false);
 
-    document.addEventListener("mousemove", e => {
+    document.addEventListener("touchmove", e => {
         if (!isDragging) return;
-        panel.style.left = (e.clientX - offsetX) + "px";
-        panel.style.top = (e.clientY - offsetY) + "px";
+        const touch = e.touches[0]
+        panel.style.left = (touch.clientX - offsetX) + "px";
+        panel.style.top = (touch.clientY - offsetY) + "px";
         panel.style.right = "auto";
         panel.style.bottom = "auto";
-    });
+    },false);*/
 
     function tryAdd() {
         const url = urlInput.value.trim();
@@ -3327,6 +3330,63 @@ if(window.__US_BUILDER_LOGINWITHTOKEN_JS__){return;}window.__US_BUILDER_LOGINWIT
 
 
 
+/* --- MakeAviaPanelsDraggable.js --- */
+if(window.__US_BUILDER_MAKEAVIAPANELSDRAGGABLE_JS__){return;}window.__US_BUILDER_MAKEAVIAPANELSDRAGGABLE_JS__=true;
+
+(function () {
+  if (window.__MAKE_AVIA_PANELS_DRAGGABLE__) return;
+  window.__MAKE_AVIA_PANELS_DRAGGABLE__ = true;
+
+  function makeAviaPanelsDraggable() {
+    const aviaPanels = [...document.querySelectorAll('[style*="z-index: 999999"],[style*=\'z-index: 999998\']')].filter(e=>e.id!='avia-settings-reopen-btn'&&e.style?.display!='none')
+    for(const panel of aviaPanels){
+        if(!panel.dataset.patched){
+            const header = panel.firstChild
+            let isDragging = false, offsetX, offsetY;
+
+            header.addEventListener("touchstart", e => {
+                isDragging = true;
+                const touch = e.touches[0]
+                offsetX = touch.clientX - panel.offsetLeft;
+                offsetY = touch.clientY - panel.offsetTop;
+            },false);
+
+            panel.addEventListener("touchend", () => isDragging = false);
+            panel.addEventListener("touchcancel", () => isDragging = false);
+
+            panel.addEventListener("touchmove", e => {
+                if (!isDragging) return;
+                const touch = e.touches[0]
+                panel.style.left = (touch.clientX - offsetX) + "px";
+                panel.style.top = (touch.clientY - offsetY) + "px";
+                panel.style.right = "auto";
+                panel.style.bottom = "auto";
+            },false);
+            panel.dataset.patched=true
+        }
+    }
+  }
+
+  const observer = new MutationObserver(() => {
+    makeAviaPanelsDraggable();
+  });
+
+  function init() {
+    makeAviaPanelsDraggable();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+
+
 /* --- MobileCSSPlus.js --- */
 if(window.__US_BUILDER_MOBILECSSPLUS_JS__){return;}window.__US_BUILDER_MOBILECSSPLUS_JS__=true;
 
@@ -5584,9 +5644,12 @@ if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SID
     const sidebar = getSidebar();
     const popout = document.getElementsByClassName('p_24px min-w_280px max-w_560px bdr_28px d_flex flex-d_column c_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-container-high)').item(0)
     const smallpopout = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll c_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-container-high) bx-sh_0_0_3px_var(--md-sys-color-shadow) w_340px h_400px bdr_var(--borderRadius-xl)').item(0)
+    const aviaPanels = [...document.querySelectorAll('[style*="z-index: 999999"],[style*=\'z-index: 999998\']')].filter(e=>e.id!='avia-settings-reopen-btn'&&e.style?.display!='none')
     if (!sidebar) return;
     if(popout||smallpopout) return;
     if(startSelection!=endSelection) return;
+    if (document.getElementById("avia-userscript-update-modal")) return;
+    if(aviaPanels.length>0)return;
 
     if (dx > SWIPE_THRESHOLD) {
 
