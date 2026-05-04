@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-03T22:16:18.672Z';
+'@preserve - Built on 2026-05-04T11:34:58.478Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -480,7 +480,7 @@ function toggleFavoritesPanel() {
     panel = document.createElement("div");
     panel.id = "avia-favorites-panel";
 
-    if(window.outerWidth<692){
+    if(window.outerWidth<512){
         Object.assign(panel.style, {
             position: "fixed",
             bottom: "12px",
@@ -561,7 +561,7 @@ function toggleFavoritesPanel() {
 
     const urlInput = document.createElement("input");
     urlInput.placeholder = "Paste link...";
-    if(window.outerWidth<692){
+    if(window.outerWidth<512){
         Object.assign(urlInput.style, {
             flex: "1", padding: "7px 10px", borderRadius: "8px",
             border: "1px solid rgba(255,255,255,0.1)",
@@ -582,7 +582,7 @@ function toggleFavoritesPanel() {
 
     const titleInput = document.createElement("input");
     titleInput.placeholder = "Opt title";
-    if(window.outerWidth<692){
+    if(window.outerWidth<512){
         Object.assign(titleInput.style, {
             flexShrink: "0", padding: "7px 10px",
             borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)",
@@ -725,7 +725,31 @@ function injectButton() {
     clone.querySelector("span.material-symbols-outlined").textContent = "star";
     clone.querySelector("button").onclick = toggleFavoritesPanel;
 
+    const badge = document.createElement("div");
+    badge.id = "avia-favorites-badge";
+    Object.assign(badge.style, {
+        position: "absolute",
+        top: "2px",
+        right: "2px",
+        background: "var(--md-sys-color-primary, #6750a4)",
+        color: "var(--md-sys-color-on-primary, #fff)",
+        borderRadius: "99px",
+        fontSize: "9px",
+        fontWeight: "700",
+        minWidth: "14px",
+        height: "14px",
+        display: "none",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "0 3px",
+        pointerEvents: "none",
+        zIndex: "1"
+    });
+
+    clone.querySelector("button").appendChild(badge);
+
     wrapper.parentElement.insertBefore(clone, wrapper.nextSibling);
+    updateBadge()
 }
 
 function uninjectButton(){
@@ -3687,54 +3711,24 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
     function normalizePluginUrl(url) {
         try {
             const u = new URL(url);
-
             if (u.hostname === "github.com") {
                 const m = u.pathname.match(/^\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/);
-                if (m) {
-                    return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
-                }
+                if (m) return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
                 return url;
             }
-
             if (u.hostname === "raw.githubusercontent.com") return url;
-
             if (u.hostname === "raw.codeberg.page") return url;
-
             if (u.hostname === "codeberg.org") {
-
-                if (u.pathname.startsWith("/api/v1/repos/")) return url;
-
                 const parts = u.pathname.split("/").filter(Boolean);
-
                 if (parts.length >= 5 && (parts[2] === "raw" || parts[2] === "src")) {
-                    const user       = parts[0];
-                    const repo       = parts[1];
-                    const branchName = parts[3] === "branch" || parts[3] === "commit" || parts[3] === "tag"
-                        ? parts[4]
-                        : parts[3];
-                    const fileStart  = parts[3] === "branch" || parts[3] === "commit" || parts[3] === "tag"
-                        ? 5
-                        : 4;
-                    const filePath   = parts.slice(fileStart).join("/");
-
-                    return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branchName}`;
+                    const user = parts[0], repo = parts[1];
+                    const branchName = ["branch","commit","tag"].includes(parts[3]) ? parts[4] : parts[3];
+                    const fileStart = ["branch","commit","tag"].includes(parts[3]) ? 5 : 4;
+                    const filePath = parts.slice(fileStart).join("/");
+                    return `https://raw.codeberg.page/${user}/${repo}/@${branchName}/${filePath}`;
                 }
-
                 if (parts.length >= 4 && parts[2] === "raw") {
-                    const user       = parts[0];
-                    const repo       = parts[1];
-                    const branchName = parts[3];
-                    const filePath   = parts.slice(4).join("/");
-
-                    return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branchName}`;
-                }
-
-                if (parts.length >= 5 && parts[2] === "src" && parts[3] === "branch") {
-                    const user     = parts[0];
-                    const repo     = parts[1];
-                    const branch   = parts[4];
-                    const filePath = parts.slice(5).join("/");
-                    return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branch}`;
+                    return `https://raw.codeberg.page/${parts[0]}/${parts[1]}/@${parts[3]}/${parts.slice(4).join("/")}`;
                 }
             }
         } catch (_) {}
@@ -3972,7 +3966,7 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
         }
         panel = document.createElement('div');
         panel.id = 'avia-plugins-panel';
-        if(window.outerWidth<572){
+        if(window.outerWidth<612){
             Object.assign(panel.style, {
                 position: 'fixed',
                 bottom: '24px',
@@ -3995,8 +3989,8 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
                 position: 'fixed',
                 bottom: '24px',
                 right: '24px',
-                width: '520px',
-                height: '460px',
+                width: '560px',
+                height: '520px',
                 background: 'var(--md-sys-color-surface, #1e1e1e)',
                 color: 'var(--md-sys-color-on-surface, #fff)',
                 borderRadius: '16px',
@@ -4011,15 +4005,21 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
         }
 
         const header = document.createElement('div');
-        header.textContent = 'Plugins';
         Object.assign(header.style, {
             padding: '14px 16px',
             fontWeight: '600',
             fontSize: '14px',
             background: 'var(--md-sys-color-surface-container, rgba(255,255,255,0.04))',
             borderBottom: '1px solid rgba(255,255,255,0.08)',
-            cursor: 'move'
+            cursor: 'move',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flex: '0 0 auto'
         });
+
+        const headerTitle = document.createElement('span');
+        headerTitle.textContent = 'Plugins';
 
         const closeBtn = document.createElement('div');
         closeBtn.textContent = '✕';
@@ -4032,6 +4032,9 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
         });
         closeBtn.onclick = () => panel.style.display = 'none';
 
+        header.appendChild(headerTitle)
+        header.appendChild(closeBtn)
+
         const controlsBar = document.createElement('div');
         Object.assign(controlsBar.style, {
             padding: '12px 16px',
@@ -4040,14 +4043,6 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
             alignItems: 'center',
             borderBottom: '1px solid rgba(255,255,255,0.08)',
             flex: '0 0 auto'
-        });
-
-        const content = document.createElement('div');
-        content.id = 'avia-plugins-content';
-        Object.assign(content.style, {
-            flex: '1',
-            overflow: 'auto',
-            padding: '16px'
         });
 
         const nameInput = document.createElement('input');
@@ -4092,16 +4087,48 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
         controlsBar.appendChild(urlInput);
         controlsBar.appendChild(addBtn);
         controlsBar.appendChild(refreshAll);
+
+        const searchBar = document.createElement('div');
+        Object.assign(searchBar.style, {
+            padding: '10px 16px',
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            flex: '0 0 auto'
+        });
+
+        const searchInput = document.createElement('input');
+        searchInput.placeholder = 'Search plugins…';
+        styleInput(searchInput);
+        searchInput.style.width = '100%';
+        searchInput.oninput = () => renderPanel(searchInput.value.toLowerCase());
+        searchBar.appendChild(searchInput);
+
+        const content = document.createElement('div');
+        content.id = 'avia-plugins-content';
+        Object.assign(content.style, {
+            flex: '1',
+            overflowY: 'auto',
+            padding: '12px 16px 16px',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
+        });
+
+        if (!document.getElementById('avia-scrollbar-hide')) {
+            const s = document.createElement('style');
+            s.id = 'avia-scrollbar-hide';
+            s.textContent = '#avia-plugins-content::-webkit-scrollbar{display:none}';
+            document.head.appendChild(s);
+        }
+
         panel.appendChild(header);
-        panel.appendChild(closeBtn);
         panel.appendChild(controlsBar);
+        panel.appendChild(searchBar)
         panel.appendChild(content);
         document.body.appendChild(panel);
         enableDragOn(panel, header);
         renderPanel();
     }
 
-    function renderPanel() {
+    function renderPanel(filter='') {
         const content = document.getElementById('avia-plugins-content');
         if (!content) return;
         content.innerHTML = '';
@@ -4109,96 +4136,167 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
         const runningSnapshot = { ...runningPlugins };
         const errorSnapshot = { ...pluginErrors };
 
-        if (plugins.length === 0) {
+        const visible = filter
+            ? plugins.filter(p => p.name.toLowerCase().includes(filter))
+            : plugins;
+
+        if (visible.length === 0) {
             const empty = document.createElement('div');
-            empty.textContent = 'No plugins yet. Add one above.';
-            Object.assign(empty.style, { opacity: '0.4', fontSize: '13px' });
+            empty.textContent = plugins.length === 0
+                ? 'No plugins yet. Add one above.'
+                : 'No plugins match your search.';
+            Object.assign(empty.style, { opacity: '0.4', fontSize: '13px', textAlign: 'center', padding: '24px 0' });
             content.appendChild(empty);
             return;
         }
 
-        plugins.forEach((plugin, index) => {
+        const sectionLabel = document.createElement('div');
+        sectionLabel.textContent = `User Plugins: ${visible.length}`;
+        Object.assign(sectionLabel.style, {
+            fontSize: '11px',
+            fontWeight: '700',
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            color: 'rgba(255,255,255,0.35)',
+            marginBottom: '10px'
+        });
+        content.appendChild(sectionLabel);
+
+        const grid = document.createElement('div');
+        Object.assign(grid.style, {
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gap: '10px'
+        });
+
+        visible.forEach((plugin, index) => {
+            const realIndex = plugins.indexOf(plugin);
             const isRunning = !!runningSnapshot[plugin.url];
             const hasError = !!errorSnapshot[plugin.url];
 
-            const row = document.createElement('div');
-            Object.assign(row.style, {
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '12px',
-                padding: '10px 12px',
-                borderRadius: '10px',
+            const card = document.createElement('div');
+            Object.assign(card.style, {
                 background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.06)'
+                border: `1px solid ${hasError ? 'rgba(255,77,77,0.3)' : isRunning ? 'rgba(77,255,136,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                borderRadius: '10px',
+                padding: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
             });
-            if(window.outerWidth<572){
-                row.style.width=`${window.outerWidth-52}px`
-            }
+            card.onmouseenter = () => {
+                if (!hasError && !isRunning) card.style.borderColor = 'rgba(255,255,255,0.13)';
+            };
+            card.onmouseleave = () => {
+                card.style.borderColor = hasError ? 'rgba(255,77,77,0.3)' : isRunning ? 'rgba(77,255,136,0.25)' : 'rgba(255,255,255,0.06)';
+            };
 
-            const left = document.createElement('div');
-            Object.assign(left.style, { display: 'flex', alignItems: 'center', gap: '10px' });
+            const topRow = document.createElement('div');
+            Object.assign(topRow.style, {
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px'
+            });
 
-            const statusDot = document.createElement('div');
-            Object.assign(statusDot.style, {
-                width: '10px',
-                height: '10px',
+            const nameWrap = document.createElement('div');
+            Object.assign(nameWrap.style, { display: 'flex', alignItems: 'center', gap: '7px', minWidth: '0', flex: '1' });
+
+            const dot = document.createElement('div');
+            Object.assign(dot.style, {
+                width: '8px',
+                height: '8px',
                 borderRadius: '50%',
-                flexShrink: '0'
+                flexShrink: '0',
+                background: hasError ? '#ff4d4d' : isRunning ? '#4dff88' : '#555',
+                boxShadow: hasError ? '0 0 5px #ff4d4d' : isRunning ? '0 0 5px #4dff88' : 'none'
             });
-            if (hasError) {
-                statusDot.style.background = '#ff4d4d';
-                statusDot.style.boxShadow = '0 0 6px #ff4d4d';
-            } else if (isRunning) {
-                statusDot.style.background = '#4dff88';
-                statusDot.style.boxShadow = '0 0 6px #4dff88';
-            } else {
-                statusDot.style.background = '#777';
-            }
 
-            const name = document.createElement('div');
-            name.textContent = plugin.name;
-            name.style.fontSize = '13px';
+            const nameEl = document.createElement('div');
+            nameEl.textContent = plugin.name;
+            Object.assign(nameEl.style, {
+                fontSize: '13px',
+                fontWeight: '600',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+            });
 
-            left.appendChild(statusDot);
-            left.appendChild(name);
+            nameWrap.appendChild(dot);
+            nameWrap.appendChild(nameEl);
 
-            const controls = document.createElement('div');
-            Object.assign(controls.style, { display: 'flex', gap: '6px' });
+            const switchWrap = document.createElement('div');
+            Object.assign(switchWrap.style, {
+                position: 'relative',
+                width: '36px',
+                height: '20px',
+                flexShrink: '0',
+                cursor: 'pointer'
+            });
 
-            const toggle = document.createElement('button');
-            toggle.textContent = plugin.enabled ? 'Disable' : 'Enable';
-            styleBtn(toggle);
-            toggle.onclick = () => {
+            const track = document.createElement('div');
+            Object.assign(track.style, {
+                position: 'absolute',
+                inset: '0',
+                borderRadius: '10px',
+                background: plugin.enabled ? 'rgba(100,160,255,0.6)' : 'rgba(255,255,255,0.15)',
+                transition: 'background 0.2s'
+            });
+
+            const thumb = document.createElement('div');
+            Object.assign(thumb.style, {
+                position: 'absolute',
+                top: '3px',
+                left: plugin.enabled ? '19px' : '3px',
+                width: '14px',
+                height: '14px',
+                borderRadius: '50%',
+                background: '#fff',
+                transition: 'left 0.2s',
+                pointerEvents: 'none'
+            });
+
+            switchWrap.appendChild(track);
+            switchWrap.appendChild(thumb);
+
+            switchWrap.onclick = () => {
                 plugin.enabled = !plugin.enabled;
                 setPlugins(plugins);
                 if (plugin.enabled) queuePlugin(plugin);
                 else stopPlugin(plugin);
-                renderPanel();
+                renderPanel(filter);
             };
+
+            topRow.appendChild(nameWrap);
+            topRow.appendChild(switchWrap);
+
+            const footer = document.createElement('div');
+            Object.assign(footer.style, { display: 'flex', gap: '6px', marginTop: 'auto', paddingTop: '2px' });
 
             const viewBtn = document.createElement('button');
             viewBtn.textContent = 'View';
             styleBtn(viewBtn, 'rgba(100,160,255,0.15)');
+            viewBtn.style.flex = '1';
             viewBtn.onclick = () => openViewerPanel(plugin);
 
-            const remove = document.createElement('button');
-            remove.textContent = '✕';
-            styleBtn(remove, 'rgba(255,80,80,0.15)');
-            remove.onclick = () => {
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = '✕';
+            styleBtn(removeBtn, 'rgba(255,80,80,0.15)');
+            removeBtn.onclick = () => {
                 stopPlugin(plugin);
-                plugins.splice(index, 1);
+                plugins.splice(realIndex, 1);
                 setPlugins(plugins);
-                renderPanel();
+                renderPanel(filter);
             };
 
-            controls.appendChild(toggle);
-            controls.appendChild(viewBtn);
-            controls.appendChild(remove);
-            row.appendChild(left);
-            row.appendChild(controls);
-            content.appendChild(row);
+            footer.appendChild(viewBtn);
+            footer.appendChild(removeBtn);
+
+            card.appendChild(topRow);
+            card.appendChild(footer);
+            grid.appendChild(card);
         });
+        content.appendChild(grid);
     }
 
     function styleInput(input) {
