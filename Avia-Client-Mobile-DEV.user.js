@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-04T20:19:10.932Z';
+'@preserve - Built on 2026-05-05T20:19:51.191Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -3341,7 +3341,8 @@ if(window.__US_BUILDER_MAKEAVIAPANELSDRAGGABLE_JS__){return;}window.__US_BUILDER
     const aviaPanels = [...document.querySelectorAll('[style*="z-index: 999999"],[style*=\'z-index: 999998\']')].filter(e=>e.id!='avia-settings-reopen-btn'&&e.style?.display!='none')
     for(const panel of aviaPanels){
         if(!panel.dataset.patched){
-            const header = panel.firstChild
+            const header = panel.querySelector(`div[style]`)
+            if(!header) return;
             let isDragging = false, offsetX, offsetY;
 
             header.addEventListener("touchstart", e => {
