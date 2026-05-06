@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-06T21:01:55.538Z';
+'@preserve - Built on 2026-05-06T22:13:07.565Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -1877,6 +1877,71 @@ if(window.__US_BUILDER_EMOJIFIX_JS__){return;}window.__US_BUILDER_EMOJIFIX_JS__=
 
   function init() {
     emojiFix();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+
+
+/* --- FullscreenDMList.js --- */
+if(window.__US_BUILDER_FULLSCREENDMLIST_JS__){return;}window.__US_BUILDER_FULLSCREENDMLIST_JS__=true;
+
+(function () {
+  if (window.__FULL_SCREEN_DM_LIST__) return;
+  window.__FULL_SCREEN_DM_LIST__ = true;
+
+  function getSidebar() {
+    const wrap = document.getElementsByClassName(
+      'd_flex h_100% min-w_0 c_var(--md-sys-color-outline) bg_var(--md-sys-color-surface-container-high)'
+    ).item(0);
+    return wrap && wrap.firstChild && wrap.firstChild.children[1]
+      ? wrap.firstChild
+      : null;
+  }
+
+  function fullScreenDMList() {
+    const sidebar = getSidebar()
+    if(!sidebar||window.outerHeight<window.outerWidth) return;
+
+    Object.assign(sidebar.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100vw',
+        height: '100vh',
+        zIndex: '99997',
+        justifyContent: 'center',
+        background: 'var(--md-sys-color-surface, #1e1e1e)',
+        overflowY: 'auto',
+    } );
+
+
+    const channels = document.querySelectorAll(`a[href*='/channel'][role='listitem']`)
+    channels.forEach(channel=>{
+      if(!channel.dataset.fuck){
+        channel.addEventListener('click',()=>{
+            const sidebar = getSidebar()
+            sidebar.style.display='none'
+          });
+          channel.dataset.fuck=true
+      }
+    })
+  }
+
+  const observer = new MutationObserver(() => {
+    fullScreenDMList();
+  });
+
+  function init() {
+    fullScreenDMList();
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
