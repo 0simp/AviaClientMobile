@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-05T20:19:51.191Z';
+'@preserve - Built on 2026-05-06T21:01:55.538Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -79,6 +79,7 @@ if(window.__US_BUILDER_ATTACHMENTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDE
   window.__ATTACHMENT_CONTEXT_MENU_FIX__ = true;
 
   function attachmentContextMenuFix() {
+    const time = 250
     const videos = document.querySelectorAll('video')
     const images = document.querySelectorAll('img[class=\'cursor_pointer\']')
     if(videos){
@@ -89,7 +90,7 @@ if(window.__US_BUILDER_ATTACHMENTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDE
             function start() {
                 timer = setTimeout(() => {
                 long = true
-                }, 500);
+                }, time);
             }
 
             function stop() {
@@ -133,7 +134,7 @@ if(window.__US_BUILDER_ATTACHMENTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDE
             function start() {
                 timer = setTimeout(() => {
                 long = true
-                }, 500);
+                }, time);
             }
 
             function stop() {
@@ -1043,6 +1044,8 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
         button:2
     });
 
+    const time = 250
+
     let channelList = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll').item(1)
     if(!channelList) return;
     channelList = channelList.children[0]
@@ -1054,7 +1057,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
         function start() {
           timer = setTimeout(() => {
             long = true
-          }, 500);
+          }, time);
         }
 
         function stop() {
@@ -1091,7 +1094,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
         }
       }
     }else{
-      const categories = document.getElementsByClassName('d_flex ai_center gap_var(--gap-sm) p_0_var(--gap-sm) pl_calc(var(--gap-lg)_+_5px) pt_10px cursor_pointer us_none trs_var(--transitions-fast)_all --color_var(--md-sys-color-on-surface) c_var(--color) fill_var(--color) lh_0.875rem fs_13px ls_0.03125rem fw_500 [&:hover]:--color_var(--md-sys-color-on-surface-variant) [&_svg]:trs_var(--transitions-fast)_transform [&_svg]:trf_rotateZ(90deg)')
+      const categories = document.getElementsByClassName('d_flex ai_center gap_var(--gap-sm) p_0_var(--gap-sm) pl_calc(var(--gap-lg)_+_5px) pt_10px cursor_pointer us_none trs_var(--transitions-fast)_all --color_var(--md-sys-color-on-surface) c_var(--color) fill_var(--color) lh_0.875rem fs_13px ls_0.03125rem fw_time [&:hover]:--color_var(--md-sys-color-on-surface-variant) [&_svg]:trs_var(--transitions-fast)_transform [&_svg]:trf_rotateZ(90deg)')
       if(categories.item(0)){
         for(const category of categories){
           let timer;
@@ -1100,7 +1103,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
           function start() {
             timer = setTimeout(() => {
               long = true
-            }, 500);
+            }, time);
           }
 
           function stop() {
@@ -1144,7 +1147,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
         function start() {
           timer = setTimeout(() => {
             long = true
-          }, 500);
+          }, time);
         }
 
         function stop() {
@@ -1184,7 +1187,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
                 function start() {
                   timer = setTimeout(() => {
                     long = true
-                  }, 500);
+                  }, time);
                 }
 
                 function stop() {
@@ -3357,6 +3360,7 @@ if(window.__US_BUILDER_MAKEAVIAPANELSDRAGGABLE_JS__){return;}window.__US_BUILDER
 
             panel.addEventListener("touchmove", e => {
                 if (!isDragging) return;
+                e.preventDefault()
                 const touch = e.touches[0]
                 panel.style.left = (touch.clientX - offsetX) + "px";
                 panel.style.top = (touch.clientY - offsetY) + "px";
@@ -5133,6 +5137,7 @@ if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SE
 
   function serverContextMenuFix() {
     if(!document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll flex-g_1').item(0)) return;
+    const time = 250
     let servers;
     for(const child of document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll flex-g_1').item(0).children){
       if(child.getAttribute('role')=='list'){
@@ -5147,7 +5152,7 @@ if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SE
       function start() {
           timer = setTimeout(() => {
           long = true
-          }, 500);
+          }, time);
       }
 
       function stop() {
