@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.5.2
+// @version     1.5.3
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-07T19:10:55.652Z';
+'@preserve - Built on 2026-05-07T20:36:32.091Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -1924,8 +1924,26 @@ if(window.__US_BUILDER_FULLSCREENDMLIST_JS__){return;}window.__US_BUILDER_FULLSC
     } );
 
     const settingsbutton = document.querySelector(`div[aria-label='Settings']`).firstChild
-    settingsbutton.style.position='fixed'
-    settingsbutton.style.bottom='0%'
+    if(settingsbutton){
+      settingsbutton.style.position='fixed'
+      settingsbutton.style.bottom='0%'
+    }
+
+    const discoverbutton = document.querySelector(`a[href*='/discover']`)
+    if(discoverbutton){
+      discoverbutton.href='https://stt.gg/discover'
+      discoverbutton.target='_blank'
+    }
+
+    const stoatserversbutton = document.getElementById('stoatservers-sidebar-btn')
+    if(stoatserversbutton&&!stoatserversbutton.dataset.patched){
+      const clone = stoatserversbutton.firstChild.cloneNode(true)
+      stoatserversbutton.replaceChild(clone,stoatserversbutton.firstChild)
+      stoatserversbutton.onclick = function(e){
+        window.open('https://stoatservers.com')
+      }
+      stoatserversbutton.dataset.patched=true
+    }
 
     const channels = document.querySelectorAll(`a[href*='/channel'][role='listitem']`)
     channels.forEach(channel=>{
