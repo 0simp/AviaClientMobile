@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.5.1
+// @version     1.5.2
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-07T18:57:20.531Z';
+'@preserve - Built on 2026-05-07T19:10:55.652Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -1937,6 +1937,29 @@ if(window.__US_BUILDER_FULLSCREENDMLIST_JS__){return;}window.__US_BUILDER_FULLSC
           channel.dataset.fuck=true
       }
     })
+
+    const homebutton = document.querySelectorAll(`a[href='/app']`).item(1)
+    if(homebutton&&!homebutton.dataset.patched){
+      homebutton.firstChild.addEventListener('click',()=>{
+        const sidebar = getSidebar()
+        sidebar.style.display='none'
+      });
+      homebutton.dataset.patched=true
+    }
+
+    const friends = document.querySelector(`a[href='/friends']`)
+    if(friends&&!friends.dataset.patched){
+      friends.firstChild.addEventListener('click',()=>{
+        const sidebar = getSidebar()
+        sidebar.style.display='none'
+      });
+
+      friends.nextSibling.nextSibling.firstChild.addEventListener('click',()=>{
+        const sidebar = getSidebar()
+        sidebar.style.display='none'
+      });
+      friends.nextSibling.nextSibling.dataset.patched=true
+    }
   }
 
   const observer = new MutationObserver(() => {
