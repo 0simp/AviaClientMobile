@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.5.3
+// @version     1.5.4
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-07T20:36:32.091Z';
+'@preserve - Built on 2026-05-08T20:48:18.091Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -5645,8 +5645,16 @@ if(window.__US_BUILDER_SHRINKGIFPANEL_JS__){return;}window.__US_BUILDER_SHRINKGI
                 }
             }
             const searchbar = document.querySelector(`[placeholder='Search for GIFs...'],[placeholder='Search for emojis...']`)
-            if(searchbar){
+            if(searchbar&&!searchbar.dataset.patched){
                 searchbar.setAttribute('contenteditable',true)
+                searchbar.addEventListener('click',()=>{
+                    if(!searchbar.focused){
+                        searchbar.focus()
+                    }else{
+                        searchbar.blur()
+                    }
+                });
+                searchbar.dataset.patched=true
             }
         }
     }
@@ -5765,6 +5773,7 @@ if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SID
     if(startSelection!=endSelection) return;
     if (document.getElementById("avia-userscript-update-modal")) return;
     if(aviaPanels.length>0)return;
+    if(e.target.tagName=='CODE') return;
 
     if (dx > SWIPE_THRESHOLD) {
 
