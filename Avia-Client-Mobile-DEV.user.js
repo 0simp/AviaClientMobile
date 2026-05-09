@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.5.4
+// @version     1.5.5
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-08T20:48:18.091Z';
+'@preserve - Built on 2026-05-09T16:29:17.489Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -1891,12 +1891,12 @@ if(window.__US_BUILDER_EMOJIFIX_JS__){return;}window.__US_BUILDER_EMOJIFIX_JS__=
 })();
 
 
-/* --- FullscreenDMList.js --- */
-if(window.__US_BUILDER_FULLSCREENDMLIST_JS__){return;}window.__US_BUILDER_FULLSCREENDMLIST_JS__=true;
+/* --- FullscreenSidebar.js --- */
+if(window.__US_BUILDER_FULLSCREENSIDEBAR_JS__){return;}window.__US_BUILDER_FULLSCREENSIDEBAR_JS__=true;
 
 (function () {
-  if (window.__FULL_SCREEN_DM_LIST__) return;
-  window.__FULL_SCREEN_DM_LIST__ = true;
+  if (window.__FULL_SCREEN_SIDEBAR__) return;
+  window.__FULL_SCREEN_SIDEBAR__ = true;
 
   function getSidebar() {
     const wrap = document.getElementsByClassName(
@@ -1907,7 +1907,38 @@ if(window.__US_BUILDER_FULLSCREENDMLIST_JS__){return;}window.__US_BUILDER_FULLSC
       : null;
   }
 
-  function fullScreenDMList() {
+  function undo(){
+    const sidebar = getSidebar()
+    if(!sidebar||sidebar.style.display=='none'||sidebar.style.width!='100vw') return;
+    sidebar.style= 'display: flex; flex-shrink: 0;'
+
+    const channels = document.querySelectorAll(`a[href*='/channel'][role='listitem']`)
+    channels.forEach(channel=>{
+        const clone = channel.cloneNode(true)
+        channel.parentElement.replaceChild(clone,channel)
+        delete clone.dataset.fuck
+    })
+
+    const homebutton = document.querySelectorAll(`a[href='/app']`).item(1)
+    if(homebutton){
+      const clone = homebutton.cloneNode(true)
+      homebutton.parentElement.replaceChild(clone,homebutton)
+      delete clone.dataset.patched
+    }
+
+    const friends = document.querySelector(`a[href='/friends']`)
+    if(friends){
+      const savednotesclone = friends.nextSibling.nextSibling.cloneNode(true)
+      friends.parentElement.replaceChild(savednotesclone,friends.nextSibling.nextSibling)
+      delete savednotesclone.dataset.patched
+
+      const friendsclone = friends.cloneNode(true)
+      friends.parentElement.replaceChild(friendsclone,friends)
+      delete friendsclone.dataset.patched
+    }
+  }
+
+  function fullScreenSidebar() {
     const sidebar = getSidebar()
     if(!sidebar||window.outerHeight<window.outerWidth) return;
 
@@ -1981,11 +2012,14 @@ if(window.__US_BUILDER_FULLSCREENDMLIST_JS__){return;}window.__US_BUILDER_FULLSC
   }
 
   const observer = new MutationObserver(() => {
-    fullScreenDMList();
+    fullScreenSidebar();
+    if(window.outerHeight<window.outerWidth){
+      undo()
+    }
   });
 
   function init() {
-    fullScreenDMList();
+    fullScreenSidebar();
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
@@ -3123,7 +3157,8 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
                 border: "1px solid rgba(255,255,255,0.06)"
             });
             if(window.outerWidth<508){
-                row.style.width = `${window.outerWidth-52}px`
+                //row.style.width = `${window.outerWidth-52}px`
+                row.style.width = `125%`
             }
 
             const left = document.createElement("div");
@@ -3763,7 +3798,7 @@ if(window.__US_BUILDER_MOVECHANNELSETTINGSBUTTON_JS__){return;}window.__US_BUILD
         if(settingsbutton){
             settingsbutton.style.display='none'
             const channelinfo = [...document.getElementsByClassName('p_24px min-w_280px max-w_560px bdr_28px d_flex flex-d_column c_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-container-high)')]
-            .find(e=>e.textContent.includes('#'))
+            .find(e=>e.textContent.includes('#')&&!e.querySelector('img'))
 
             if(channelinfo&&!channelinfo.dataset.patched){
                 const clone = channelinfo.lastChild.firstChild.cloneNode(true)
