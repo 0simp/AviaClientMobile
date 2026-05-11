@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.5.5
+// @version     1.5.6
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-09T16:29:17.489Z';
+'@preserve - Built on 2026-05-11T21:43:37.316Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -2116,6 +2116,7 @@ if(window.__US_BUILDER_HIDESERVERLIST_JS__){return;}window.__US_BUILDER_HIDESERV
           .item(0).firstChild
           if(sidebar.children[1]){
             button.$$click = function(){
+              console.log('balls')
               if(sidebar.style.display=='none'){
                 sidebar.style.display='flex'
               }else{
@@ -5816,6 +5817,7 @@ if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SID
         showSidebar(sidebar);
       }
     } else if (dx < -SWIPE_THRESHOLD) {
+      console.log('penis')
 
       hideSidebar(sidebar);
     }
@@ -6649,6 +6651,11 @@ if(window.__US_BUILDER_WHISPER_JS__){return;}window.__US_BUILDER_WHISPER_JS__=tr
             pointer-events: none !important;
             transition: none !important;
         }
+        div.w_360px.h_120px[data-whisper-switch] {
+            visibility: hidden !important;
+            pointer-events: none !important;
+            transition: none !important;
+        }
     `;
 
     function isDM() {
@@ -6716,7 +6723,6 @@ if(window.__US_BUILDER_WHISPER_JS__){return;}window.__US_BUILDER_WHISPER_JS__=tr
         findInjectedBtn()?.remove();
     }
 
-    // Tooltip
     let whisperTooltip = null;
 
     function getTooltip() {
@@ -6736,7 +6742,6 @@ if(window.__US_BUILDER_WHISPER_JS__){return;}window.__US_BUILDER_WHISPER_JS__=tr
         const t = getTooltip();
         t.style.display = "block";
         const rect = btn.getBoundingClientRect();
-        // Position below the button, centered
         requestAnimationFrame(() => {
             const tw = t.getBoundingClientRect().width;
             const x = rect.left + (rect.width / 2) - (tw / 2);
@@ -6755,6 +6760,7 @@ if(window.__US_BUILDER_WHISPER_JS__){return;}window.__US_BUILDER_WHISPER_JS__=tr
         if (!isDM()) {
             removeInjectedBtn();
             restoreVoiceWrapper();
+            unstampSwitchCard();
         }
     }
 
@@ -6777,6 +6783,7 @@ if(window.__US_BUILDER_WHISPER_JS__){return;}window.__US_BUILDER_WHISPER_JS__=tr
         if (!isDM()) {
             removeInjectedBtn();
             restoreVoiceWrapper();
+            unstampSwitchCard();
             return;
         }
 
@@ -6838,13 +6845,28 @@ if(window.__US_BUILDER_WHISPER_JS__){return;}window.__US_BUILDER_WHISPER_JS__=tr
         pinBtn.insertAdjacentElement("afterend", btn);
     }
 
+    function stampSwitchCard() {
+        document.querySelectorAll("div.w_360px.h_120px.trs-tmf_ease-in-out").forEach(el => {
+            if (el.innerText?.includes("Switch to this voice channel")) {
+                el.setAttribute("data-whisper-switch", "");
+            }
+        });
+    }
+
+    function unstampSwitchCard() {
+        document.querySelectorAll("[data-whisper-switch]")
+            .forEach(el => el.removeAttribute("data-whisper-switch"));
+    }
+
     function enforceHidden() {
         if (!isDM()) {
             restoreVoiceWrapper();
+            unstampSwitchCard();
             return;
         }
         if (findActiveCall()) return;
         applyCSS();
+        stampSwitchCard();
     }
 
     const observer = new MutationObserver(() => {
