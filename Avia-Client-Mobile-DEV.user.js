@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.5.6
+// @version     1.5.7
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-11T21:43:37.316Z';
+'@preserve - Built on 2026-05-12T20:36:17.457Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -1196,6 +1196,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
                 }
 
                 if(!child2.dataset.patched){
+                  console.log(child2.firstChild.firstChild)
                   child2.firstChild.firstChild.addEventListener('touchstart', function(e){
                         start()
                   });
@@ -2116,7 +2117,6 @@ if(window.__US_BUILDER_HIDESERVERLIST_JS__){return;}window.__US_BUILDER_HIDESERV
           .item(0).firstChild
           if(sidebar.children[1]){
             button.$$click = function(){
-              console.log('balls')
               if(sidebar.style.display=='none'){
                 sidebar.style.display='flex'
               }else{
@@ -5810,6 +5810,8 @@ if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SID
     if (document.getElementById("avia-userscript-update-modal")) return;
     if(aviaPanels.length>0)return;
     if(e.target.tagName=='CODE') return;
+    if(document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0)) return;
+    if(e.target.tagName=='IMG') return;
 
     if (dx > SWIPE_THRESHOLD) {
 
@@ -5817,7 +5819,6 @@ if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SID
         showSidebar(sidebar);
       }
     } else if (dx < -SWIPE_THRESHOLD) {
-      console.log('penis')
 
       hideSidebar(sidebar);
     }
