@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.5.7
+// @version     1.5.8
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-12T20:36:17.457Z';
+'@preserve - Built on 2026-05-13T20:54:58.698Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -1245,23 +1245,30 @@ if(window.__US_BUILDER_CHUNKYMEMBERS_JS__){return;}window.__US_BUILDER_CHUNKYMEM
   if (window.__CHUNKY_MEMBERS__) return;
   window.__CHUNKY_MEMBERS__ = true;
 
-  function fuckwank(mutationsList, observer){
-    mutationsList.forEach(mutation=>{
-      if(mutation.type=='childList'){
-        for(let node of mutation.addedNodes){
-          if(node.className=='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)'){
-            node.style.width = `${node.clientWidth+node.previousSibling.clientWidth}px`
-          }
-        }
-      }
-    })
+  function chunkyMembers() {
+    const memberlist = document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0)
+    if(memberlist&&memberlist.style.width!=`${memberlist.clientWidth+memberlist.previousSibling.clientWidth}px`){
+      memberlist.style.width = `${memberlist.clientWidth+memberlist.previousSibling.clientWidth}px`
+    }
   }
 
-  const fuckyshit = new MutationObserver(fuckwank)
-  fuckyshit.observe(document.documentElement,{
-    childList: true,
-    subtree: true,
-  })
+  const observer = new MutationObserver(() => {
+    chunkyMembers();
+  });
+
+  function init() {
+    chunkyMembers();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
 })();
 
 
@@ -5808,18 +5815,24 @@ if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SID
     if(popout||smallpopout) return;
     if(startSelection!=endSelection) return;
     if (document.getElementById("avia-userscript-update-modal")) return;
-    if(aviaPanels.length>0)return;
+    if(aviaPanels.length>0) return;
+    
     if(e.target.tagName=='CODE') return;
-    if(document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0)) return;
     if(e.target.tagName=='IMG') return;
+    if(e.target.className=='flex-sh_0 fw_500 fs_15px us_none cursor_pointer pos_relative d_flex ai_center m_0_var(--gap-md) p_0_var(--gap-md) bdr_var(--borderRadius-xl) c_var(--color) fill_var(--color) [&_>_svg]:as_center [&:hover_.hover-hide,_&:not(:hover)_.hover-show]:d_none h_42px gap_var(--gap-md) --color_var(--md-sys-color-on-surface) bg_transparent') return;
 
     if (dx > SWIPE_THRESHOLD) {
 
       if (touchStartX <= EDGE_ZONE || sidebar.style.display === 'none') {
-        showSidebar(sidebar);
+        if(document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0)){
+          document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0).remove()
+        }else{
+          showSidebar(sidebar);
+        }
       }
     } else if (dx < -SWIPE_THRESHOLD) {
 
+      if(document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0)) return;
       hideSidebar(sidebar);
     }
 
