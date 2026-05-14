@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.5.9
+// @version     1.5.10
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-13T22:31:14.768Z';
+'@preserve - Built on 2026-05-14T20:54:41.551Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -5826,7 +5826,10 @@ if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SID
 
       if (touchStartX <= EDGE_ZONE || sidebar.style.display === 'none') {
         if(document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0)){
-          document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0).remove()
+          const button = document.querySelector(`button[aria-label='View members']`)
+          if(button){
+            button.click()
+          }
         }else{
           showSidebar(sidebar);
         }
@@ -5834,7 +5837,14 @@ if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SID
     } else if (dx < -SWIPE_THRESHOLD) {
 
       if(document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0)) return;
-      hideSidebar(sidebar);
+      if(sidebar.style.display!='none'){
+        hideSidebar(sidebar);
+      }else{
+        const button = document.querySelector(`button[aria-label='View members']`)
+        if(button){
+          button.click()
+        }
+      } 
     }
 
     touchStartX = null;
