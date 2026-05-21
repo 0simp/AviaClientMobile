@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.5.11
+// @version     1.5.12
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-18T19:18:02.153Z';
+'@preserve - Built on 2026-05-21T16:08:15.149Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -5707,7 +5707,7 @@ if(window.__US_BUILDER_SHRINKGIFPANEL_JS__){return;}window.__US_BUILDER_SHRINKGI
             gifPanel.style.removeProperty('top')
             gifPanel.style.setProperty('right','0px')
             gifPanel.style.setProperty('bottom','12px')
-            if(window.outerWidth<466){
+            if(window.outerWidth<466&&gifPanel.children[0].children[1].children[1].children[1]){
                 gifPanel.style.setProperty('width',`${window.outerWidth-66}px`)
                 gifPanel.style.setProperty('height',`${window.outerWidth-66}px`)
                 for(const child of gifPanel.children[0].children[1].children[1].children[1].children[0].children){
