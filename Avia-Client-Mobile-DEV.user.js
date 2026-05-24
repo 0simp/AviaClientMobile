@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.5.14
+// @version     1.5.15
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-24T12:42:14.035Z';
+'@preserve - Built on 2026-05-24T20:57:44.701Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -2084,7 +2084,9 @@ if(window.__US_BUILDER_HIDECHATBUTTONSONFOCUS_JS__){return;}window.__US_BUILDER_
 
         chatbar.addEventListener('blur',()=>{
             for(const button of chatbar.parentElement.parentElement.parentElement.parentElement.querySelectorAll(`div[class='flex-sh_0 d_flex ai_end jc_center w_42px']`)){
-                button.style.removeProperty('display')
+                if(button.textContent!='gif'){
+                  button.style.removeProperty('display')
+                }
             }
         })
         chatbar.dataset.patched=true
@@ -3279,7 +3281,7 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
 
         const fileInput = document.createElement("input");
         fileInput.type = "file";
-        fileInput.accept = ".js";
+        fileInput.accept = "text/javascript";
         fileInput.multiple = true;
         fileInput.style.display = "none";
 
@@ -4643,6 +4645,49 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
         if (plugin.enabled) queuePlugin(plugin);
     });
 
+})();
+
+
+/* --- RemoveGifButton.js --- */
+if(window.__US_BUILDER_REMOVEGIFBUTTON_JS__){return;}window.__US_BUILDER_REMOVEGIFBUTTON_JS__=true;
+
+(function () {
+  if (window.__REMOVE_GIF_BUTTON__) return;
+  window.__REMOVE_GIF_BUTTON__ = true;
+
+  function removeGifButton() {
+    const favouritesbutton = document.getElementById('avia-favorites-btn')
+    if(!favouritesbutton) return;
+    const buttons = favouritesbutton.parentElement
+
+    if(buttons.firstChild.textContent=='gif'){
+        buttons.firstChild.style.display='none'
+    }
+
+    for(const button of buttons.children){
+        if(button.textContent!='gif'&&button.style.display=='none'){
+            button.style.removeProperty('display')
+        }
+    }
+  }
+
+  const observer = new MutationObserver(() => {
+    removeGifButton();
+  });
+
+  function init() {
+    removeGifButton();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
 })();
 
 
