@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.5.15
+// @version     1.5.16
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-24T20:57:44.701Z';
+'@preserve - Built on 2026-05-25T11:48:51.471Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -4663,6 +4663,8 @@ if(window.__US_BUILDER_REMOVEGIFBUTTON_JS__){return;}window.__US_BUILDER_REMOVEG
     if(buttons.firstChild.textContent=='gif'){
         buttons.firstChild.style.display='none'
     }
+    const chatbar = document.getElementsByClassName('cm-content cm-lineWrapping').item(0)
+    if(document.activeElement==chatbar) return;
 
     for(const button of buttons.children){
         if(button.textContent!='gif'&&button.style.display=='none'){
