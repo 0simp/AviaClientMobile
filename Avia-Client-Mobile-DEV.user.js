@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.5.16
+// @version     1.5.17
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-25T11:48:51.471Z';
+'@preserve - Built on 2026-05-26T19:24:23.179Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -995,6 +995,65 @@ if(window.__US_BUILDER_BADGES_JS__){return;}window.__US_BUILDER_BADGES_JS__=true
     observer.observe(document.body, { childList: true, subtree: true });
 })();
 
+
+
+/* --- BetterScrolling.js --- */
+if(window.__US_BUILDER_BETTERSCROLLING_JS__){return;}window.__US_BUILDER_BETTERSCROLLING_JS__=true;
+
+(function () {
+  if (window.__BETTER_SCROLLING__) return;
+  window.__BETTER_SCROLLING__ = true;
+
+  function betterScrolling() {
+    const channellist = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll').item(1)
+    if(!channellist) return;
+    const clone = channellist.lastChild.lastChild.cloneNode(true)
+    clone.style.opacity=0
+    clone.id='betterscrolling'
+
+    setTimeout(() => {
+        if(document.baseURI.includes('/server')){
+            for(const child of clone.lastChild.children){
+                child.remove()
+            }
+
+
+            for(const child of clone.lastChild.children){
+                console.log(child)
+                child.remove()
+            }
+        }else{
+            for(const child of clone.children){
+                for(const child2 of child.children){
+                    child2.remove()
+                }
+            }
+        }
+    }, 100);
+
+    if(!document.getElementById('betterscrolling')){
+        channellist.lastChild.appendChild(clone)
+    }
+  }
+
+  const observer = new MutationObserver(() => {
+    betterScrolling();
+  });
+
+  function init() {
+    betterScrolling();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
 
 
 /* --- ButtonFix.js --- */
@@ -6181,6 +6240,7 @@ if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SID
     if(e.target.tagName=='CODE') return;
     if(e.target.tagName=='IMG') return;
     if(e.target.className=='flex-sh_0 fw_500 fs_15px us_none cursor_pointer pos_relative d_flex ai_center m_0_var(--gap-md) p_0_var(--gap-md) bdr_var(--borderRadius-xl) c_var(--color) fill_var(--color) [&_>_svg]:as_center [&:hover_.hover-hide,_&:not(:hover)_.hover-show]:d_none h_42px gap_var(--gap-md) --color_var(--md-sys-color-on-surface) bg_transparent') return;
+    if(e.target.className=='ov_hidden white-space_nowrap tov_ellipsis [&_*]:ov_hidden [&_*]:white-space_nowrap [&_*]:tov_ellipsis') return;
 
     if (dx > SWIPE_THRESHOLD) {
 
