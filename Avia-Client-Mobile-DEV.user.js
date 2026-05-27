@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.5.17
+// @version     1.5.18
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-26T19:24:23.179Z';
+'@preserve - Built on 2026-05-27T20:37:53.253Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -1019,7 +1019,6 @@ if(window.__US_BUILDER_BETTERSCROLLING_JS__){return;}window.__US_BUILDER_BETTERS
 
 
             for(const child of clone.lastChild.children){
-                console.log(child)
                 child.remove()
             }
         }else{
@@ -1033,6 +1032,18 @@ if(window.__US_BUILDER_BETTERSCROLLING_JS__){return;}window.__US_BUILDER_BETTERS
 
     if(!document.getElementById('betterscrolling')){
         channellist.lastChild.appendChild(clone)
+    }
+
+    const serverlist = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll').item(0)
+    if(!serverlist) return;
+    const target = serverlist.parentElement
+
+    const clone2 = target.lastChild.cloneNode(true)
+    clone2.style.opacity=0
+    clone2.id='betterscrollingserverlist'
+
+    if(!document.getElementById('betterscrollingserverlist')){
+      target.appendChild(clone2)
     }
   }
 
@@ -1255,7 +1266,6 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
                 }
 
                 if(!child2.dataset.patched){
-                  console.log(child2.firstChild.firstChild)
                   child2.firstChild.firstChild.addEventListener('touchstart', function(e){
                         start()
                   });
@@ -2021,12 +2031,6 @@ if(window.__US_BUILDER_FULLSCREENSIDEBAR_JS__){return;}window.__US_BUILDER_FULLS
         background: 'var(--md-sys-color-surface, #1e1e1e)',
         overflowY: 'auto',
     } );
-
-    const settingsbutton = document.querySelector(`div[aria-label='Settings']`).firstChild
-    if(settingsbutton){
-      settingsbutton.style.position='fixed'
-      settingsbutton.style.bottom='0%'
-    }
 
     const discoverbutton = document.querySelector(`a[href*='/discover']`)
     if(discoverbutton){
@@ -5663,7 +5667,6 @@ if(window.__US_BUILDER_SELECTMENUFIX_JS__){return;}window.__US_BUILDER_SELECTMEN
   function selectMenuFix() {
     if(!document.querySelector('path[d=\'M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z\']')) return;
     document.querySelectorAll('mdui-select').forEach(element=>{
-      console.log(element.oninput)
         const select = document.createElement('select')
         if(element.id){
           select.id=element.id
