@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.5.19
+// @version     1.5.20
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-28T13:07:49.759Z';
+'@preserve - Built on 2026-05-28T16:22:10.460Z';
 window.__USERSCRIPT_VERSION__ = "1.5";
 
 /* --- 3TapRely.js --- */
@@ -1120,7 +1120,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
     if(!channelList) return;
     channelList = channelList.children[0]
     if(channelList.querySelector('a[href=\'/app\']')){
-      for(const child of channelList.lastChild.children){
+      for(const child of channelList.lastChild.previousSibling.children){
         let timer;
         let long = false;
 
@@ -1140,23 +1140,23 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
                 start()
           });
           child.addEventListener('touchend', function(e){
-          if(long){
-              const rect = child.getBoundingClientRect();
+            if(long){
+                const rect = child.getBoundingClientRect();
 
-              const contextMenuX = rect.left + rect.width / 2;
-              const contextMenuY = rect.top + rect.height / 2;
+                const contextMenuX = rect.left + rect.width / 2;
+                const contextMenuY = rect.top + rect.height / 2;
 
-              const contextMenuEvent = new MouseEvent('contextmenu', {
-                  bubbles: true,
-                  cancelable: true,
-                  clientX: contextMenuX,
-                  clientY: contextMenuY
-              });
-              setTimeout(() => {
-                child.firstChild.firstChild.dispatchEvent(contextMenuEvent)
-              }, 100);
-          }
-          stop()
+                const contextMenuEvent = new MouseEvent('contextmenu', {
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: contextMenuX,
+                    clientY: contextMenuY
+                });
+                setTimeout(() => {
+                  child.firstChild.firstChild.dispatchEvent(contextMenuEvent)
+                }, 100);
+            }
+            stop()
           });
           child.addEventListener('touchcancel',stop);
           child.addEventListener('touchmove',stop);
@@ -1266,7 +1266,6 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
                 }
 
                 if(!child2.dataset.patched){
-                  console.log(child2.firstChild.firstChild)
                   child2.firstChild.firstChild.addEventListener('touchstart', function(e){
                         start()
                   });
@@ -3893,6 +3892,119 @@ if(window.__US_BUILDER_MAKEAVIAPANELSDRAGGABLE_JS__){return;}window.__US_BUILDER
 })();
 
 
+/* --- MemberListContextMenuFix.js --- */
+if(window.__US_BUILDER_MEMBERLISTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_MEMBERLISTCONTEXTMENUFIX_JS__=true;
+
+(function () {
+  if (window.__MEMBER_LIST_CONTEXT_MENU_FIX__) return;
+  window.__MEMBER_LIST_CONTEXT_MENU_FIX__ = true;
+
+  function memberListContextMenuFix() {
+    const balls = new Event('contextmenu',{
+        bubbles:true,
+        button:2
+    });
+
+    const time = 250
+
+    const memberlist = document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0)
+    if(!memberlist) return;
+
+    for(const member of memberlist.getElementsByClassName('flex-sh_0 fw_500 fs_15px us_none cursor_pointer pos_relative d_flex ai_center m_0_var(--gap-md) p_0_var(--gap-md) bdr_var(--borderRadius-xl) c_var(--color) fill_var(--color) [&_>_svg]:as_center [&:hover_.hover-hide,_&:not(:hover)_.hover-show]:d_none h_42px gap_var(--gap-md) --color_var(--md-sys-color-on-surface) bg_transparent')){
+        let timer;
+        let long = false;
+
+        function start() {
+            timer = setTimeout(() => {
+                long = true
+            }, time);
+        }
+
+        function stop() {
+            clearTimeout(timer);
+            long = false
+        }
+
+        if(!member.dataset.patched){
+            member.addEventListener('touchstart',function(e){
+                start()
+            });
+
+            member.addEventListener('touchend',function(e){
+                if(long){
+                    setTimeout(() => {
+                        member.dispatchEvent(balls)
+                    }, 100);
+                }
+                stop()
+            })
+
+            member.addEventListener('touchcancel',stop);
+            member.addEventListener('touchmove',stop);
+
+            member.dataset.patched=true
+        }
+    }
+
+    for(const offlinemember of memberlist.getElementsByClassName('flex-sh_0 fw_500 fs_15px us_none cursor_pointer pos_relative d_flex ai_center m_0_var(--gap-md) p_0_var(--gap-md) bdr_var(--borderRadius-xl) c_var(--color) fill_var(--color) [&_>_svg]:as_center [&:hover_.hover-hide,_&:not(:hover)_.hover-show]:d_none h_42px gap_var(--gap-md) --color_var(--md-sys-color-outline-variant) bg_transparent [&_img]:op_0.3')){
+        if(!offlinemember.dataset.patched){
+            let timer;
+            let long = false;
+
+            function start() {
+                timer = setTimeout(() => {
+                    long = true
+                }, time);
+            }
+
+            function stop() {
+                clearTimeout(timer);
+                long = false
+            }
+
+            if(!offlinemember.dataset.patched){
+                offlinemember.addEventListener('touchstart',function(e){
+                    start()
+                });
+
+                offlinemember.addEventListener('touchend',function(e){
+                    if(long){
+                        setTimeout(() => {
+                            offlinemember.dispatchEvent(balls)
+                        }, 100);
+                    }
+                    stop()
+                })
+
+                offlinemember.addEventListener('touchcancel',stop);
+                offlinemember.addEventListener('touchmove',stop);
+
+                offlinemember.dataset.patched=true
+            }
+        }
+    }
+  }
+
+  const observer = new MutationObserver(() => {
+    memberListContextMenuFix();
+  });
+
+  function init() {
+    memberListContextMenuFix();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+
+
 /* --- MoveChannelSettingsButton.js --- */
 if(window.__US_BUILDER_MOVECHANNELSETTINGSBUTTON_JS__){return;}window.__US_BUILDER_MOVECHANNELSETTINGSBUTTON_JS__=true;
 
@@ -5668,7 +5780,6 @@ if(window.__US_BUILDER_SELECTMENUFIX_JS__){return;}window.__US_BUILDER_SELECTMEN
   function selectMenuFix() {
     if(!document.querySelector('path[d=\'M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z\']')) return;
     document.querySelectorAll('mdui-select').forEach(element=>{
-      console.log(element.oninput)
         const select = document.createElement('select')
         if(element.id){
           select.id=element.id
