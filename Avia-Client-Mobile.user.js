@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.6
-// @description Avia Client Mobile by 0simp. Based on Avia Client 1.7.1 by AvaLilac
+// @version     1.6.1
+// @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-06-20T17:05:20.378Z';
-window.__USERSCRIPT_VERSION__ = "1.6";
+'@preserve - Built on 2026-06-22T18:40:46.980Z';
+window.__USERSCRIPT_VERSION__ = "1.6.1";
 
 /* --- 3TapRely.js --- */
 if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=true;
@@ -838,34 +838,41 @@ if(window.__US_BUILDER_AVIASERVERBUTTON_JS__){return;}window.__US_BUILDER_AVIASE
 
 (function(){
 
-if (window.__AVIA_SERVER_BUTTON__) return;
-window.__AVIA_SERVER_BUTTON__ = true;
+  if (window.__AVIA_SERVER_BUTTON__) return;
+  window.__AVIA_SERVER_BUTTON__ = true;
 
-const AVIA_INVITE = "https://stt.gg/0MPSAx8x";
+  const AVIA_INVITE = "https://stt.gg/0MPSAx8x";
 
-function apply(){
-   const homebuttons = document.getElementsByClassName('gap_8px p_8px d_flex bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface-variant) bg_var(--md-sys-color-surface-variant)')
-    .item(0)
-    if(!homebuttons) return;
-    const button = homebuttons.children[0].children[1]
-    const title = button.querySelector("div.flex-g_1 > div");
-    if(!title.textContent.includes('ACM Server')){
-      title.textContent = title.textContent.replace('Stoat Lounge','ACM Server')
-      button.addEventListener('click',(e)=>{
-        e.preventDefault();
-        e.stopPropagation()
-        window.open(AVIA_INVITE,'_blank')
-      },true)
-    }
-}
+  function apply(){
+    const homebuttons = document.getElementsByClassName('gap_8px p_8px d_flex bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface-variant) bg_var(--md-sys-color-surface-variant)')
+      .item(0)
+      if(!homebuttons) return;
+      const button = homebuttons.children[0].children[1]
+      const title = button.querySelector("div.flex-g_1 > div");
+      if(!title.textContent.includes('ACM Server')){
+        const server = document.querySelector(`a[href*='/server/01KKQHXPKHSFBJNA2DY4XMP0DB']`)
+        if(server){
+          title.textContent='Go to the ACM Server'
+        }else{
+          title.textContent='Join the ACM Server'
+        }
+        button.addEventListener('click',(e)=>{
+          e.preventDefault();
+          e.stopPropagation()
+          if(server){
+            server.click()
+          }else{
+            window.open(AVIA_INVITE,'_blank')
+          }
+        },true)
+      }
+  }
 
-const observer = new MutationObserver(apply);
-observer.observe(document.body,{childList:true,subtree:true});
+  const observer = new MutationObserver(apply);
+  observer.observe(document.body,{childList:true,subtree:true});
 
-apply();
-
+  apply();
 })();
-
 
 
 /* --- badges.js --- */
@@ -1965,8 +1972,8 @@ if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE
     if(!icon) return;
     icon.href='https://cdn.stoatusercontent.com/icons/vnGRb1M_UiP4-oj1qfqQODDCsyYOWa3f92ib3ac-K_/original'
 
-    if(document.title!='Stoat (Avia Client Mobile 1.6)'){
-        document.title='Stoat (Avia Client Mobile 1.6)'
+    if(document.title!='Stoat (Avia Client Mobile 1.6.1)'){
+        document.title='Stoat (Avia Client Mobile 1.6.1)'
     }
   }
 
@@ -3066,7 +3073,7 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     el.appendChild(element)
                     element.outerHTML = `
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
-                                Avia Client Mobile 1.6<br>
+                                Avia Client Mobile 1.6.1<br>
                                 <span style="font-size:10px;opacity:0.7;">
                                     Based on Avia Client 1.7.1
                                 </span>
@@ -3523,7 +3530,7 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
 
         const fileInput = document.createElement("input");
         fileInput.type = "file";
-        fileInput.accept = ".js";
+        fileInput.accept = ".js,text/javascript";
         fileInput.multiple = true;
         fileInput.style.display = "none";
 
@@ -6784,19 +6791,12 @@ if(window.__US_BUILDER_SHRINKGIFPANEL_JS__){return;}window.__US_BUILDER_SHRINKGI
             gifPanel.style.removeProperty('top')
             gifPanel.style.setProperty('right','0px')
             gifPanel.style.setProperty('bottom','12px')
+
             if(window.outerWidth<466&&gifPanel.children[0].children[1].children[1].children[1]){
                 gifPanel.style.setProperty('width',`${window.outerWidth-66}px`)
                 gifPanel.style.setProperty('height',`${window.outerWidth-66}px`)
-                for(const child of gifPanel.children[0].children[1].children[1].children[1].children[0].children){
-                    if(child?.className=='d_flex ai_center px_var(--gap-md) w_calc(40px_*_10)!'){
-                        const list = child?.style?.getPropertyValue('transform').substring(9).replaceAll('(','').replaceAll(')','').replaceAll('px','').split(', ')
-                        if(list[0]!=0){
-                            list[0]=0
-                            child?.style?.setProperty('transform',`translate(${list.map(item=>`${item}px`).join(', ')})`)
-                        }
-                    }
-                }
             }
+
             const searchbar = document.querySelector(`[placeholder='Search for GIFs...'],[placeholder='Search for emojis...']`)
             if(searchbar&&!searchbar.dataset.patched){
                 searchbar.setAttribute('contenteditable',true)
