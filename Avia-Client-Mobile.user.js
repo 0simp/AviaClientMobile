@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.6.1
+// @version     1.6.2
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,8 +9,8 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-06-22T18:40:46.980Z';
-window.__USERSCRIPT_VERSION__ = "1.6.1";
+'@preserve - Built on 2026-06-25T21:29:27.070Z';
+window.__USERSCRIPT_VERSION__ = "1.6.2";
 
 /* --- 3TapRely.js --- */
 if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=true;
@@ -1972,8 +1972,8 @@ if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE
     if(!icon) return;
     icon.href='https://cdn.stoatusercontent.com/icons/vnGRb1M_UiP4-oj1qfqQODDCsyYOWa3f92ib3ac-K_/original'
 
-    if(document.title!='Stoat (Avia Client Mobile 1.6.1)'){
-        document.title='Stoat (Avia Client Mobile 1.6.1)'
+    if(document.title!='Stoat (Avia Client Mobile 1.6.2)'){
+        document.title='Stoat (Avia Client Mobile 1.6.2)'
     }
   }
 
@@ -2036,6 +2036,19 @@ if(window.__US_BUILDER_FIXCOLOURPICKER_JS__){return;}window.__US_BUILDER_FIXCOLO
 (function () {
   if (window.__FIX_COLOUR_PICKER__) return;
   window.__FIX_COLOUR_PICKER__ = true;
+
+  const defaultthemesettings = {
+    'blur':true,
+    'interfaceFont':'Inter',
+    'm3Accent':'#5470ec',
+    'm3Contrast':0,
+    'm3Variant':'tonal_spot',
+    'messageGroupSpacing':12,
+    'messageSize':14,
+    'mode':'system',
+    'monospaceFont':'Fira Code',
+    'present':'you'
+  }
 
   function rgbToHex(r, g, b) {
     return "#" + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
@@ -2107,13 +2120,13 @@ if(window.__US_BUILDER_FIXCOLOURPICKER_JS__){return;}window.__US_BUILDER_FIXCOLO
                 const row = document.createElement('div')
                 row.className='d_flex flex-d_row flex-g_initial flex-wrap_initial gap_var(--gap-md) ai_center jc_center'
 
-                const themesettings = await getThemeSettings()
+                const themesettings = await getThemeSettings()??defaultthemesettings
                 const input = document.createElement('input')
                 input.type='color'
                 input.id='aviacolourpicker'
                 input.value=themesettings['m3Accent']
                 input.onchange = async function(){
-                    const themesettings = await getThemeSettings()
+                    const themesettings = await getThemeSettings()??defaultthemesettings
                     themesettings['m3Accent']=input.value
                     updateThemeSettings(themesettings)
                 }
@@ -3073,7 +3086,7 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     el.appendChild(element)
                     element.outerHTML = `
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
-                                Avia Client Mobile 1.6.1<br>
+                                Avia Client Mobile 1.6.2<br>
                                 <span style="font-size:10px;opacity:0.7;">
                                     Based on Avia Client 1.7.1
                                 </span>
@@ -4228,6 +4241,9 @@ if(window.__US_BUILDER_MEMBERLISTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDE
 
             member.addEventListener('touchend',function(e){
                 if(long){
+                    e.preventDefault()
+                    e.stopImmediatePropagation()
+                    e.stopPropagation()
                     setTimeout(() => {
                         member.dispatchEvent(balls)
                     }, 100);
@@ -4243,40 +4259,41 @@ if(window.__US_BUILDER_MEMBERLISTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDE
     }
 
     for(const offlinemember of memberlist.getElementsByClassName('flex-sh_0 fw_500 fs_15px us_none cursor_pointer pos_relative d_flex ai_center m_0_var(--gap-md) p_0_var(--gap-md) bdr_var(--borderRadius-xl) c_var(--color) fill_var(--color) [&_>_svg]:as_center [&:hover_.hover-hide,_&:not(:hover)_.hover-show]:d_none h_42px gap_var(--gap-md) --color_var(--md-sys-color-outline-variant) bg_transparent [&_img]:op_0.3')){
+        let timer;
+        let long = false;
+
+        function start() {
+            timer = setTimeout(() => {
+                long = true
+            }, time);
+        }
+
+        function stop() {
+            clearTimeout(timer);
+            long = false
+        }
+
         if(!offlinemember.dataset.patched){
-            let timer;
-            let long = false;
+            offlinemember.addEventListener('touchstart',function(e){
+                start()
+            });
 
-            function start() {
-                timer = setTimeout(() => {
-                    long = true
-                }, time);
-            }
+            offlinemember.addEventListener('touchend',function(e){
+                if(long){
+                    e.preventDefault()
+                    e.stopImmediatePropagation()
+                    e.stopPropagation()
+                    setTimeout(() => {
+                        offlinemember.dispatchEvent(balls)
+                    }, 100);
+                }
+                stop()
+            })
 
-            function stop() {
-                clearTimeout(timer);
-                long = false
-            }
+            offlinemember.addEventListener('touchcancel',stop);
+            offlinemember.addEventListener('touchmove',stop);
 
-            if(!offlinemember.dataset.patched){
-                offlinemember.addEventListener('touchstart',function(e){
-                    start()
-                });
-
-                offlinemember.addEventListener('touchend',function(e){
-                    if(long){
-                        setTimeout(() => {
-                            offlinemember.dispatchEvent(balls)
-                        }, 100);
-                    }
-                    stop()
-                })
-
-                offlinemember.addEventListener('touchcancel',stop);
-                offlinemember.addEventListener('touchmove',stop);
-
-                offlinemember.dataset.patched=true
-            }
+            offlinemember.dataset.patched=true
         }
     }
   }
@@ -6373,6 +6390,19 @@ function injectSettingsButton() {
     referenceNode.parentElement.insertBefore(clone, referenceNode.nextSibling);
 }
 
+function registerWithAviaMenu() {
+    if (window.AviaMenu) {
+        window.AviaMenu.register({ id: "avia_official_repo", name: "Plugins & Themes Repo", icon: "palette", onClick: openWindow });
+    } else {
+        const interval = setInterval(() => {
+            if (window.AviaMenu) {
+                clearInterval(interval);
+                window.AviaMenu.register({ id: "avia_official_repo", name: "Plugins & Themes Repo", icon: "palette", onClick: openWindow });
+            }
+        }, 100);
+    }
+}
+
 window.addEventListener("avia-plugin-list-changed", () => {
     if (document.getElementById("avia-official-repo-window")) {
         updateInstallStates();
@@ -6383,6 +6413,7 @@ new MutationObserver(() => injectSettingsButton())
     .observe(document.body, { childList: true, subtree: true });
 
 injectSettingsButton();
+registerWithAviaMenu()
 
 })();
 
