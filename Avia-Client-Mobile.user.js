@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.6.2
+// @version     1.6.3
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,8 +9,8 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-06-25T21:29:27.070Z';
-window.__USERSCRIPT_VERSION__ = "1.6.2";
+'@preserve - Built on 2026-06-27T11:24:36.707Z';
+window.__USERSCRIPT_VERSION__ = "1.6.3";
 
 /* --- 3TapRely.js --- */
 if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=true;
@@ -1972,8 +1972,8 @@ if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE
     if(!icon) return;
     icon.href='https://cdn.stoatusercontent.com/icons/vnGRb1M_UiP4-oj1qfqQODDCsyYOWa3f92ib3ac-K_/original'
 
-    if(document.title!='Stoat (Avia Client Mobile 1.6.2)'){
-        document.title='Stoat (Avia Client Mobile 1.6.2)'
+    if(document.title!='Stoat (Avia Client Mobile 1.6.3)'){
+        document.title='Stoat (Avia Client Mobile 1.6.3)'
     }
   }
 
@@ -2644,13 +2644,15 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
 
         pasteBtn.addEventListener('click',async ()=>{
             navigator.clipboard.readText().then(text=>{
-                const value = monaco.editor.getEditors()[0].getValue()
-                monaco.editor.getEditors()[0].setValue(value+'\n'+text)
+                const model = editor.getModel();
+                const value = model.getValue()
+                model.setValue(value+`\n${text}`)
             })
         });
 
         clearBtn.addEventListener('click',async ()=>{
-            monaco.editor.getEditors()[0].setValue('')
+            const model = editor.getModel();
+            model.setValue('')
         });
 
         panel.appendChild(header);
@@ -3086,7 +3088,7 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     el.appendChild(element)
                     element.outerHTML = `
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
-                                Avia Client Mobile 1.6.2<br>
+                                Avia Client Mobile 1.6.3<br>
                                 <span style="font-size:10px;opacity:0.7;">
                                     Based on Avia Client 1.7.1
                                 </span>
@@ -6998,23 +7000,13 @@ if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SID
 
 
 
-/* --- themes.user.js --- */
-if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER_JS__=true;
-
-// ==UserScript==
-// @name         Avia Client themes
-// @description  Adds theme support
-// @author       AvaLilac
-// @version      1.4
-// @match        *://*.stoat.chat/*
-// @grant        none
-// @inject-into  content
-// ==/UserScript==
+/* --- themes.js --- */
+if(window.__US_BUILDER_THEMES_JS__){return;}window.__US_BUILDER_THEMES_JS__=true;
 
 (function () {
 
-    if (window.__AVIA_THEMES_LOADED__) return;
-    window.__AVIA_THEMES_LOADED__ = true;
+    if (window.__AVIA_THEMES__) return;
+    window.__AVIA_THEMES__ = true;
 
     const STORAGE_KEY = "avia_themes";
     let editingThemeId = null;
@@ -7045,13 +7037,13 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
         });
     }
 
-    function parseMeta(css){
+    function parseMeta(css) {
         const name = css.match(/@name\s+(.+)/)?.[1] || "Unknown Theme";
         const author = css.match(/@author\s+(.+)/)?.[1] || "Unknown";
         const version = css.match(/@version\s+(.+)/)?.[1] || "1.0";
         const rawDescription = css.match(/@description\s+(.+)/)?.[1] || "No Description Available";
         const description = rawDescription.trim() === "*/" ? "No Description Available" : rawDescription;
-        return {name,author,version,description};
+        return { name, author, version, description };
     }
 
     function sanitizeFilename(name) {
@@ -7074,15 +7066,33 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
         URL.revokeObjectURL(url);
     }
 
-    function applyThemes(){
-        document.querySelectorAll(".avia-theme-style").forEach(e=>e.remove());
-        const themes = getThemes();
-        themes.forEach(theme=>{
-            if(!theme.enabled) return;
-            const style=document.createElement("style");
-            style.className="avia-theme-style";
-            style.textContent=theme.css;
-            document.head.appendChild(style);
+    function applyThemes() {
+        document.querySelectorAll(".avia-theme-style").forEach(e => e.remove());
+        getThemes().forEach(theme => {
+            if (!theme.enabled) return;
+
+            const importRegex = /@import\s+url\(["']?([^"')]+)["']?\)\s*;/g;
+            let match;
+            while ((match = importRegex.exec(theme.css)) !== null) {
+                const url = match[1];
+                fetch(url)
+                    .then(r => r.text())
+                    .then(css => {
+                        const style = document.createElement("style");
+                        style.className = "avia-theme-style";
+                        style.textContent = css;
+                        document.head.appendChild(style);
+                    })
+                    .catch(() => {});
+            }
+
+            const stripped = theme.css.replace(/@import\s+url\(["']?[^"')]+["']?\)\s*;/g, "").trim();
+            if (stripped) {
+                const style = document.createElement("style");
+                style.className = "avia-theme-style";
+                style.textContent = stripped;
+                document.head.appendChild(style);
+            }
         });
     }
 
@@ -7102,35 +7112,37 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
         btn.onmouseleave = () => btn.style.opacity = "1";
     }
 
-    function makeDraggable(panel, handle){
-        let dragging=false,offsetX,offsetY;
-        handle.addEventListener("mousedown",e=>{
-            dragging=true;
-            offsetX=e.clientX-panel.offsetLeft;
-            offsetY=e.clientY-panel.offsetTop;
-            document.body.style.userSelect="none";
+    function makeDraggable(panel, handle) {
+        let dragging = false, offsetX, offsetY;
+        handle.addEventListener("mousedown", e => {
+            dragging = true;
+            offsetX = e.clientX - panel.offsetLeft;
+            offsetY = e.clientY - panel.offsetTop;
+            document.body.style.userSelect = "none";
         });
-        document.addEventListener("mouseup",()=>{dragging=false;document.body.style.userSelect="";});
-        document.addEventListener("mousemove",e=>{
-            if(!dragging) return;
-            panel.style.left=(e.clientX-offsetX)+"px";
-            panel.style.top=(e.clientY-offsetY)+"px";
-            panel.style.right="auto";
-            panel.style.bottom="auto";
+        document.addEventListener("mouseup", () => { dragging = false; document.body.style.userSelect = ""; });
+        document.addEventListener("mousemove", e => {
+            if (!dragging) return;
+            panel.style.left = (e.clientX - offsetX) + "px";
+            panel.style.top = (e.clientY - offsetY) + "px";
+            panel.style.right = "auto";
+            panel.style.bottom = "auto";
         });
     }
 
-    async function openThemeEditor(themeId){
-        await preloadMonaco()
+    async function openThemeEditor(themeId) {
+        await preloadMonaco();
+
         editingThemeId = themeId;
         const themes = getThemes();
         const theme = themes.find(t => t.id === themeId);
         if (!theme) return;
 
         const meta = parseMeta(theme.css);
-        let panel = document.getElementById('avia-theme-editor');
-        if(panel){
-            panel.style.display="flex";
+        let panel = document.getElementById("avia-theme-editor");
+
+        if (panel) {
+            panel.style.display = "flex";
             panel.querySelector("#avia-theme-editor-title").textContent = "Theme Editor — " + meta.name;
             if (monacoEditorInstance) {
                 monacoEditorInstance._aviaThemeId = themeId;
@@ -7139,6 +7151,7 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
             }
             return;
         }
+
         panel=document.createElement("div");
         panel.id="avia-theme-editor";
         if(window.outerWidth<472){
@@ -7176,33 +7189,39 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
                 border:"1px solid rgba(255,255,255,0.08)"
             });
         }
-        const header=document.createElement("div");
-        header.textContent="Theme Editor";
-        Object.assign(header.style,{
-            padding:"14px 16px",
-            fontWeight:"600",
-            fontSize:"14px",
-            background:"var(--md-sys-color-surface-container,rgba(255,255,255,0.04))",
-            borderBottom:"1px solid rgba(255,255,255,0.08)",
-            cursor:"move"
+
+        const header = document.createElement("div");
+        header.id = "avia-theme-editor-title";
+        header.textContent = "Theme Editor — " + meta.name;
+        Object.assign(header.style, {
+            padding: "14px 16px",
+            fontWeight: "600",
+            fontSize: "14px",
+            background: "var(--md-sys-color-surface-container, rgba(255,255,255,0.04))",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            cursor: "move",
+            color: "#fff",
+            flex: "0 0 auto"
         });
-        makeDraggable(panel,header);
-        const close=document.createElement("div");
-        close.textContent="✕";
-        Object.assign(close.style,{
-            position:"absolute",
-            right:"16px",
-            top:"12px",
-            cursor:"pointer",
-            opacity:"0.6",
-            fontSize:"15px",
-            lineHeight:"1",
-            padding:"2px 4px"
+        makeDraggable(panel, header);
+
+        const close = document.createElement("div");
+        close.textContent = "✕";
+        Object.assign(close.style, {
+            position: "absolute",
+            right: "16px",
+            top: "12px",
+            cursor: "pointer",
+            opacity: "0.6",
+            fontSize: "15px",
+            lineHeight: "1",
+            padding: "2px 4px",
+            color: "#fff"
         });
-        close.onmouseenter=()=>close.style.opacity="1";
-        close.onmouseleave=()=>close.style.opacity="0.6";
-        close.onclick=()=>panel.style.display="none";
-        
+        close.onmouseenter = () => close.style.opacity = "1";
+        close.onmouseleave = () => close.style.opacity = "0.6";
+        close.onclick = () => panel.style.display = "none";
+
         const editorContainer = document.createElement("div");
         editorContainer.style.flex = "1";
 
@@ -7224,6 +7243,19 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
             right:'36px',
             cursor:'pointer',
             color:'#fff'
+        });
+
+        pasteBtn.addEventListener('click',async ()=>{
+            navigator.clipboard.readText().then(text=>{
+                const model = monacoEditorInstance.getModel();
+                const value = model.getValue()
+                model.setValue(value+`\n${text}`)
+            })
+        });
+
+        clearBtn.addEventListener('click',async ()=>{
+            const model = monacoEditorInstance.getModel();
+            model.setValue('')
         });
 
         panel.appendChild(header);
@@ -7263,9 +7295,9 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
         });
     }
 
-    function toggleThemesPanel(){
-        let panel=document.getElementById("avia-themes-panel");
-        if(panel){
+    function toggleThemesPanel() {
+        let panel = document.getElementById("avia-themes-panel");
+        if (panel) {
             if (panel.style.display === "none") {
                 panel.style.display = "flex";
                 if (typeof window.__avia_refresh_themes_panel === "function") {
@@ -7276,175 +7308,220 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
             }
             return;
         }
-        panel=document.createElement("div");
-        panel.id="avia-themes-panel";
-        if(window.outerHeight<468){
-            Object.assign(panel.style,{
-                position:"fixed",
-                bottom:"12px",
-                right:"0px",
-                width:`${window.outerWidth-52}px`,
-                height:`${window.outerWidth-72}px`,
-                background:"var(--md-sys-color-surface,#1e1e1e)",
-                color:"var(--md-sys-color-on-surface,#fff)",
-                borderRadius:"16px",
-                boxShadow:"0 8px 28px rgba(0,0,0,0.35)",
-                zIndex:999999,
-                display:"flex",
-                flexDirection:"column",
-                overflow:"hidden",
-                border:"1px solid rgba(255,255,255,0.08)"
-            });
-        }else{
-            Object.assign(panel.style,{
-                position:"fixed",
-                bottom:"12px",
-                right:"0px",
-                width:"416px",
-                height:"368px",
-                background:"#1e1e1e",
-                color:"#fff",
-                borderRadius:"16px",
-                boxShadow:"0 12px 35px rgba(0,0,0,0.45)",
-                zIndex:999999,
-                display:"flex",
-                flexDirection:"column",
-                overflow:"hidden",
-                border:"1px solid rgba(255,255,255,0.08)"
-            });
-        }
 
-        const header=document.createElement("div");
-        header.textContent="Themes";
-        Object.assign(header.style,{
-            padding:"14px 16px",
-            fontWeight:"600",
-            fontSize:"14px",
-            background:"var(--md-sys-color-surface-container,rgba(255,255,255,0.04))",
-            borderBottom:"1px solid rgba(255,255,255,0.08)",
-            cursor:"move"
-        });
-        makeDraggable(panel,header);
-
-        const close=document.createElement("div");
-        close.textContent="✕";
-        Object.assign(close.style,{
-            position:"absolute",
-            right:"16px",
-            top:"12px",
-            cursor:"pointer",
-            opacity:"0.6",
-            fontSize:"15px",
-            lineHeight:"1",
-            padding:"2px 4px"
-        });
-        close.onmouseenter=()=>close.style.opacity="1";
-        close.onmouseleave=()=>close.style.opacity="0.6";
-        close.onclick=()=>panel.style.display="none";
-
-        const btnRow=document.createElement("div");
-        Object.assign(btnRow.style,{
-            display:"flex",
-            gap:"8px",
-            padding:"12px 16px",
-            borderBottom:"1px solid rgba(255,255,255,0.08)",
-            flex:"0 0 auto"
+        panel = document.createElement("div");
+        panel.id = "avia-themes-panel";
+        Object.assign(panel.style, {
+            position: "fixed",
+            bottom: "40px",
+            right: "40px",
+            width: "500px",
+            height: "460px",
+            background: "var(--md-sys-color-surface, #1e1e1e)",
+            color: "var(--md-sys-color-on-surface, #fff)",
+            borderRadius: "16px",
+            boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
+            zIndex: "999999",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(12px)"
         });
 
-        const importBtn=document.createElement("button");
-        importBtn.textContent="Import Theme";
+        const header = document.createElement("div");
+        header.textContent = "Themes";
+        Object.assign(header.style, {
+            padding: "14px 16px",
+            fontWeight: "600",
+            fontSize: "14px",
+            background: "var(--md-sys-color-surface-container, rgba(255,255,255,0.04))",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            cursor: "move"
+        });
+        makeDraggable(panel, header);
+
+        const close = document.createElement("div");
+        close.textContent = "✕";
+        Object.assign(close.style, {
+            position: "absolute",
+            right: "16px",
+            top: "12px",
+            cursor: "pointer",
+            opacity: "0.6",
+            fontSize: "15px",
+            lineHeight: "1",
+            padding: "2px 4px"
+        });
+        close.onmouseenter = () => close.style.opacity = "1";
+        close.onmouseleave = () => close.style.opacity = "0.6";
+        close.onclick = () => panel.style.display = "none";
+
+        const btnRow = document.createElement("div");
+        Object.assign(btnRow.style, {
+            display: "flex",
+            gap: "8px",
+            padding: "12px 16px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            flex: "0 0 auto"
+        });
+
+        const importBtn = document.createElement("button");
+        importBtn.textContent = "Import Theme";
         styleBtn(importBtn);
-        importBtn.style.flex="1";
-        importBtn.style.padding="8px 12px";
+        importBtn.style.flex = "1";
+        importBtn.style.padding = "8px 12px";
 
-        const newBtn=document.createElement("button");
-        newBtn.textContent="+ New";
+        const newBtn = document.createElement("button");
+        newBtn.textContent = "+ New";
         styleBtn(newBtn);
-        newBtn.style.flex="1";
-        newBtn.style.padding="8px 12px";
+        newBtn.style.flex = "1";
+        newBtn.style.padding = "8px 12px";
 
         btnRow.appendChild(importBtn);
         btnRow.appendChild(newBtn);
 
-        const list=document.createElement("div");
-        Object.assign(list.style,{
-            flex:"1",
-            overflowY:"auto",
-            padding:"16px",
-            display:"flex",
-            flexDirection:"column",
-            gap:"8px"
+        const list = document.createElement("div");
+        Object.assign(list.style, {
+            flex: "1",
+            overflowY: "auto",
+            padding: "16px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px"
+        });
+
+        const dropOverlay = document.createElement("div");
+        dropOverlay.textContent = "Drop .css or .txt files here";
+        Object.assign(dropOverlay.style, {
+            position: "absolute",
+            inset: "0",
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "18px",
+            fontWeight: "600",
+            color: "#fff",
+            opacity: "0",
+            pointerEvents: "none",
+            transition: "opacity 0.15s ease",
+            borderRadius: "16px"
         });
 
         panel.appendChild(header);
         panel.appendChild(close);
         panel.appendChild(btnRow);
         panel.appendChild(list);
+        panel.appendChild(dropOverlay);
         document.body.appendChild(panel);
 
-        function render(){
-            list.innerHTML="";
-            const themes=getThemes();
+        let dragDepth = 0;
 
-            if(themes.length === 0){
-                const empty=document.createElement("div");
-                empty.textContent="No themes yet. Import or create one above.";
-                Object.assign(empty.style,{opacity:"0.4",fontSize:"13px"});
+        panel.addEventListener("dragenter", e => {
+            e.preventDefault();
+            e.stopPropagation();
+            dragDepth++;
+            dropOverlay.style.opacity = "1";
+            panel.style.border = "1px dashed rgba(255,255,255,0.4)";
+        });
+
+        panel.addEventListener("dragover", e => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        panel.addEventListener("dragleave", e => {
+            e.preventDefault();
+            e.stopPropagation();
+            dragDepth--;
+            if (dragDepth <= 0) {
+                dropOverlay.style.opacity = "0";
+                panel.style.border = "1px solid rgba(255,255,255,0.08)";
+                dragDepth = 0;
+            }
+        });
+
+        panel.addEventListener("drop", async e => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropOverlay.style.opacity = "0";
+            panel.style.border = "1px solid rgba(255,255,255,0.08)";
+            dragDepth = 0;
+            const files = [...e.dataTransfer.files].filter(f => f.name.endsWith(".css") || f.name.endsWith(".txt"));
+            if (!files.length) return;
+            const themes = getThemes();
+            for (const file of files) {
+                const css = await file.text();
+                themes.push({ id: crypto.randomUUID(), css, enabled: true });
+            }
+            setThemes(themes);
+            applyThemes();
+            render();
+        });
+
+        function render() {
+            list.innerHTML = "";
+            const themes = getThemes();
+
+            if (themes.length === 0) {
+                const empty = document.createElement("div");
+                empty.textContent = "No themes yet. Import or create one above.";
+                Object.assign(empty.style, { opacity: "0.4", fontSize: "13px" });
                 list.appendChild(empty);
                 return;
             }
 
-            themes.forEach(theme=>{
-                const meta=parseMeta(theme.css);
+            themes.forEach(theme => {
+                const meta = parseMeta(theme.css);
 
-                const card=document.createElement("div");
-                Object.assign(card.style,{
-                    display:"flex",
-                    justifyContent:"space-between",
-                    alignItems:"center",
-                    padding:"10px 12px",
-                    borderRadius:"10px",
-                    background:"rgba(255,255,255,0.04)",
-                    border:"1px solid rgba(255,255,255,0.06)",
-                    marginBottom:"0"
+                const card = document.createElement("div");
+                Object.assign(card.style, {
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    borderRadius: "10px",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.06)"
                 });
 
-                const left=document.createElement("div");
-                Object.assign(left.style,{display:"flex",alignItems:"center",gap:"10px"});
+                const left = document.createElement("div");
+                Object.assign(left.style, { display: "flex", alignItems: "center", gap: "10px" });
 
-                const dot=document.createElement("div");
-                Object.assign(dot.style,{
-                    width:"10px",
-                    height:"10px",
-                    borderRadius:"50%",
-                    flexShrink:"0",
+                const dot = document.createElement("div");
+                Object.assign(dot.style, {
+                    width: "10px",
+                    height: "10px",
+                    borderRadius: "50%",
+                    flexShrink: "0",
                     background: theme.enabled ? "#4dff88" : "#777",
                     boxShadow: theme.enabled ? "0 0 6px #4dff88" : "none"
                 });
 
-                const info=document.createElement("div");
-                info.innerHTML=`<div style="font-weight:600;font-size:13px">${meta.name}</div><div style="font-size:11px;opacity:.5">${meta.author} • v${meta.version}</div><div style="font-size:11px;opacity:.4">${meta.description}</div>`;
+                const info = document.createElement("div");
+                info.innerHTML = `<div style="font-weight:600;font-size:13px">${meta.name}</div><div style="font-size:11px;opacity:.5">${meta.author} • v${meta.version}</div><div style="font-size:11px;opacity:.4">${meta.description}</div>`;
 
                 left.appendChild(dot);
                 left.appendChild(info);
 
-                const controls=document.createElement("div");
-                Object.assign(controls.style,{display:"flex",gap:"6px"});
+                const controls = document.createElement("div");
+                Object.assign(controls.style, { display: "flex", gap: "6px" });
 
-                const toggle=document.createElement("button");
-                toggle.textContent=theme.enabled?"Disable":"Enable";
+                const toggle = document.createElement("button");
+                toggle.textContent = theme.enabled ? "Disable" : "Enable";
                 styleBtn(toggle);
-                toggle.onclick=()=>{
-                    theme.enabled=!theme.enabled;
+                toggle.onclick = () => {
+                    theme.enabled = !theme.enabled;
                     setThemes(themes);
                     applyThemes();
                     render();
                 };
 
-                const edit=document.createElement("button");
-                edit.textContent="Edit";
+                const edit = document.createElement("button");
+                edit.textContent = "Edit";
                 styleBtn(edit, "rgba(100,160,255,0.15)");
-                edit.onclick=()=>openThemeEditor(theme.id);
+                edit.onclick = () => openThemeEditor(theme.id);
 
                 const dlBtn = document.createElement("button");
                 dlBtn.textContent = "Export";
@@ -7455,11 +7532,11 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
                     downloadTheme(theme);
                 };
 
-                const del=document.createElement("button");
-                del.textContent="✕";
+                const del = document.createElement("button");
+                del.textContent = "✕";
                 styleBtn(del, "rgba(255,80,80,0.15)");
-                del.onclick=()=>{
-                    const updated=themes.filter(t=>t.id!==theme.id);
+                del.onclick = () => {
+                    const updated = themes.filter(t => t.id !== theme.id);
                     setThemes(updated);
                     applyThemes();
                     render();
@@ -7477,16 +7554,19 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
 
         window.__avia_refresh_themes_panel = render;
 
-        importBtn.onclick=()=>{
-            const input=document.createElement("input");
-            input.type="file";
-            input.accept=".css,.txt";
-            input.onchange=async()=>{
-                const file=input.files[0];
-                if(!file) return;
-                const css=await file.text();
-                const themes=getThemes();
-                themes.push({id:crypto.randomUUID(),css,enabled:true});
+        importBtn.onclick = () => {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = ".css,.txt";
+            input.multiple = true;
+            input.onchange = async () => {
+                const files = [...input.files];
+                if (!files.length) return;
+                const themes = getThemes();
+                for (const file of files) {
+                    const css = await file.text();
+                    themes.push({ id: crypto.randomUUID(), css, enabled: true });
+                }
                 setThemes(themes);
                 applyThemes();
                 render();
@@ -7494,9 +7574,9 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
             input.click();
         };
 
-        newBtn.onclick=()=>{
-            const themes=getThemes();
-            themes.push({id:crypto.randomUUID(),css:TEMPLATE,enabled:true});
+        newBtn.onclick = () => {
+            const themes = getThemes();
+            themes.push({ id: crypto.randomUUID(), css: TEMPLATE, enabled: true });
             setThemes(themes);
             applyThemes();
             render();
@@ -7505,20 +7585,20 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
         render();
     }
 
-    function injectButton(){
-        if(document.getElementById("avia-themes-btn")) return;
-        const appearanceBtn=[...document.querySelectorAll("a")].find(a=>a.textContent.trim()==="Appearance");
-        const quickCSS=document.getElementById("stoat-fake-quickcss");
-        if(!appearanceBtn || !quickCSS) return;
-        const clone=appearanceBtn.cloneNode(true);
-        clone.id="avia-themes-btn";
-        const text=[...clone.querySelectorAll("div")].find(d=>d.children.length===0);
-        if(text) text.textContent="(Avia) Themes";
-        clone.onclick=toggleThemesPanel;
+    function injectButton() {
+        if (document.getElementById("avia-themes-btn")) return;
+        const appearanceBtn = [...document.querySelectorAll("a")].find(a => a.textContent.trim() === "Appearance");
+        const quickCSS = document.getElementById("stoat-fake-quickcss");
+        if (!appearanceBtn || !quickCSS) return;
+        const clone = appearanceBtn.cloneNode(true);
+        clone.id = "avia-themes-btn";
+        const text = [...clone.querySelectorAll("div")].find(d => d.children.length === 0);
+        if (text) text.textContent = "(Avia) Themes";
+        clone.onclick = toggleThemesPanel;
         quickCSS.parentElement.insertBefore(clone, quickCSS.nextSibling);
     }
 
-     function registerWithAviaMenu() {
+    function registerWithAviaMenu() {
         if (window.AviaMenu) {
             window.AviaMenu.register({ id: "avia_themes", name: "Themes", icon: "palette", onClick: toggleThemesPanel });
         } else {
@@ -7531,14 +7611,13 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
         }
     }
 
-    new MutationObserver(injectButton).observe(document.body,{childList:true,subtree:true});
+    new MutationObserver(injectButton).observe(document.body, { childList: true, subtree: true });
     injectButton();
     applyThemes();
-     preloadMonaco();
+    preloadMonaco();
     registerWithAviaMenu();
 
 })();
-
 
 
 /* --- UnsentMessageContextMenuFix.js --- */
