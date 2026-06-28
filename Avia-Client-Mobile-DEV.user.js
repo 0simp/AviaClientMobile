@@ -1,16 +1,16 @@
 // ==UserScript==
-// @name        Avia Client Mobile
+// @name        Avia Client Mobile DEV
 // @namespace   userscript.builder
-// @version     1.5.20
+// @version     1.7
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
-// @match       https://stoat.chat/*
+// @match       https://beta.stoat.chat/*
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-05-28T16:22:10.460Z';
-window.__USERSCRIPT_VERSION__ = "1.5";
+'@preserve - Built on 2026-06-28T17:15:47.551Z';
+window.__USERSCRIPT_VERSION__ = "1.7";
 
 /* --- 3TapRely.js --- */
 if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=true;
@@ -27,7 +27,12 @@ if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=
         message.addEventListener('click',()=>{
             clicks = clicks+1
             if(clicks==3){
-                message.children[0].children[0].click()
+                const bar = message.querySelector(`[class='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar']`) 
+                bar.children[0].click()
+                setTimeout(() => {
+                  const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
+                  contextmenu.firstChild.click()
+                }, 100);
                 clicks = 0
             }
             setTimeout(() => {
@@ -41,7 +46,12 @@ if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=
         message.addEventListener('click',()=>{
             clicks = clicks+1
             if(clicks==3){
-                message.children[0].children[0].click()
+                const bar = message.querySelector(`[class='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar']`) 
+                bar.children[0].click()
+                setTimeout(() => {
+                  const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
+                  contextmenu.firstChild.click()
+                }, 100);
                 clicks = 0
             }
             setTimeout(() => {
@@ -82,6 +92,7 @@ if(window.__US_BUILDER_ATTACHMENTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDE
     const time = 250
     const videos = document.querySelectorAll('video')
     const images = document.querySelectorAll('img[class=\'cursor_pointer\']')
+    const other = document.querySelectorAll(`pre[class='d_flex ov_auto scr-bar-w_thin flex-d_column']`)
     if(videos){
         videos.forEach(video=>{
             let timer;
@@ -100,25 +111,27 @@ if(window.__US_BUILDER_ATTACHMENTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDE
 
             if(!video.dataset.patched){
                 video.addEventListener('touchstart', function(e){
-                start()
+                    start()
                 });
+
                 video.addEventListener('touchend', function(e){
-                if(long){
-                    const rect = video.getBoundingClientRect();
+                    if(long){
+                        const rect = video.getBoundingClientRect();
 
-                    const contextMenuX = rect.left + rect.width / 2;
-                    const contextMenuY = rect.top + rect.height / 2;
+                        const contextMenuX = rect.left + rect.width / 2;
+                        const contextMenuY = rect.top + rect.height / 2;
 
-                    const contextMenuEvent = new MouseEvent('contextmenu', {
-                        bubbles: true,
-                        cancelable: true,
-                        clientX: contextMenuX,
-                        clientY: contextMenuY
-                    });
-                    video.dispatchEvent(contextMenuEvent);
-                }
-                stop()
+                        const contextMenuEvent = new MouseEvent('contextmenu', {
+                            bubbles: true,
+                            cancelable: true,
+                            clientX: contextMenuX,
+                            clientY: contextMenuY
+                        });
+                        video.dispatchEvent(contextMenuEvent);
+                    }
+                    stop()
                 });
+
                 video.addEventListener('touchcancel',stop);
                 video.addEventListener('touchmove',stop);
                 video.dataset.patched=true
@@ -144,28 +157,79 @@ if(window.__US_BUILDER_ATTACHMENTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDE
 
             if(!image.dataset.patched){
                 image.addEventListener('touchstart', function(e){
-                start()
+                    start()
                 });
+
                 image.addEventListener('touchend', function(e){
-                if(long){
-                    const rect = image.getBoundingClientRect();
+                    if(long){
+                        const rect = image.getBoundingClientRect();
 
-                    const contextMenuX = rect.left + rect.width / 2;
-                    const contextMenuY = rect.top + rect.height / 2;
+                        const contextMenuX = rect.left + rect.width / 2;
+                        const contextMenuY = rect.top + rect.height / 2;
 
-                    const contextMenuEvent = new MouseEvent('contextmenu', {
-                        bubbles: true,
-                        cancelable: true,
-                        clientX: contextMenuX,
-                        clientY: contextMenuY
-                    });
-                    image.dispatchEvent(contextMenuEvent);
-                }
-                stop()
+                        const contextMenuEvent = new MouseEvent('contextmenu', {
+                            bubbles: true,
+                            cancelable: true,
+                            clientX: contextMenuX,
+                            clientY: contextMenuY
+                        });
+                        image.dispatchEvent(contextMenuEvent);
+                    }
+                    stop()
                 });
+
                 image.addEventListener('touchcancel',stop);
                 image.addEventListener('touchmove',stop);
                 image.dataset.patched=true
+            }
+        })
+    }
+
+    if(other){
+        other.forEach(thing=>{
+            let timer;
+            let long = false;
+
+            function start() {
+                timer = setTimeout(() => {
+                long = true
+                }, time);
+            }
+
+            function stop() {
+                clearTimeout(timer);
+                long = false
+            }
+
+            if(!thing.dataset.patched){
+                thing.addEventListener('touchstart', function(e){
+                    start()
+                });
+
+                thing.addEventListener('touchend', function(e){
+                    if(long){
+                        const rect = thing.getBoundingClientRect();
+
+                        const contextMenuX = rect.left + rect.width / 2;
+                        const contextMenuY = rect.top + rect.height / 2;
+
+                        const contextMenuEvent = new MouseEvent('contextmenu', {
+                            bubbles: true,
+                            cancelable: true,
+                            clientX: contextMenuX,
+                            clientY: contextMenuY
+                        });
+
+                        setTimeout(() => {
+                            thing.dispatchEvent(contextMenuEvent);
+                        }, 100);
+                    }
+                    stop()
+                });
+
+                thing.addEventListener('touchcancel',stop);
+                thing.addEventListener('touchmove',stop);
+                thing.dataset.patched=true
             }
         })
     }
@@ -784,34 +848,85 @@ if(window.__US_BUILDER_AVIASERVERBUTTON_JS__){return;}window.__US_BUILDER_AVIASE
 
 (function(){
 
-if (window.__AVIA_SERVER_BUTTON__) return;
-window.__AVIA_SERVER_BUTTON__ = true;
+  if (window.__AVIA_SERVER_BUTTON__) return;
+  window.__AVIA_SERVER_BUTTON__ = true;
 
-const AVIA_INVITE = "https://stt.gg/0MPSAx8x";
+  const AVIA_INVITE = "https://stt.gg/0MPSAx8x";
 
-function apply(){
-   const homebuttons = document.getElementsByClassName('gap_8px p_8px d_flex bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface-variant) bg_var(--md-sys-color-surface-variant)')
-    .item(0)
-    if(!homebuttons) return;
-    const button = homebuttons.children[0].children[1]
-    const title = button.querySelector("div.flex-g_1 > div");
-    if(!title.textContent.includes('ACM Server')){
-      title.textContent = title.textContent.replace('Stoat Lounge','ACM Server')
-      button.addEventListener('click',(e)=>{
-        e.preventDefault();
-        e.stopPropagation()
-        window.open(AVIA_INVITE,'_blank')
-      },true)
-    }
-}
+  function apply(){
+    const homebuttons = document.getElementsByClassName('gap_8px p_8px d_flex bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface-variant) bg_var(--md-sys-color-surface-variant)')
+      .item(0)
+      if(!homebuttons) return;
+      const server = document.querySelector(`a[href*='/server/01KKQHXPKHSFBJNA2DY4XMP0DB']`)
+      const button = [...homebuttons.children[0].children].find(e=>e.querySelector(`path[d="M16.24 13.65c-1.17-.52-2.61-.9-4.24-.9s-3.07.39-4.24.9A2.99 2.99 0 0 0 6 16.39V18h12v-1.61c0-1.18-.68-2.26-1.76-2.74m-15.02.93A2.01 2.01 0 0 0 0 16.43V18h4.5v-1.61c0-.83.23-1.61.63-2.29-.37-.06-.74-.1-1.13-.1-.99 0-1.93.21-2.78.58m21.56 0A6.95 6.95 0 0 0 20 14c-.39 0-.76.04-1.13.1.4.68.63 1.46.63 2.29V18H24v-1.57c0-.81-.48-1.53-1.22-1.85M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3M1.497 11 4 8.497 6.503 11 4 13.503zM20 9l-2.5 4h5z"]`))
+      if(button){
+        const title = button.querySelector("div.flex-g_1 > div");
+        if(!title.textContent.includes('ACM Server')){
+          if(server){
+            title.textContent='Go to the ACM Server'
+          }else{
+            title.textContent='Join the ACM Server'
+          }
+          button.addEventListener('click',(e)=>{
+            e.preventDefault();
+            e.stopPropagation()
+            if(server){
+              server.click()
+            }else{
+              window.open(AVIA_INVITE,'_blank')
+            }
+          },true)
+        }
+      }else{
+        const fakebutton = document.createElement('a')
+        fakebutton.className='pos_relative gap_16px p_13px bdr_var(--borderRadius-md) us_none cursor_pointer trs_background-color_0.1s_ease-in-out d_flex ai_center flex-d_row c_var(--color) fill_var(--color) bg_var(--md-sys-color-secondary-container) --color_var(--md-sys-color-on-secondary-container)'
 
-const observer = new MutationObserver(apply);
-observer.observe(document.body,{childList:true,subtree:true});
+        const mdripple = document.createElement('md-ripple')
+        mdripple.ariaHidden=true
 
-apply();
+        const idkwhattocallthis = document.createElement('div')
+        idkwhattocallthis.className='fill_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-dim) w_36px h_36px d_flex flex-sh_0 ai_center jc_center bdr_var(--borderRadius-full)'
+        idkwhattocallthis.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M16.24 13.65c-1.17-.52-2.61-.9-4.24-.9s-3.07.39-4.24.9A2.99 2.99 0 0 0 6 16.39V18h12v-1.61c0-1.18-.68-2.26-1.76-2.74m-15.02.93A2.01 2.01 0 0 0 0 16.43V18h4.5v-1.61c0-.83.23-1.61.63-2.29-.37-.06-.74-.1-1.13-.1-.99 0-1.93.21-2.78.58m21.56 0A6.95 6.95 0 0 0 20 14c-.39 0-.76.04-1.13.1.4.68.63 1.46.63 2.29V18H24v-1.57c0-.81-.48-1.53-1.22-1.85M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3M1.497 11 4 8.497 6.503 11 4 13.503zM20 9l-2.5 4h5z"></path></svg>`
 
+        const textparent = document.createElement('div')
+        textparent.className='d_flex flex-g_1 flex-d_column fw_500 fs_14px gap_2px white-space_nowrap ov_hidden tov_ellipsis'
+
+        const title = document.createElement('div')
+        title.className='ov_hidden white-space_nowrap tov_ellipsis [&_*]:ov_hidden [&_*]:white-space_nowrap [&_*]:tov_ellipsis'
+        if(server){
+          title.textContent=`Go to the ACM Server`
+        }else{
+          title.textContent=`Join the ACM Server`
+        }
+
+        const text = document.createElement('span')
+        text.className='lh_1rem fs_0.75rem ls_0.03125rem fw_500 tw_wrap [&_a:hover]:td_underline'
+        text.textContent='You can report issues and discuss improvements with us directly here.'
+
+        fakebutton.appendChild(mdripple)
+        fakebutton.appendChild(idkwhattocallthis)
+        fakebutton.appendChild(textparent)
+        textparent.appendChild(title)
+        textparent.appendChild(text)
+        homebuttons.children[0].insertBefore(fakebutton,homebuttons.children[0].lastChild)
+
+        fakebutton.addEventListener('click',(e)=>{
+          e.preventDefault();
+          e.stopPropagation()
+          if(server){
+            server.click()
+          }else{
+            window.open(AVIA_INVITE,'_blank')
+          }
+        });
+      }
+  }
+
+  const observer = new MutationObserver(apply);
+  observer.observe(document.body,{childList:true,subtree:true});
+
+  apply();
 })();
-
 
 
 /* --- badges.js --- */
@@ -997,73 +1112,27 @@ if(window.__US_BUILDER_BADGES_JS__){return;}window.__US_BUILDER_BADGES_JS__=true
 
 
 
-/* --- BetterScrolling.js --- */
-if(window.__US_BUILDER_BETTERSCROLLING_JS__){return;}window.__US_BUILDER_BETTERSCROLLING_JS__=true;
+/* --- BettersSwiping.js --- */
+if(window.__US_BUILDER_BETTERSSWIPING_JS__){return;}window.__US_BUILDER_BETTERSSWIPING_JS__=true;
 
 (function () {
-  if (window.__BETTER_SCROLLING__) return;
-  window.__BETTER_SCROLLING__ = true;
+  if (window.__BETTER_SWIPING__) return;
+  window.__BETTER_SWIPING__ = true;
+  let startselection = null;
+  let newselection =null;
 
-  function betterScrolling() {
-    const channellist = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll').item(1)
-    if(!channellist) return;
-    const clone = channellist.lastChild.lastChild.cloneNode(true)
-    clone.style.opacity=0
-    clone.id='betterscrolling'
-
-    setTimeout(() => {
-        if(document.baseURI.includes('/server')){
-            for(const child of clone.lastChild.children){
-                child.remove()
-            }
-
-
-            for(const child of clone.lastChild.children){
-                child.remove()
-            }
-        }else{
-            for(const child of clone.children){
-                for(const child2 of child.children){
-                    child2.remove()
-                }
-            }
-        }
-    }, 100);
-
-    if(!document.getElementById('betterscrolling')){
-        channellist.lastChild.appendChild(clone)
-    }
-
-    const serverlist = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll').item(0)
-    if(!serverlist) return;
-    const target = serverlist.parentElement
-
-    const clone2 = target.lastChild.cloneNode(true)
-    clone2.style.opacity=0
-    clone2.id='betterscrollingserverlist'
-
-    if(!document.getElementById('betterscrollingserverlist')){
-      target.appendChild(clone2)
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    betterScrolling();
+  document.addEventListener('touchstart',(e)=>{
+    startselection = document.getSelection().toString()
   });
 
-  function init() {
-    betterScrolling();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
+  document.addEventListener('touchmove',(e)=>{
+    newselection = document.getSelection().toString()
+    if(startselection!=newselection){
+        e.preventDefault()
+        e.stopImmediatePropagation()
+        e.stopPropagation()
+    }
+  });
 })();
 
 
@@ -1120,7 +1189,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
     if(!channelList) return;
     channelList = channelList.children[0]
     if(channelList.querySelector('a[href=\'/app\']')){
-      for(const child of channelList.lastChild.previousSibling.children){
+      for(const child of channelList.lastChild.children){
         let timer;
         let long = false;
 
@@ -1164,7 +1233,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
         }
       }
     }else{
-      const categories = document.getElementsByClassName('d_flex ai_center gap_var(--gap-sm) p_0_var(--gap-sm) pl_calc(var(--gap-lg)_+_5px) pt_10px cursor_pointer us_none trs_var(--transitions-fast)_all --color_var(--md-sys-color-on-surface) c_var(--color) fill_var(--color) lh_0.875rem fs_13px ls_0.03125rem fw_time [&:hover]:--color_var(--md-sys-color-on-surface-variant) [&_svg]:trs_var(--transitions-fast)_transform [&_svg]:trf_rotateZ(90deg)')
+      const categories = document.getElementsByClassName('d_flex ai_center gap_var(--gap-sm) p_0_var(--gap-sm) pl_calc(var(--gap-lg)_+_5px) pt_10px cursor_pointer us_none trs_var(--transitions-fast)_all --color_var(--md-sys-color-on-surface) c_var(--color) fill_var(--color) lh_0.875rem fs_13px ls_0.03125rem fw_500 [&:hover]:--color_var(--md-sys-color-on-surface-variant) [&_svg]:trs_var(--transitions-fast)_transform [&_svg]:trf_rotateZ(90deg)')
       if(categories.item(0)){
         for(const category of categories){
           let timer;
@@ -1187,6 +1256,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
 
             category.addEventListener('touchend',function(e){
               if(long){
+                e.preventDefault()
                 const rect = category.getBoundingClientRect();
                 const contextMenuX = rect.left + rect.width / 2;
                 const contextMenuY = rect.top + rect.height / 2;
@@ -1230,6 +1300,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
                 start()
           });
           child.addEventListener('touchend', function(e){
+          if(e.target!=child) return;
           if(long){
               setTimeout(() => {
                 child.dispatchEvent(balls)
@@ -1266,19 +1337,20 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
                 }
 
                 if(!child2.dataset.patched){
-                  child2.firstChild.firstChild.addEventListener('touchstart', function(e){
+                  child2.firstChild.addEventListener('touchstart', function(e){
                         start()
                   });
-                  child2.firstChild.firstChild.addEventListener('touchend', function(e){
+                  child2.firstChild.addEventListener('touchend', function(e){
                   if(long){
+                    e.preventDefault()
                       setTimeout(() => {
-                        child2.firstChild.firstChild.firstChild.dispatchEvent(balls)
+                        child2.firstChild.dispatchEvent(balls)
                       }, 100);
                   }
                   stop()
                   });
-                  child2.firstChild.firstChild.addEventListener('touchcancel',stop);
-                  child2.firstChild.firstChild.addEventListener('touchmove',stop);
+                  child2.firstChild.addEventListener('touchcancel',stop);
+                  child2.firstChild.addEventListener('touchmove',stop);
                   child2.dataset.patched=true
                 }
             }
@@ -1523,382 +1595,6 @@ if(window.__US_BUILDER_CLIENTBACKUP_JS__){return;}window.__US_BUILDER_CLIENTBACK
 
 
 
-/* --- CollapseChannelName.js --- */
-if(window.__US_BUILDER_COLLAPSECHANNELNAME_JS__){return;}window.__US_BUILDER_COLLAPSECHANNELNAME_JS__=true;
-
-(function () {
-  if (window.__COLLAPSE_CHANNEL_NAME__) return;
-  window.__COLLAPSE_CHANNEL_NAME__ = true;
-  let baseuris = []
-  let username = '';
-
-  function collapseChannelName() {
-    const bar = document.getElementsByClassName('gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0').item(0)
-    if(bar){
-        const button = document.createElement('button')
-        button.id='collpasechannelname'
-        button.className='lh_1.25rem fs_0.875rem ls_0.015625rem fw_500 pos_relative asp_1/1 flex-sh_0 d_flex ai_center jc_center ff_inherit cursor_pointer bd_none trs_var(--transitions-fast)_all c_var(--colour) fill_var(--colour) --colour_var(--md-sys-color-on-surface-variant) bdr_var(--borderRadius-full) h_40px px_8px'
-
-        const ripple = document.createElement('md-ripple')
-        ripple.ariaHidden=true
-
-        const span = document.createElement('span')
-        span.className='material-symbols-outlined'
-        span.style='display: block; font-variation-settings: &quot;FILL&quot; 0, &quot;wght&quot; 400, &quot;GRAD&quot; 0; font-size: 24px;'
-        span.textContent='arrow_back_ios'
-
-        button.appendChild(ripple)
-        button.appendChild(span)
-
-        button.onclick = function(){
-          for(const child of button.parentElement.children){
-              if(child.id=='collpasechannelname') break;
-              if(!child.style.display){
-                  child.style.display='none'
-                  button.querySelector('span').textContent='arrow_forward_ios'
-              }else{
-                  child.style.removeProperty('display')
-                  button.querySelector('span').textContent='arrow_back_ios'
-              }
-          }
-          if(!bar.querySelectorAll('svg')[1].previousSibling.tagName){
-            if(bar.querySelectorAll('svg')[1].previousSibling.textContent){
-              username = bar.querySelectorAll('svg')[1].previousSibling.textContent
-              bar.querySelectorAll('svg')[1].previousSibling.textContent=''
-            }else{
-              bar.querySelectorAll('svg')[1].previousSibling.textContent=username
-            }
-          }
-        }
-
-        if(!document.getElementById('collpasechannelname')){
-          if(bar.querySelector(`[aria-label='Click to show full description']`)){
-            bar.insertBefore(button,bar.querySelector(`[aria-label='Click to show full description']`).nextSibling)
-          }else{
-              if(bar.children[1]){
-                bar.insertBefore(button,bar.children[1].nextSibling)
-              }
-          }
-        }
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    if(baseuris[baseuris.length-1]!=document.baseURI){
-      const bar = document.getElementsByClassName('gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0').item(0)
-      for(const child of bar.children){
-        if(child.style?.display){
-          child.style.removeProperty('display')
-        }
-      }
-      if(document.getElementById('collpasechannelname')){
-        document.getElementById('collpasechannelname').remove()
-      }
-    }
-    baseuris.push(document.baseURI)
-    collapseChannelName();
-  });
-
-  function init() {
-    collapseChannelName();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
-/* --- CollapseSettingsSidebar.js --- */
-if(window.__US_BUILDER_COLLAPSESETTINGSSIDEBAR_JS__){return;}window.__US_BUILDER_COLLAPSESETTINGSSIDEBAR_JS__=true;
-
-let fuckyou = [];
-(function () {
-  if (window.__COLLAPSE_SETTINGS_SIDEBAR__) return;
-  window.__COLLAPSE_SETTINGS_SIDEBAR__ = true;
-
-  function apply() {
-    if(document.getElementsByClassName('d_flex flex_1_0_218px pl_8px jc_flex-end').item(0)){
-        if(fuckyou.length>1){
-            fuckyou = [];
-        }
-        const thing = document.getElementsByClassName('d_flex flex_1_0_218px pl_8px jc_flex-end').item(0).children[0].children[0].children[0]
-        const collapsebutton = document.createElement('div')
-        collapsebutton.className = 'd_flex cursor_pointer ai_center'
-        collapsebutton.ariaLabel = 'Collapse'
-        collapsebutton.innerHTML = `
-            <svg stroke-width="0" color="currentColor" fill="currentColor" viewBox="0 0 24 24" size="20" height="20" width="20" xmlns="http://www.w3.org/2000/svg" style="overflow: visible;"><path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path></svg>
-        `
-        collapsebutton.addEventListener('click',()=>{
-            document.getElementsByClassName('d_flex flex_1_0_218px pl_8px jc_flex-end').item(0).style.display ='none'
-        });
-
-        if(!document.querySelector('div[aria-label=\'Collapse\']')&&window.outerWidth<window.outerHeight){
-          thing.insertBefore(collapsebutton,thing.children[0])
-        }
-  
-        document.querySelectorAll(`a[class='pos_relative min-w_0 d_flex ai_center p_6px_8px bdr_8px fw_500 me_12px fs_15px us_none trs_background-color_0.1s_ease-in-out c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg_unset [&_svg]:flex-sh_0']`).forEach(e=>{
-          if(e.children[1].children[0]?.children[0]?.getAttribute('d')=='m17 8-1.41 1.41L17.17 11H9v2h8.17l-1.58 1.58L17 16l4-4zM5 5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h7v-2H5z'
-          ||e.children[1].children[0]?.children[0]?.getAttribute('d')=='M18.5 3H6c-1.1 0-2 .9-2 2v5.71c0 3.83 2.95 7.18 6.78 7.29 3.96.12 7.22-3.06 7.22-7v-1h.5c1.93 0 3.5-1.57 3.5-3.5S20.43 3 18.5 3M16 5v3H6V5zm0 5v1c0 2.76-2.24 5-5 5s-5-2.24-5-5v-1m12.5-2H18V5h.5c.83 0 1.5.67 1.5 1.5S19.33 8 18.5 8M4 19h16v2H4z'
-          ||e.children[1].children[0]?.children[0]?.getAttribute('d')=='M15 9H9v6h6zm-2 4h-2v-2h2zm8-2V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9v2H7c-1.1 0-2 .9-2 2v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2zm-4 6H7V7h10z'
-          ||e.textContent.includes('Avia')){
-              return;
-          }
-          const oldClick = e.$$click
-          e.$$click = async function(){
-            await oldClick()
-            const collapsebutton = document.querySelector('div[aria-label=\'Collapse\']')
-            if(collapsebutton){
-              collapsebutton.click()
-            }
-          }
-      })
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    apply();
-  });
-
-  function init() {
-    apply();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
-/* --- __COLLAPSE_SETTINGS_SIDEBAR_FULLSCREEN__.js --- */
-if(window.__US_BUILDER_COLLAPSE_SETTINGS_SIDEBAR_FULLSCREEN_JS__){return;}window.__US_BUILDER_COLLAPSE_SETTINGS_SIDEBAR_FULLSCREEN_JS__=true;
-
-(function(){
-if(window.__COLLAPSE_SETTINGS_SIDEBAR_FULLSCREEN__) return;
-window.__COLLAPSE_SETTINGS_SIDEBAR_FULLSCREEN__ = true;
-
-function getPanel(){
-  return document.getElementsByClassName('d_flex flex_1_0_218px pl_8px jc_flex-end').item(0);
-}
-
-function getContentPanel(){
-  return document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden min-w_0 flex_1_1_800px').item(0);
-}
-
-function getSettingsRoot(){
-  // the flex row that contains both the sidebar panel and content panel
-  const panel = getPanel();
-  if(!panel) return null;
-  return panel.parentElement;
-}
-
-function ensureReopenBtn(){
-  if(document.getElementById('avia-settings-reopen-btn')) return;
-
-  const btn = document.createElement('div');
-  btn.id = 'avia-settings-reopen-btn';
-  Object.assign(btn.style, {
-    position: 'fixed',
-    top: '12px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    zIndex: '999999',
-    background: 'var(--md-sys-color-surface-container-high, #2a2a2a)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: '0 0 8px 8px',
-    padding: '4px 16px 6px',
-    cursor: 'pointer',
-    display: 'none',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
-    color: 'var(--md-sys-color-on-surface, #fff)',
-    fontSize: '12px',
-    fontWeight: '500',
-  });
-
-  // down chevron + label
-  btn.innerHTML = `
-    <svg stroke-width="0" fill="currentColor" viewBox="0 0 24 24" height="16" width="16" xmlns="http://www.w3.org/2000/svg">
-      <path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/>
-    </svg>
-    <span>Settings</span>
-  `;
-
-  btn.addEventListener('click', () => {
-    const panel = getPanel();
-    if(!panel) return;
-
-    // restore sidebar
-    panel.style.display = '';
-    Object.assign(panel.style, {
-      position: '',
-      top: '',
-      left: '',
-      width: '',
-      height: '',
-      zIndex: '',
-    });
-
-    // hide content again
-    const content = getContentPanel();
-    if(content) content.style.display = 'none';
-
-    btn.style.display = 'none';
-  });
-
-  document.body.appendChild(btn);
-}
-
-function applyFullscreenSidebar(){
-  const panel = getPanel();
-  //ignore on tablets/ipads
-  if(!panel || panel.__avia_fullscreen_applied__||window.outerHeight<window.outerWidth) return;
-  panel.__avia_fullscreen_applied__ = true;
-
-  // make the sidebar fill the screen, centered
-  Object.assign(panel.style, {
-    position: 'fixed',
-    top: '0',
-    left: '0',
-    width: '100vw',
-    height: '100vh',
-    zIndex: '99997',
-    display: 'flex',
-    justifyContent: 'center',
-    background: 'var(--md-sys-color-surface, #1e1e1e)',
-    overflowY: 'auto',
-  });
-
-  const content = getContentPanel();
-  if(content) content.style.display = 'none';
-}
-
-function resetFullscreenSidebar(){
-  const panel = getPanel();
-  if(!panel) return;
-  panel.__avia_fullscreen_applied__ = false;
-  Object.assign(panel.style, {
-    position: '',
-    top: '',
-    left: '',
-    width: '',
-    height: '',
-    zIndex: '',
-    display: '',
-    justifyContent: '',
-    background: '',
-    overflowY: '',
-  });
-}
-
-function syncReopenBtn(){
-  const btn = document.getElementById('avia-settings-reopen-btn');
-  if(!btn) return;
-  const panel = getPanel();
-  // if not in settings at all, hide the btn
-  if(!panel){
-    btn.style.display = 'none';
-    return;
-  }
-
-  if(panel.style.display !== 'none'){
-    btn.style.display = 'none';
-  }
-}
-
-function hijack(){
-  const panel = getPanel();
-  if(!panel) return;
-
-  applyFullscreenSidebar();
-
-  const collapseBtn = panel.querySelector('[aria-label="Collapse"]');
-  if(!collapseBtn || collapseBtn.__avia_fs_hijacked__) return;
-  collapseBtn.__avia_fs_hijacked__ = true;
-
-  collapseBtn.addEventListener('click', (e) => {
-    e.stopImmediatePropagation();
-
-    // hide sidebar
-    panel.style.display = 'none';
-
-    // show content panel
-    const content = getContentPanel();
-    if(content){
-      content.style.display = '';
-      // center it nicely
-      Object.assign(content.style, {
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        width: '100vw',
-        height: '100vh',
-        zIndex: '99996',
-        overflowY: 'auto',
-      });
-    }
-
-    const reopenBtn = document.getElementById('avia-settings-reopen-btn');
-    if(reopenBtn) reopenBtn.style.display = 'flex';
-  }, true);
-}
-
-ensureReopenBtn();
-
-let lastInSettings = false;
-
-new MutationObserver(() => {
-  ensureReopenBtn();
-
-  const inSettings = !!getPanel();
-
-  if(inSettings && !lastInSettings){
-    // just entered settings — reset any stale state
-    const content = getContentPanel();
-    if(content){
-      Object.assign(content.style, {
-        position: '',
-        top: '',
-        left: '',
-        width: '',
-        height: '',
-        zIndex: '',
-        overflowY: '',
-      });
-    }
-  }
-
-  if(!inSettings && lastInSettings){
-    // just left settings
-    const btn = document.getElementById('avia-settings-reopen-btn');
-    if(btn) btn.style.display = 'none';
-  }
-
-  lastInSettings = inSettings;
-
-  hijack();
-  syncReopenBtn();
-
-}).observe(document.body, { childList: true, subtree: true });
-
-hijack();
-
-})();
-
-
 /* --- CustomTitle.js --- */
 if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE_JS__=true;
 
@@ -1911,8 +1607,8 @@ if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE
     if(!icon) return;
     icon.href='https://cdn.stoatusercontent.com/icons/vnGRb1M_UiP4-oj1qfqQODDCsyYOWa3f92ib3ac-K_/original'
 
-    if(document.title!='Stoat (Avia Client Mobile 1.5)'){
-        document.title='Stoat (Avia Client Mobile 1.5)'
+    if(document.title!='Stoat (Avia Client Mobile 1.7)'){
+        document.title='Stoat (Avia Client Mobile 1.7)'
     }
   }
 
@@ -1969,129 +1665,33 @@ if(window.__US_BUILDER_EMOJIFIX_JS__){return;}window.__US_BUILDER_EMOJIFIX_JS__=
 })();
 
 
-/* --- FullscreenSidebar.js --- */
-if(window.__US_BUILDER_FULLSCREENSIDEBAR_JS__){return;}window.__US_BUILDER_FULLSCREENSIDEBAR_JS__=true;
+/* --- FixBanList.js --- */
+if(window.__US_BUILDER_FIXBANLIST_JS__){return;}window.__US_BUILDER_FIXBANLIST_JS__=true;
 
 (function () {
-  if (window.__FULL_SCREEN_SIDEBAR__) return;
-  window.__FULL_SCREEN_SIDEBAR__ = true;
+  if (window.__FIX_BAN_LIST__) return;
+  window.__FIX_BAN_LIST__ = true;
 
-  function getSidebar() {
-    const wrap = document.getElementsByClassName(
-      'd_flex h_100% min-w_0 c_var(--md-sys-color-outline) bg_var(--md-sys-color-surface-container-high)'
-    ).item(0);
-    return wrap && wrap.firstChild && wrap.firstChild.children[1]
-      ? wrap.firstChild
-      : null;
-  }
-
-  function undo(){
-    const sidebar = getSidebar()
-    if(!sidebar||sidebar.style.display=='none'||sidebar.style.width!='100vw') return;
-    sidebar.style= 'display: flex; flex-shrink: 0;'
-
-    const channels = document.querySelectorAll(`a[href*='/channel'][role='listitem']`)
-    channels.forEach(channel=>{
-        const clone = channel.cloneNode(true)
-        channel.parentElement.replaceChild(clone,channel)
-        delete clone.dataset.fuck
-    })
-
-    const homebutton = document.querySelectorAll(`a[href='/app']`).item(1)
-    if(homebutton){
-      const clone = homebutton.cloneNode(true)
-      homebutton.parentElement.replaceChild(clone,homebutton)
-      delete clone.dataset.patched
+  function fixBanList() {
+    const reasontextfield = document.querySelector(`mdui-text-field[label='Reason']`)
+    if(window.outerWidth>window.outerHeight){
+        if(reasontextfield?.style.width){
+            reasontextfield.style.removeProperty('width')
+        }
+        return;
     }
 
-    const friends = document.querySelector(`a[href='/friends']`)
-    if(friends){
-      const savednotesclone = friends.nextSibling.nextSibling.cloneNode(true)
-      friends.parentElement.replaceChild(savednotesclone,friends.nextSibling.nextSibling)
-      delete savednotesclone.dataset.patched
-
-      const friendsclone = friends.cloneNode(true)
-      friends.parentElement.replaceChild(friendsclone,friends)
-      delete friendsclone.dataset.patched
-    }
-  }
-
-  function fullScreenSidebar() {
-    const sidebar = getSidebar()
-    if(!sidebar||window.outerHeight<window.outerWidth) return;
-
-    Object.assign(sidebar.style, {
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        width: '100vw',
-        height: '100vh',
-        zIndex: '99997',
-        justifyContent: 'center',
-        background: 'var(--md-sys-color-surface, #1e1e1e)',
-        overflowY: 'auto',
-    } );
-
-    const discoverbutton = document.querySelector(`a[href*='/discover']`)
-    if(discoverbutton){
-      discoverbutton.href='https://stt.gg/discover'
-      discoverbutton.target='_blank'
-    }
-
-    const stoatserversbutton = document.getElementById('stoatservers-sidebar-btn')
-    if(stoatserversbutton&&!stoatserversbutton.dataset.patched){
-      const clone = stoatserversbutton.firstChild.cloneNode(true)
-      stoatserversbutton.replaceChild(clone,stoatserversbutton.firstChild)
-      stoatserversbutton.onclick = function(e){
-        window.open('https://stoatservers.com')
-      }
-      stoatserversbutton.dataset.patched=true
-    }
-
-    const channels = document.querySelectorAll(`a[href*='/channel'][role='listitem']`)
-    channels.forEach(channel=>{
-      if(!channel.dataset.fuck){
-        channel.addEventListener('click',()=>{
-            const sidebar = getSidebar()
-            sidebar.style.display='none'
-          });
-          channel.dataset.fuck=true
-      }
-    })
-
-    const homebutton = document.querySelectorAll(`a[href='/app']`).item(1)
-    if(homebutton&&!homebutton.dataset.patched){
-      homebutton.firstChild.addEventListener('click',()=>{
-        const sidebar = getSidebar()
-        sidebar.style.display='none'
-      });
-      homebutton.dataset.patched=true
-    }
-
-    const friends = document.querySelector(`a[href='/friends']`)
-    if(friends&&!friends.dataset.patched){
-      friends.firstChild.addEventListener('click',()=>{
-        const sidebar = getSidebar()
-        sidebar.style.display='none'
-      });
-
-      friends.nextSibling.nextSibling.firstChild.addEventListener('click',()=>{
-        const sidebar = getSidebar()
-        sidebar.style.display='none'
-      });
-      friends.nextSibling.nextSibling.dataset.patched=true
+    if(reasontextfield){
+        reasontextfield.style.width='170%'
     }
   }
 
   const observer = new MutationObserver(() => {
-    fullScreenSidebar();
-    if(window.outerHeight<window.outerWidth){
-      undo()
-    }
+    fixBanList();
   });
 
   function init() {
-    fullScreenSidebar();
+    fixBanList();
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
@@ -2106,62 +1706,205 @@ if(window.__US_BUILDER_FULLSCREENSIDEBAR_JS__){return;}window.__US_BUILDER_FULLS
 })();
 
 
-/* --- GifAutoPlayfix.js --- */
-if(window.__US_BUILDER_GIFAUTOPLAYFIX_JS__){return;}window.__US_BUILDER_GIFAUTOPLAYFIX_JS__=true;
+/* --- FixColourPicker.js --- */
+if(window.__US_BUILDER_FIXCOLOURPICKER_JS__){return;}window.__US_BUILDER_FIXCOLOURPICKER_JS__=true;
 
 (function () {
-    if (window.__GIF_AUTOPLAY_FIX__) return;
-    window.__GIF_AUTOPLAY_FIX__ = true;
+  if (window.__FIX_COLOUR_PICKER__) return;
+  window.__FIX_COLOUR_PICKER__ = true;
 
-    function fixGifAutoPlay(){
-        document.querySelectorAll('video').forEach(video=>{
-            if(video.className=='w_200px h_120px cursor_pointer obj-f_cover'||video.className=='cursor_pointer'){
-                video.setAttribute('playsinline','true')
-            }
+  const defaultthemesettings = {
+    'blur':true,
+    'interfaceFont':'Inter',
+    'm3Accent':'#5470ec',
+    'm3Contrast':0,
+    'm3Variant':'tonal_spot',
+    'messageGroupSpacing':12,
+    'messageSize':14,
+    'mode':'system',
+    'monospaceFont':'Fira Code',
+    'present':'you'
+  }
+
+  function rgbToHex(r, g, b) {
+    return "#" + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
+  }
+
+  async function getThemeSettings(){
+    const db = await new Promise((resolve, reject) => {
+    const r = indexedDB.open('localforage');
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+    });
+
+    const tx = db.transaction('keyvaluepairs', 'readwrite');
+    const promise = await new Promise((resolve, reject) => {
+    const r = tx.objectStore('keyvaluepairs').get('theme')
+        r.onsuccess = ()=>resolve(r.result)
+    });
+    return promise;
+    }
+
+    async function updateThemeSettings(data){
+        const db = await new Promise((resolve, reject) => {
+        const r = indexedDB.open('localforage');
+        r.onsuccess = () => resolve(r.result);
+        r.onerror = () => reject(r.error);
+        });
+
+        const tx = db.transaction('keyvaluepairs', 'readwrite');
+        const promise = await new Promise((resolve, reject) => {
+        const r = tx.objectStore('keyvaluepairs').put(data,'theme')
+            r.onsuccess = ()=>resolve(r.result)
+            r.onerror = ()=>reject(r.error)
         });
     }
-    
-    const observer = new MutationObserver(()=>{
-        fixGifAutoPlay()
+
+    async function fixColourInput(){
+        const colourinput = document.querySelector(`input[type='color']`)
+        if(colourinput&&!document.getElementById('aviacolourpicker')){
+            const parent = colourinput.parentElement.parentElement
+            if(parent.firstChild.tagName=='DIV'){
+                const row = document.createElement('div')
+                row.className='d_flex flex-d_column flex-g_initial m_0 ai_initial jc_initial gap_var(--gap-lg)'
+
+                const input = document.createElement('input')
+                input.type='color'
+                input.id='aviacolourpicker'
+                input.value=colourinput.value
+                input.$$input = colourinput.$$input
+
+                row.appendChild(input)
+
+                for(const child of colourinput.nextSibling.children){
+                    for(const child2 of child.children){
+                        child2.addEventListener('click',async ()=>{
+                            const numbers = child2.style.backgroundColor.replace('rgb','').replace('(','').replace(')','').split(', ')
+                            const r = Number(numbers[0])
+                            const g = Number(numbers[1])
+                            const b = Number(numbers[2])
+                            input.value = await rgbToHex(r,g,b)
+                        });
+                    }
+                }
+
+                colourinput.previousSibling.remove()
+                parent.parentElement.insertBefore(row,parent.parentElement.children[1])
+            }
+
+            if(parent.firstChild.tagName=='SPAN'){
+                const row = document.createElement('div')
+                row.className='d_flex flex-d_row flex-g_initial flex-wrap_initial gap_var(--gap-md) ai_center jc_center'
+
+                const themesettings = await getThemeSettings()??defaultthemesettings
+                const input = document.createElement('input')
+                input.type='color'
+                input.id='aviacolourpicker'
+                input.value=themesettings['m3Accent']
+                input.onchange = async function(){
+                    const themesettings = await getThemeSettings()??defaultthemesettings
+                    themesettings['m3Accent']=input.value
+                    updateThemeSettings(themesettings)
+                }
+
+                row.appendChild(input)
+
+                for(const child of [...parent.children[2].children].filter(child=>child.tagName=='BUTTON')){
+                    child.addEventListener('click',async ()=>{
+                        const numbers = child.style.backgroundColor.replace('rgb','').replace('(','').replace(')','').split(', ')
+                        const r = Number(numbers[0])
+                        const g = Number(numbers[1])
+                        const b = Number(numbers[2])
+                        input.value = await rgbToHex(r,g,b)
+                    })
+                }
+
+                parent.insertBefore(row,parent.children[2])
+                parent.children[3].removeChild(parent.children[3].firstChild)
+            }
+        }
+    }
+
+    const observer = new MutationObserver(() => {
+        fixColourInput();
     });
-    observer.observe(document.documentElement, {childList: true, subtree: true })
+
+    function init() {
+        fixColourInput();
+        observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+        });
+    }
+
+    if (document.body) {
+        init();
+    } else {
+        requestAnimationFrame(init);
+    }
 })();
 
 
-/* --- HideChatButtonsOnFocus.js --- */
-if(window.__US_BUILDER_HIDECHATBUTTONSONFOCUS_JS__){return;}window.__US_BUILDER_HIDECHATBUTTONSONFOCUS_JS__=true;
+/* --- FixUserPopups.js --- */
+if(window.__US_BUILDER_FIXUSERPOPUPS_JS__){return;}window.__US_BUILDER_FIXUSERPOPUPS_JS__=true;
 
 (function () {
-  if (window.__HIDE_CHAT_BUTTONS_ON_FOCUS__) return;
-  window.__HIDE_CHAT_BUTTONS_ON_FOCUS__ = true;
+  if (window.__FIX_USER_POPUPS__) return;
+  window.__FIX_USER_POPUPS__ = true;
 
-  function hideChatButtonsOnFocus() {
-    const chatbar = document.getElementsByClassName('cm-content cm-lineWrapping').item(0)
-    if(!chatbar) return;
-    if(!chatbar.dataset.patched){
-        chatbar.addEventListener('focus',()=>{
-            for(const button of chatbar.parentElement.parentElement.parentElement.parentElement.querySelectorAll(`div[class='flex-sh_0 d_flex ai_end jc_center w_42px']`)){
-                button.style.display='none'
-            }
-        })
+  function fixUserPopups() {
+    const names = [...document.getElementsByClassName('ov_hidden white-space_nowrap tov_ellipsis [&_*]:ov_hidden [&_*]:white-space_nowrap [&_*]:tov_ellipsis')]
+    .filter(e=>e.offsetParent?.id)
 
-        chatbar.addEventListener('blur',()=>{
-            for(const button of chatbar.parentElement.parentElement.parentElement.parentElement.querySelectorAll(`div[class='flex-sh_0 d_flex ai_end jc_center w_42px']`)){
-                if(button.textContent!='gif'){
-                  button.style.removeProperty('display')
-                }
+    names.forEach(name=>{
+        if(name.firstChild.firstChild?.dataset&&!name.firstChild.firstChild.dataset.userpopupfixed){
+            const pfp = name.parentElement.parentElement.previousSibling.querySelector(`img[class='w_100% h_100% obj-f_cover']`)
+            const balls = new Event('contextmenu',{
+                bubbles:true,
+                button:2
+            });
+
+            name.firstChild.firstChild.onclick = function(e){
+                e.preventDefault()
+                e.stopImmediatePropagation()
+                e.stopPropagation()
+
+                setTimeout(() => {
+                    pfp.dispatchEvent(balls)
+
+                    setTimeout(() => {
+                        const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
+                        contextmenu.firstChild.click()
+                    }, 100);
+                }, 100);
+            };
+
+            pfp.onclick = function(e){
+              e.preventDefault()
+              e.stopImmediatePropagation()
+              e.stopPropagation()
+
+              setTimeout(() => {
+                  pfp.dispatchEvent(balls)
+
+                  setTimeout(() => {
+                      const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
+                      contextmenu.firstChild.click()
+                  }, 100);
+              }, 100);
             }
-        })
-        chatbar.dataset.patched=true
-    }
+
+            name.firstChild.firstChild.dataset.userpopupfixed=true
+        }
+    });
   }
 
   const observer = new MutationObserver(() => {
-    hideChatButtonsOnFocus();
+    fixUserPopups();
   });
 
   function init() {
-    hideChatButtonsOnFocus();
+    fixUserPopups();
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
@@ -2176,36 +1919,61 @@ if(window.__US_BUILDER_HIDECHATBUTTONSONFOCUS_JS__){return;}window.__US_BUILDER_
 })();
 
 
-/* --- HideServerList.js --- */
-if(window.__US_BUILDER_HIDESERVERLIST_JS__){return;}window.__US_BUILDER_HIDESERVERLIST_JS__=true;
+/* --- HideSearchbarButton.js --- */
+if(window.__US_BUILDER_HIDESEARCHBARBUTTON_JS__){return;}window.__US_BUILDER_HIDESEARCHBARBUTTON_JS__=true;
 
 (function () {
-  if (window.__HIDE_SERVER_LIST__) return;
-  window.__HIDE_SERVER_LIST__ = true;
+  if (window.__HIDE_SEARCHBAR_BUTTON__) return;
+  window._HIDE_SEARCHBAR_BUTTON__ = true;
 
-  function hideServerList() {
-        const button = document.querySelector('div[aria-label=\'Toggle main sidebar\']')
-        if(button){
-          const sidebar = document.getElementsByClassName('d_flex h_100% min-w_0 c_var(--md-sys-color-outline) bg_var(--md-sys-color-surface-container-high)')
-          .item(0).firstChild
-          if(sidebar.children[1]){
-            button.$$click = function(){
-              if(sidebar.style.display=='none'){
-                sidebar.style.display='flex'
-              }else{
-                sidebar.style.display='none'
-              }
-            }
-          }
+  function hideSearchbarButton() {
+    if(window.outerWidth>window.outerHeight) return;
+
+    const pinbutton = document.querySelector(`[aria-label='View pinned messages']`)
+    if(!pinbutton) return;
+    if(pinbutton.parentElement.lastChild.placeholder&&!document.getElementById('hidesearchbarbutton')){
+        const searchbutton = document.createElement('button')
+        searchbutton.className='ov-wrap_anywhere lh_1.25rem fs_0.875rem ls_0.015625rem fw_500 pos_relative asp_1/1 flex-sh_0 d_flex ai_center jc_center ff_inherit cursor_pointer bd_none trs_var(--transitions-fast)_all c_var(--colour) fill_var(--colour) --colour_var(--md-sys-color-on-surface-variant) bdr_var(--borderRadius-full) h_40px px_8px'
+        searchbutton.ariaLabel='Search'
+        searchbutton.id='hidesearchbarbutton'
+
+        const mdripple = document.createElement('md-ripple')
+        mdripple.ariaHidden=true
+
+        const span = document.createElement('span')
+        span.ariaHidden=true
+        span.className='material-symbols-outlined fs_inherit fw_undefined!'
+        span.style='display: block; font-variation-settings: &quot;FILL&quot; 0, &quot;wght&quot; 400, &quot;GRAD&quot; 0;'
+        span.textContent='search'
+
+        searchbutton.appendChild(mdripple)
+        searchbutton.appendChild(span)
+
+        searchbutton.onclick = function(e){
+            const searchbar = pinbutton.parentElement.lastChild
+            const searchresults = document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0)
+            searchbar.remove()
+            searchbutton.remove()
+            searchresults.remove()
+
+            pinbutton.click()
+            pinbutton.click()
         }
+
+        pinbutton.parentElement.insertBefore(searchbutton,pinbutton.parentElement.lastChild)
+    }
+
+    if(pinbutton.parentElement.lastChild.textContent=='search'&&document.getElementById('hidesearchbarbutton')){
+        document.getElementById('hidesearchbarbutton').remove()
+    }
   }
 
   const observer = new MutationObserver(() => {
-      hideServerList();
+    hideSearchbarButton();
   });
 
   function init() {
-    hideServerList();
+    hideSearchbarButton();
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
@@ -2444,13 +2212,15 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
 
         pasteBtn.addEventListener('click',async ()=>{
             navigator.clipboard.readText().then(text=>{
-                const value = monaco.editor.getEditors()[0].getValue()
-                monaco.editor.getEditors()[0].setValue(value+'\n'+text)
+                const model = editor.getModel();
+                const value = model.getValue()
+                model.setValue(value+`\n${text}`)
             })
         });
 
         clearBtn.addEventListener('click',async ()=>{
-            monaco.editor.getEditors()[0].setValue('')
+            const model = editor.getModel();
+            model.setValue('')
         });
 
         panel.appendChild(header);
@@ -2886,9 +2656,9 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     el.appendChild(element)
                     element.outerHTML = `
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
-                                Avia Client Mobile 1.5<br>
+                                Avia Client Mobile 1.7<br>
                                 <span style="font-size:10px;opacity:0.7;">
-                                    Based on Avia Client 1.7
+                                    Based on Avia Client 1.7.1
                                 </span>
                             </span>
                     `
@@ -2973,14 +2743,30 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
         }).observe(document.documentElement, { childList: true });
     }
 
+    function registerWithAviaMenu() {
+        if (window.AviaMenu) {
+            window.AviaMenu.register({ id: "avia_fontloader", name: "Font Loader", icon: "upload", onClick: showFontLoaderModal });
+            window.AviaMenu.register({ id: "avia_quickcss", name: "QuickCSS", icon: "code", onClick: toggleQuickCSSPanel });
+        } else {
+            const interval = setInterval(() => {
+                if (window.AviaMenu) {
+                    clearInterval(interval);
+                    window.AviaMenu.register({ id: "avia_fontloader", name: "Font Loader", icon: "upload", onClick: showFontLoaderModal });
+                    window.AviaMenu.register({ id: "avia_quickcss", name: "QuickCSS", icon: "code", onClick: toggleQuickCSSPanel });
+                }
+            }, 100);
+        }
+    }
+
     waitForBody(() => {
         const observer = new MutationObserver(() => injectButtons());
         observer.observe(document.body, { childList: true, subtree: true });
         injectButtons();
     });
 
+    preloadMonaco();
+    registerWithAviaMenu();
 })();
-
 
 
 /* --- LocalPlugins.js --- */
@@ -2988,8 +2774,8 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
 
 (function () {
 
-    if (window.__AVIA_LOCAL_PLUGINS_LOADED__) return;
-    window.__AVIA_LOCAL_PLUGINS_LOADED__ = true;
+    if (window.__LOCAL_PLUGINS__) return;
+    window.__LOCAL_PLUGINS__ = true;
 
     const STORAGE_KEY = "avia_local_plugins";
 
@@ -3044,13 +2830,13 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
 
         const panel = document.createElement("div");
         panel.id = "avia-local-editor-panel";
-        if(window.outerWidth<746){
+        if(window.outerWidth<612){
             Object.assign(panel.style, {
                 position: "fixed",
                 bottom: "24px",
                 left: "24px",
-                width: `${window.outerWidth-66}px`,
-                height: `${window.outerWidth-130}px`,
+                width: `${window.outerWidth-52}px`,
+                height: `${window.outerWidth-72}px`,
                 background: "var(--md-sys-color-surface, #1e1e1e)",
                 borderRadius: "16px",
                 boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
@@ -3066,8 +2852,8 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
                 position: "fixed",
                 bottom: "24px",
                 left: "24px",
-                width: "680px",
-                height: "460px",
+                width: "560px",
+                height: "520px",
                 background: "var(--md-sys-color-surface, #1e1e1e)",
                 borderRadius: "16px",
                 boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
@@ -3108,37 +2894,6 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
         closeBtn.onmouseleave = () => closeBtn.style.opacity = "0.7";
         closeBtn.onclick = () => panel.remove();
 
-        const clearBtn = document.createElement('div');
-        clearBtn.textContent = 'Clear';
-        Object.assign(clearBtn.style,{
-            position:'absolute',
-            top:'12px',
-            right:'86px',
-            cursor:'pointer',
-            color:'#fff'
-        });
-
-        const pasteBtn = document.createElement('div');
-        pasteBtn.textContent = 'Paste';
-        Object.assign(pasteBtn.style,{
-            position:'absolute',
-            top:'12px',
-            right:'36px',
-            cursor:'pointer',
-            color:'#fff'
-        });
-
-        pasteBtn.addEventListener('click',async ()=>{
-            navigator.clipboard.readText().then(text=>{
-                const value = monaco.editor.getEditors()[0].getValue()
-                monaco.editor.getEditors()[0].setValue(value+'\n'+text)
-            })
-        });
-
-        clearBtn.addEventListener('click',async ()=>{
-            monaco.editor.getEditors()[0].setValue('')
-        });
-
         const toolbar = document.createElement("div");
         Object.assign(toolbar.style, {
             padding: "8px 16px",
@@ -3163,15 +2918,13 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
         editorContainer.style.flex = "1";
 
         panel.appendChild(header);
-        panel.appendChild(clearBtn)
-        panel.appendChild(pasteBtn)
         panel.appendChild(closeBtn);
         panel.appendChild(toolbar);
         panel.appendChild(editorContainer);
         document.body.appendChild(panel);
 
         const editor = monaco.editor.create(editorContainer, {
-            value: plugin.code || "// Write your plugin code here\n",
+            value: plugin.code || "",
             language: "javascript",
             theme: "vs-dark",
             automaticLayout: true,
@@ -3183,7 +2936,6 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
 
         saveBtn.onclick = () => {
             onSave(editor.getValue(), false);
-
             saveBtn.textContent = "✓ Saved";
             setTimeout(() => saveBtn.textContent = "💾 Save", 1200);
         };
@@ -3236,11 +2988,17 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
     function toggleLocalPanel() {
         let panel = document.getElementById("avia-local-plugins-panel");
         if (panel) {
-            panel.style.display = panel.style.display === "none" ? "flex" : "none";
+            if (panel.style.display === "none") {
+                panel.style.display = "flex";
+                renderLocalPanel();
+            } else {
+                panel.style.display = "none";
+            }
             return;
         }
 
         panel = document.createElement("div");
+        panel.id = "avia-local-plugins-panel";
         panel.id = "avia-local-plugins-panel";
         if(window.outerWidth<508){
             Object.assign(panel.style, {
@@ -3281,26 +3039,37 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
         }
 
         const header = document.createElement("div");
-        header.textContent = "Local Plugins";
         Object.assign(header.style, {
             padding: "14px 16px",
             fontWeight: "600",
             fontSize: "14px",
             background: "var(--md-sys-color-surface-container, rgba(255,255,255,0.04))",
             borderBottom: "1px solid rgba(255,255,255,0.08)",
-            cursor: "move"
+            cursor: "move",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flex: "0 0 auto"
         });
+
+        const headerTitle = document.createElement("span");
+        headerTitle.textContent = "Local Plugins";
 
         const closeBtn = document.createElement("div");
         closeBtn.textContent = "✕";
         Object.assign(closeBtn.style, {
-            position: "absolute",
-            top: "12px",
-            right: "16px",
             cursor: "pointer",
-            opacity: "0.7"
+            opacity: "0.7",
+            fontSize: "15px",
+            lineHeight: "1",
+            padding: "2px 4px"
         });
+        closeBtn.onmouseenter = () => closeBtn.style.opacity = "1";
+        closeBtn.onmouseleave = () => closeBtn.style.opacity = "0.7";
         closeBtn.onclick = () => panel.style.display = "none";
+
+        header.appendChild(headerTitle);
+        header.appendChild(closeBtn);
 
         const controlsBar = document.createElement("div");
         Object.assign(controlsBar.style, {
@@ -3327,13 +3096,13 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
             const newPlugin = {
                 id: "local_" + Date.now(),
                 name,
-                code: "// " + name + "\n",
+                code: "",
                 enabled: false
             };
             plugins.push(newPlugin);
             setLocalPlugins(plugins);
             nameInput.value = "";
-            renderLocalPanel();
+            renderLocalPanel(searchInput.value.toLowerCase());
         };
 
         const importBtn = document.createElement("button");
@@ -3344,7 +3113,7 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
 
         const fileInput = document.createElement("input");
         fileInput.type = "file";
-        fileInput.accept = "text/javascript";
+        fileInput.accept = ".js,text/javascript";
         fileInput.multiple = true;
         fileInput.style.display = "none";
 
@@ -3353,9 +3122,7 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
         fileInput.onchange = async () => {
             const files = [...fileInput.files];
             if (!files.length) return;
-
             const plugins = getLocalPlugins();
-
             for (const file of files) {
                 const text = await file.text();
                 const name = file.name.replace(/\.js$/i, "");
@@ -3366,10 +3133,9 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
                     enabled: false
                 });
             }
-
             setLocalPlugins(plugins);
             fileInput.value = "";
-            renderLocalPanel();
+            renderLocalPanel(searchInput.value.toLowerCase());
         };
 
         controlsBar.appendChild(nameInput);
@@ -3377,19 +3143,41 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
         controlsBar.appendChild(importBtn);
         controlsBar.appendChild(fileInput);
 
+        const searchBar = document.createElement("div");
+        Object.assign(searchBar.style, {
+            padding: "10px 16px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            flex: "0 0 auto"
+        });
+
+        const searchInput = document.createElement("input");
+        searchInput.placeholder = "Search plugins…";
+        styleLocalInput(searchInput);
+        searchInput.style.width = "100%";
+        searchInput.oninput = () => renderLocalPanel(searchInput.value.toLowerCase());
+        searchBar.appendChild(searchInput);
+
         const content = document.createElement("div");
         content.id = "avia-local-plugins-content";
         Object.assign(content.style, {
             flex: "1",
-            overflow: "auto",
-            padding: "16px"
+            overflowY: "auto",
+            padding: "12px 16px 16px",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none"
         });
 
+        if (!document.getElementById("avia-local-scrollbar-hide")) {
+            const s = document.createElement("style");
+            s.id = "avia-local-scrollbar-hide";
+            s.textContent = "#avia-local-plugins-content::-webkit-scrollbar{display:none}";
+            document.head.appendChild(s);
+        }
+
         panel.appendChild(header);
-        panel.appendChild(closeBtn);
         panel.appendChild(controlsBar);
+        panel.appendChild(searchBar);
         panel.appendChild(content);
-        document.body.appendChild(panel);
 
         const dropOverlay = document.createElement("div");
         dropOverlay.textContent = "Import JS files";
@@ -3409,6 +3197,8 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
             borderRadius: "16px"
         });
         panel.appendChild(dropOverlay);
+
+        document.body.appendChild(panel);
 
         let dragDepth = 0;
 
@@ -3439,16 +3229,12 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
         panel.addEventListener("drop", async e => {
             e.preventDefault();
             e.stopPropagation();
-
             dropOverlay.style.opacity = "0";
             panel.style.border = "1px solid rgba(255,255,255,0.08)";
             dragDepth = 0;
-
             const files = [...e.dataTransfer.files].filter(f => f.name.endsWith(".js"));
             if (!files.length) return;
-
             const plugins = getLocalPlugins();
-
             for (const file of files) {
                 const text = await file.text();
                 const name = file.name.replace(/\.js$/i, "");
@@ -3459,9 +3245,8 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
                     enabled: false
                 });
             }
-
             setLocalPlugins(plugins);
-            renderLocalPanel();
+            renderLocalPanel(searchInput.value.toLowerCase());
         });
 
         let isDragging = false, offsetX, offsetY;
@@ -3469,8 +3254,12 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
             isDragging = true;
             offsetX = e.clientX - panel.offsetLeft;
             offsetY = e.clientY - panel.offsetTop;
+            document.body.style.userSelect = "none";
         });
-        document.addEventListener("mouseup", () => isDragging = false);
+        document.addEventListener("mouseup", () => {
+            isDragging = false;
+            document.body.style.userSelect = "";
+        });
         document.addEventListener("mousemove", e => {
             if (!isDragging) return;
             panel.style.left = (e.clientX - offsetX) + "px";
@@ -3482,92 +3271,141 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
         renderLocalPanel();
     }
 
-    function renderLocalPanel() {
+    function renderLocalPanel(filter = "") {
         const content = document.getElementById("avia-local-plugins-content");
         if (!content) return;
         content.innerHTML = "";
-        const plugins = getLocalPlugins();
 
-        if (plugins.length === 0) {
+        const plugins = getLocalPlugins();
+        const runSnap = { ...runningLocalPlugins };
+        const errSnap = { ...localPluginErrors };
+
+        const filtered = filter
+            ? plugins.filter(p => p.name.toLowerCase().includes(filter))
+            : plugins;
+
+        const visible = [...filtered].reverse();
+
+        if (visible.length === 0) {
             const empty = document.createElement("div");
-            empty.textContent = "No local plugins yet. Add one above.";
-            empty.style.opacity = "0.4";
-            empty.style.fontSize = "13px";
+            empty.textContent = plugins.length === 0
+                ? "No local plugins yet. Add one above."
+                : "No plugins match your search.";
+            Object.assign(empty.style, { opacity: "0.4", fontSize: "13px", textAlign: "center", padding: "24px 0" });
             content.appendChild(empty);
             return;
         }
 
-        plugins.forEach((plugin, index) => {
-            const isRunning = !!runningLocalPlugins[plugin.id];
-            const hasError = !!localPluginErrors[plugin.id];
+        const sectionLabel = document.createElement("div");
+        sectionLabel.textContent = `Local Plugins: ${visible.length}`;
+        Object.assign(sectionLabel.style, {
+            fontSize: "11px",
+            fontWeight: "700",
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.35)",
+            marginBottom: "10px"
+        });
+        content.appendChild(sectionLabel);
 
-            const row = document.createElement("div");
-            Object.assign(row.style, {
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "12px",
-                padding: "10px 12px",
-                borderRadius: "10px",
+        const grid = document.createElement("div");
+        Object.assign(grid.style, {
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+            gap: "10px"
+        });
+
+        visible.forEach((plugin) => {
+            const realIndex = plugins.indexOf(plugin);
+            const isRunning = !!runSnap[plugin.id];
+            const hasError = !!errSnap[plugin.id];
+
+            const card = document.createElement("div");
+            Object.assign(card.style, {
                 background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.06)"
+                border: `1px solid ${hasError ? "rgba(255,77,77,0.3)" : isRunning ? "rgba(77,255,136,0.25)" : "rgba(255,255,255,0.06)"}`,
+                borderRadius: "10px",
+                padding: "12px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px"
             });
-            if(window.outerWidth<508){
-                //row.style.width = `${window.outerWidth-52}px`
-                row.style.width = `125%`
-            }
-
-            const left = document.createElement("div");
-            Object.assign(left.style, { display: "flex", alignItems: "center", gap: "10px" });
-
-            const statusDot = document.createElement("div");
-            Object.assign(statusDot.style, { width: "10px", height: "10px", borderRadius: "50%", flexShrink: "0" });
-            if (hasError) {
-                statusDot.style.background = "#ff4d4d";
-                statusDot.style.boxShadow = "0 0 6px #ff4d4d";
-            } else if (isRunning) {
-                statusDot.style.background = "#4dff88";
-                statusDot.style.boxShadow = "0 0 6px #4dff88";
-            } else {
-                statusDot.style.background = "#777";
-            }
-
-            const name = document.createElement("div");
-            name.textContent = plugin.name;
-            name.style.fontSize = "13px";
-
-            left.appendChild(statusDot);
-            left.appendChild(name);
-
-            const controls = document.createElement("div");
-            Object.assign(controls.style, { display: "flex", gap: "6px" });
-
-            const editBtn = document.createElement("button");
-            editBtn.textContent = "✏ Edit";
-            styleLocalBtn(editBtn, "rgba(100,140,255,0.2)");
-            editBtn.onclick = () => {
-                openEditorPanel(plugin, (newCode, andRun) => {
-                    const all = getLocalPlugins();
-                    const target = all.find(p => p.id === plugin.id);
-                    if (target) {
-                        target.code = newCode;
-                        plugin.code = newCode; 
-                        setLocalPlugins(all);
-                    }
-                    if (andRun) {
-                        plugin.enabled = true;
-                        if (target) target.enabled = true;
-                        setLocalPlugins(getLocalPlugins().map(p => p.id === plugin.id ? { ...p, code: newCode, enabled: true } : p));
-                        runLocalPlugin(plugin);
-                    }
-                    renderLocalPanel();
-                });
+            card.onmouseenter = () => {
+                if (!hasError && !isRunning) card.style.borderColor = "rgba(255,255,255,0.13)";
+            };
+            card.onmouseleave = () => {
+                card.style.borderColor = hasError ? "rgba(255,77,77,0.3)" : isRunning ? "rgba(77,255,136,0.25)" : "rgba(255,255,255,0.06)";
             };
 
-            const toggleBtn = document.createElement("button");
-            toggleBtn.textContent = plugin.enabled ? "Disable" : "Enable";
-            styleLocalBtn(toggleBtn);
-            toggleBtn.onclick = () => {
+            const topRow = document.createElement("div");
+            Object.assign(topRow.style, {
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "8px"
+            });
+
+            const nameWrap = document.createElement("div");
+            Object.assign(nameWrap.style, { display: "flex", alignItems: "center", gap: "7px", minWidth: "0", flex: "1" });
+
+            const dot = document.createElement("div");
+            Object.assign(dot.style, {
+                width: "8px",
+                height: "8px",
+                borderRadius: "50%",
+                flexShrink: "0",
+                background: hasError ? "#ff4d4d" : isRunning ? "#4dff88" : "#555",
+                boxShadow: hasError ? "0 0 5px #ff4d4d" : isRunning ? "0 0 5px #4dff88" : "none"
+            });
+
+            const nameEl = document.createElement("div");
+            nameEl.textContent = plugin.name;
+            Object.assign(nameEl.style, {
+                fontSize: "13px",
+                fontWeight: "600",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap"
+            });
+
+            nameWrap.appendChild(dot);
+            nameWrap.appendChild(nameEl);
+
+            const switchWrap = document.createElement("div");
+            Object.assign(switchWrap.style, {
+                position: "relative",
+                width: "36px",
+                height: "20px",
+                flexShrink: "0",
+                cursor: "pointer"
+            });
+
+            const track = document.createElement("div");
+            Object.assign(track.style, {
+                position: "absolute",
+                inset: "0",
+                borderRadius: "10px",
+                background: plugin.enabled ? "rgba(100,160,255,0.6)" : "rgba(255,255,255,0.15)",
+                transition: "background 0.2s"
+            });
+
+            const thumb = document.createElement("div");
+            Object.assign(thumb.style, {
+                position: "absolute",
+                top: "3px",
+                left: plugin.enabled ? "19px" : "3px",
+                width: "14px",
+                height: "14px",
+                borderRadius: "50%",
+                background: "#fff",
+                transition: "left 0.2s",
+                pointerEvents: "none"
+            });
+
+            switchWrap.appendChild(track);
+            switchWrap.appendChild(thumb);
+
+            switchWrap.onclick = () => {
                 const all = getLocalPlugins();
                 const target = all.find(p => p.id === plugin.id);
                 if (!target) return;
@@ -3576,7 +3414,36 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
                 setLocalPlugins(all);
                 if (target.enabled) runLocalPlugin(plugin);
                 else stopLocalPlugin(plugin);
-                renderLocalPanel();
+                renderLocalPanel(filter);
+            };
+
+            topRow.appendChild(nameWrap);
+            topRow.appendChild(switchWrap);
+
+            const footer = document.createElement("div");
+            Object.assign(footer.style, { display: "flex", gap: "6px", marginTop: "auto", paddingTop: "2px" });
+
+            const editBtn = document.createElement("button");
+            editBtn.textContent = "✏ Edit";
+            styleLocalBtn(editBtn, "rgba(100,140,255,0.2)");
+            editBtn.style.flex = "1";
+            editBtn.onclick = () => {
+                openEditorPanel(plugin, (newCode, andRun) => {
+                    const all = getLocalPlugins();
+                    const target = all.find(p => p.id === plugin.id);
+                    if (target) {
+                        target.code = newCode;
+                        plugin.code = newCode;
+                        setLocalPlugins(all);
+                    }
+                    if (andRun) {
+                        plugin.enabled = true;
+                        if (target) target.enabled = true;
+                        setLocalPlugins(getLocalPlugins().map(p => p.id === plugin.id ? { ...p, code: newCode, enabled: true } : p));
+                        runLocalPlugin(plugin);
+                    }
+                    renderLocalPanel(filter);
+                });
             };
 
             const removeBtn = document.createElement("button");
@@ -3584,22 +3451,23 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
             styleLocalBtn(removeBtn, "rgba(255,80,80,0.15)");
             removeBtn.onclick = () => {
                 stopLocalPlugin(plugin);
-
                 const editorPanel = document.getElementById("avia-local-editor-panel");
                 if (editorPanel) editorPanel.remove();
                 const all = getLocalPlugins();
                 all.splice(all.findIndex(p => p.id === plugin.id), 1);
                 setLocalPlugins(all);
-                renderLocalPanel();
+                renderLocalPanel(filter);
             };
 
-            controls.appendChild(editBtn);
-            controls.appendChild(toggleBtn);
-            controls.appendChild(removeBtn);
-            row.appendChild(left);
-            row.appendChild(controls);
-            content.appendChild(row);
+            footer.appendChild(editBtn);
+            footer.appendChild(removeBtn);
+
+            card.appendChild(topRow);
+            card.appendChild(footer);
+            grid.appendChild(card);
         });
+
+        content.appendChild(grid);
     }
 
     function styleLocalInput(input) {
@@ -3644,7 +3512,6 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
             .find(d => d.children.length === 0 && d.textContent.trim() === "Appearance");
         if (textNode) textNode.textContent = "(Avia) Local Plugins";
 
-
         const oldSvg = localBtn.querySelector("svg");
         if (oldSvg) oldSvg.remove();
         const svgNS = "http://www.w3.org/2000/svg";
@@ -3655,7 +3522,6 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
         svg.setAttribute("fill", "currentColor");
         svg.style.marginRight = "8px";
         const path = document.createElementNS(svgNS, "path");
-
         path.setAttribute("d", "M20.5 11H19V7a2 2 0 00-2-2h-4V3.5a2.5 2.5 0 00-5 0V5H4a2 2 0 00-2 2v3.8h1.5c1.5 0 2.7 1.2 2.7 2.7S5 16.2 3.5 16.2H2V20a2 2 0 002 2h3.8v-1.5c0-1.5 1.2-2.7 2.7-2.7s2.7 1.2 2.7 2.7V22H17a2 2 0 002-2v-4h1.5a2.5 2.5 0 000-5z");
         svg.appendChild(path);
         localBtn.insertBefore(svg, localBtn.firstChild);
@@ -3665,6 +3531,18 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
     }
 
 
+    function registerWithAviaMenu() {
+        if (window.AviaMenu) {
+            window.AviaMenu.register({ id: "avia_plugins_local", name: "Local Plugins", icon: "extension", onClick: toggleLocalPanel });
+        } else {
+            const interval = setInterval(() => {
+                if (window.AviaMenu) {
+                    clearInterval(interval);
+                    window.AviaMenu.register({ id: "avia_plugins_local", name: "Local Plugins", icon: "extension", onClick: toggleLocalPanel });
+                }
+            }, 100);
+        }
+    }
     function waitForBody(callback) {
         if (document.body) callback();
         else new MutationObserver((obs) => {
@@ -3684,8 +3562,9 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
 
     preloadMonaco();
 
-})();
+    registerWithAviaMenu();
 
+})();
 
 
 /* --- LoginWithToken.js --- */
@@ -3932,6 +3811,9 @@ if(window.__US_BUILDER_MEMBERLISTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDE
 
             member.addEventListener('touchend',function(e){
                 if(long){
+                    e.preventDefault()
+                    e.stopImmediatePropagation()
+                    e.stopPropagation()
                     setTimeout(() => {
                         member.dispatchEvent(balls)
                     }, 100);
@@ -3947,40 +3829,41 @@ if(window.__US_BUILDER_MEMBERLISTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDE
     }
 
     for(const offlinemember of memberlist.getElementsByClassName('flex-sh_0 fw_500 fs_15px us_none cursor_pointer pos_relative d_flex ai_center m_0_var(--gap-md) p_0_var(--gap-md) bdr_var(--borderRadius-xl) c_var(--color) fill_var(--color) [&_>_svg]:as_center [&:hover_.hover-hide,_&:not(:hover)_.hover-show]:d_none h_42px gap_var(--gap-md) --color_var(--md-sys-color-outline-variant) bg_transparent [&_img]:op_0.3')){
+        let timer;
+        let long = false;
+
+        function start() {
+            timer = setTimeout(() => {
+                long = true
+            }, time);
+        }
+
+        function stop() {
+            clearTimeout(timer);
+            long = false
+        }
+
         if(!offlinemember.dataset.patched){
-            let timer;
-            let long = false;
+            offlinemember.addEventListener('touchstart',function(e){
+                start()
+            });
 
-            function start() {
-                timer = setTimeout(() => {
-                    long = true
-                }, time);
-            }
+            offlinemember.addEventListener('touchend',function(e){
+                if(long){
+                    e.preventDefault()
+                    e.stopImmediatePropagation()
+                    e.stopPropagation()
+                    setTimeout(() => {
+                        offlinemember.dispatchEvent(balls)
+                    }, 100);
+                }
+                stop()
+            })
 
-            function stop() {
-                clearTimeout(timer);
-                long = false
-            }
+            offlinemember.addEventListener('touchcancel',stop);
+            offlinemember.addEventListener('touchmove',stop);
 
-            if(!offlinemember.dataset.patched){
-                offlinemember.addEventListener('touchstart',function(e){
-                    start()
-                });
-
-                offlinemember.addEventListener('touchend',function(e){
-                    if(long){
-                        setTimeout(() => {
-                            offlinemember.dispatchEvent(balls)
-                        }, 100);
-                    }
-                    stop()
-                })
-
-                offlinemember.addEventListener('touchcancel',stop);
-                offlinemember.addEventListener('touchmove',stop);
-
-                offlinemember.dataset.patched=true
-            }
+            offlinemember.dataset.patched=true
         }
     }
   }
@@ -3991,6 +3874,372 @@ if(window.__US_BUILDER_MEMBERLISTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDE
 
   function init() {
     memberListContextMenuFix();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+
+
+/* --- menu.js --- */
+if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
+
+(function () {
+    if (window.__AVIA_MENU__) return;
+    window.__AVIA_MENU__ = true;
+
+    const ITEM_HEIGHT = 32;
+    const MAX_VISIBLE = 12;
+    const PIN_STORAGE_KEY = "avia_menu_pins";
+
+    const registeredItems = [];
+    let menuEl = null;
+    let menuOpen = false;
+
+    function getPins() {
+        try { return JSON.parse(localStorage.getItem(PIN_STORAGE_KEY) || "[]"); }
+        catch { return []; }
+    }
+
+    function savePins(arr) {
+        localStorage.setItem(PIN_STORAGE_KEY, JSON.stringify(arr));
+    }
+
+    function pinItem(id) {
+        const pins = getPins().filter(p => p !== id);
+        pins.unshift(id);
+        savePins(pins);
+    }
+
+    function unpinItem(id) {
+        savePins(getPins().filter(p => p !== id));
+    }
+
+    function isPinned(id) {
+        return getPins().includes(id);
+    }
+
+    function getSortedItems() {
+        const pins = getPins();
+        const pinned = [];
+        for (const id of pins) {
+            const found = registeredItems.find(i => i.id === id);
+            if (found) pinned.push(found);
+        }
+        const unpinned = registeredItems.filter(i => !isPinned(i.id));
+        return [...pinned, ...unpinned];
+    }
+
+    window.AviaMenu = {
+        register: function (item) {
+            if (!item || typeof item !== "object") {
+                console.error("[AviaMenu] Registration failed: item must be an object, got", typeof item);
+                return;
+            }
+            if (typeof item.id !== "string" || !item.id.trim()) {
+                console.error("[AviaMenu] Registration failed: item.id must be a non-empty string, got", item.id);
+                return;
+            }
+            if (!item.name || typeof item.name !== "string") {
+                console.error("[AviaMenu] Registration failed for id '%s': item.name must be a non-empty string, got", item.id, item.name);
+                return;
+            }
+            if (typeof item.onClick !== "function") {
+                console.error("[AviaMenu] Registration failed for id '%s': item.onClick must be a function, got", item.id, typeof item.onClick);
+                return;
+            }
+            if (registeredItems.find(i => i.id === item.id.trim())) {
+                console.error("[AviaMenu] Registration failed: an item with id '%s' is already registered", item.id.trim());
+                return;
+            }
+            registeredItems.push({
+                id: item.id.trim(),
+                name: item.name,
+                onClick: item.onClick,
+                icon: typeof item.icon === "string" && item.icon.trim() ? item.icon.trim() : null
+            });
+            if (menuEl) rebuildMenu();
+        }
+    };
+
+    function closeMenu() {
+        if (menuEl) {
+            menuEl.remove();
+            menuEl = null;
+        }
+        menuOpen = false;
+    }
+
+    function rebuildMenu() {
+        if (!menuEl) return;
+        const list = menuEl.querySelector("#avia-menu-list");
+        if (!list) return;
+        list.innerHTML = "";
+
+        if (registeredItems.length === 0) {
+            const empty = document.createElement("div");
+            empty.textContent = "No buttons registered";
+            Object.assign(empty.style, {
+                padding: "12px 16px",
+                fontSize: "13px",
+                opacity: "0.4",
+                color: "var(--md-sys-color-on-surface, #fff)",
+                userSelect: "none"
+            });
+            list.appendChild(empty);
+            list.style.maxHeight = "";
+            list.style.overflowY = "hidden";
+            list.style.scrollbarWidth = "none";
+            return;
+        }
+
+        const sorted = getSortedItems();
+
+        for (const item of sorted) {
+            const pinned = isPinned(item.id);
+
+            const btn = document.createElement("div");
+            Object.assign(btn.style, {
+                padding: "0 12px",
+                height: ITEM_HEIGHT + "px",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                fontSize: "13px",
+                fontWeight: "500",
+                color: "var(--md-sys-color-on-surface, #fff)",
+                cursor: "pointer",
+                borderRadius: "10px",
+                transition: "background 0.12s",
+                userSelect: "none",
+                flexShrink: "0",
+                position: "relative"
+            });
+
+            if (item.icon) {
+                const iconEl = document.createElement("span");
+                iconEl.className = "material-symbols-outlined";
+                iconEl.textContent = item.icon;
+                iconEl.style.cssText = "font-size:20px;display:block;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;flex-shrink:0;opacity:0.85;";
+                btn.appendChild(iconEl);
+            }
+
+            const label = document.createElement("span");
+            label.textContent = item.name;
+            label.style.flex = "1";
+            btn.appendChild(label);
+
+            const pinBtn = document.createElement("span");
+            pinBtn.className = "material-symbols-outlined";
+            pinBtn.textContent = "push_pin";
+            Object.assign(pinBtn.style, {
+                fontSize: "14px",
+                display: "block",
+                fontVariationSettings: pinned ? "'FILL' 1,'wght' 400,'GRAD' 0" : "'FILL' 0,'wght' 400,'GRAD' 0",
+                color: pinned ? "var(--md-sys-color-primary, #cfbcff)" : "rgba(255,255,255,0.3)",
+                flexShrink: "0",
+                transition: "color 0.12s, font-variation-settings 0.12s",
+                cursor: "pointer"
+            });
+
+            pinBtn.addEventListener("mouseenter", (e) => {
+                e.stopPropagation();
+                pinBtn.style.color = pinned ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.7)";
+            });
+            pinBtn.addEventListener("mouseleave", (e) => {
+                e.stopPropagation();
+                pinBtn.style.color = pinned ? "var(--md-sys-color-primary, #cfbcff)" : "rgba(255,255,255,0.3)";
+            });
+            pinBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (isPinned(item.id)) {
+                    unpinItem(item.id);
+                } else {
+                    pinItem(item.id);
+                }
+                rebuildMenu();
+            });
+
+            btn.appendChild(pinBtn);
+
+            btn.addEventListener("mouseenter", () => {
+                btn.style.background = "rgba(255,255,255,0.07)";
+            });
+            btn.addEventListener("mouseleave", () => {
+                btn.style.background = "transparent";
+            });
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                closeMenu();
+                try { item.onClick(); } catch (err) { console.error("[AviaMenu]", err); }
+            });
+
+            list.appendChild(btn);
+        }
+
+        const total = getSortedItems().length;
+        list.style.maxHeight = (MAX_VISIBLE * ITEM_HEIGHT) + "px";
+        list.style.overflowY = total > MAX_VISIBLE ? "auto" : "hidden";
+        list.style.scrollbarWidth = "none";
+    }
+
+    function openMenu(anchorEl) {
+        if (menuOpen) { closeMenu(); return; }
+
+        menuEl = document.createElement("div");
+        Object.assign(menuEl.style, {
+            position: "fixed",
+            zIndex: "9999999",
+            background: "var(--md-sys-color-surface, #1e1e1e)",
+            borderRadius: "16px",
+            boxShadow: "0 8px 28px rgba(0,0,0,0.4)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(12px)",
+            overflow: "hidden",
+            minWidth: "200px",
+            display: "flex",
+            flexDirection: "column"
+        });
+
+        const list = document.createElement("div");
+        list.id = "avia-menu-list";
+        Object.assign(list.style, {
+            display: "flex",
+            flexDirection: "column",
+            padding: "8px",
+            boxSizing: "border-box"
+        });
+
+        menuEl.appendChild(list);
+        document.body.appendChild(menuEl);
+
+        rebuildMenu();
+
+        const rect = anchorEl.getBoundingClientRect();
+        const menuRect = menuEl.getBoundingClientRect();
+        let top = rect.bottom + 6;
+        let left = rect.left;
+
+        if (left + menuRect.width > window.innerWidth - 8) {
+            left = window.innerWidth - menuRect.width - 8;
+        }
+        if (top + menuRect.height > window.innerHeight - 8) {
+            top = rect.top - menuRect.height - 6;
+        }
+
+        menuEl.style.top = top + "px";
+        menuEl.style.left = left + "px";
+
+        menuOpen = true;
+
+        setTimeout(() => {
+            document.addEventListener("click", onOutsideClick, { once: true });
+        }, 0);
+    }
+
+    function onOutsideClick(e) {
+        if (menuEl && !menuEl.contains(e.target)) {
+            closeMenu();
+        }
+    }
+
+    function injectToolbarButton() {
+        if (document.getElementById("avia-menu-toolbar-btn")) return;
+
+        const pinBtn = document.querySelector('button[aria-label="View pinned messages"]');
+        if (!pinBtn) return;
+
+        const btn = pinBtn.cloneNode(false);
+        btn.id = "avia-menu-toolbar-btn";
+        btn.setAttribute("aria-label", "Avia Menu");
+
+        const ripple = document.createElement("md-ripple");
+        ripple.setAttribute("aria-hidden", "true");
+        btn.appendChild(ripple);
+
+        const icon = document.createElement("span");
+        icon.className = "material-symbols-outlined";
+        icon.style.cssText = "display:block;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;font-size:24px;";
+        icon.textContent = "apps";
+        btn.appendChild(icon);
+
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            openMenu(btn);
+        });
+
+        pinBtn.insertAdjacentElement("afterend", btn);
+    }
+
+    const observer = new MutationObserver(() => {
+        injectToolbarButton();
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+    injectToolbarButton();
+})();
+
+
+/* --- MessageContextMenuFix.js --- */
+if(window.__US_BUILDER_MESSAGECONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_MESSAGECONTEXTMENUFIX_JS__=true;
+
+(function () {
+  if (window.__MESSAGE_CONTEXT_MENU_FIX__) return;
+  window.__MESSAGE_CONTEXT_MENU_FIX__ = true;
+
+  function messageContextMenuFix() {
+    const messages = document.querySelectorAll(`div[id][class*='group']`)
+    for(const message of messages){
+        const bar = document.createElement('div')
+        bar.className='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar'
+        const dots = document.createElement('div')
+        dots.className='cursor_pointer pos_relative p_var(--gap-sm)'
+        const ripple = document.createElement('md-ripple')
+        ripple.ariaHidden = true
+        const svg = document.createElement('svg')
+        dots.appendChild(ripple)
+        dots.appendChild(svg)
+        svg.outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2m0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2"></path></svg>`
+        bar.appendChild(dots)
+
+        bar.onclick = function(){
+            const rect = message.getBoundingClientRect();
+
+            const contextMenuX = rect.left + rect.width / 2;
+            const contextMenuY = rect.top + rect.height / 2;
+
+            const contextMenuEvent = new MouseEvent('contextmenu', {
+                bubbles: true,
+                cancelable: true,
+                clientX: contextMenuX,
+                clientY: contextMenuY
+            });
+            setTimeout(() => {
+                message.dispatchEvent(contextMenuEvent);
+            }, 100);
+        }
+
+        if(!message.dataset.contextmenupatched){
+            message.appendChild(bar)
+            message.dataset.contextmenupatched=true
+        }
+    }
+  }
+
+  const observer = new MutationObserver(() => {
+    messageContextMenuFix();
+  });
+
+  function init() {
+    messageContextMenuFix();
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
@@ -4389,7 +4638,12 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
     function togglePluginsPanel() {
         let panel = document.getElementById('avia-plugins-panel');
         if (panel) {
-            panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+            if (panel.style.display === 'none') {
+                panel.style.display = 'flex';
+                renderPanel();
+            } else {
+                panel.style.display = 'none';
+            }
             return;
         }
         panel = document.createElement('div');
@@ -4564,9 +4818,11 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
         const runningSnapshot = { ...runningPlugins };
         const errorSnapshot = { ...pluginErrors };
 
-        const visible = filter
+        const filtered = filter
             ? plugins.filter(p => p.name.toLowerCase().includes(filter))
             : plugins;
+
+        const visible = [...filtered].reverse();
 
         if (visible.length === 0) {
             const empty = document.createElement('div');
@@ -4810,6 +5066,19 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
         }).observe(document.documentElement, { childList: true });
     }
 
+    function registerWithAviaMenu() {
+        if (window.AviaMenu) {
+            window.AviaMenu.register({ id: "avia_plugins_online", name: "Plugins", icon: "extension", onClick: togglePluginsPanel });
+        } else {
+            const interval = setInterval(() => {
+                if (window.AviaMenu) {
+                    clearInterval(interval);
+                    window.AviaMenu.register({ id: "avia_plugins_online", name: "Plugins", icon: "extension", onClick: togglePluginsPanel });
+                }
+            }, 100);
+        }
+    }
+
     waitForBody(() => {
         const observer = new MutationObserver(() => injectButtons());
         observer.observe(document.body, { childList: true, subtree: true });
@@ -4820,6 +5089,8 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
     getPlugins().forEach(plugin => {
         if (plugin.enabled) queuePlugin(plugin);
     });
+
+    registerWithAviaMenu()
 
 })();
 
@@ -4866,96 +5137,6 @@ if(window.__US_BUILDER_REMOVEGIFBUTTON_JS__){return;}window.__US_BUILDER_REMOVEG
   } else {
     requestAnimationFrame(init);
   }
-})();
-
-
-/* --- ReplaceSearchbar.js --- */
-if(window.__US_BUILDER_REPLACESEARCHBAR_JS__){return;}window.__US_BUILDER_REPLACESEARCHBAR_JS__=true;
-
-(function () {
-    if (window.__AVIA_SEARCH__) return;
-    window.__AVIA_SEARCH__ = true;
-
-    function injectHideStyle() {
-        if (document.getElementById("avia-search-hide")) return;
-        const style = document.createElement("style");
-        style.id = "avia-search-hide";
-        style.textContent = `input[placeholder="Search messages..."] { display: none !important; }`;
-        document.head.appendChild(style);
-    }
-
-    function removeHideStyle() {
-        document.getElementById("avia-search-hide")?.remove();
-    }
-
-    injectHideStyle();
-
-    function findSearchInput() {
-        return document.querySelector('input[placeholder="Search messages..."]');
-    }
-
-    function findPinButton() {
-        return document.querySelector('button[aria-label="View pinned messages"]');
-    }
-
-    function findInjectedBtn() {
-        return document.querySelector("[data-avia-search-btn]");
-    }
-
-    function injectSearchButton() {
-        if (findInjectedBtn()) return;
-
-        const searchInput = findSearchInput();
-        const pinBtn = findPinButton();
-        if (!searchInput || !pinBtn) return;
-
-        const btn = pinBtn.cloneNode(false);
-        btn.setAttribute("data-avia-search-btn", "true");
-        btn.setAttribute("aria-label", "Search messages");
-
-        const ripple = document.createElement("md-ripple");
-        ripple.setAttribute("aria-hidden", "true");
-        btn.appendChild(ripple);
-
-        const icon = document.createElement("span");
-        icon.className = "material-symbols-outlined";
-        icon.style.cssText = "display:block;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;font-size:24px;";
-        icon.textContent = "search";
-        btn.appendChild(icon);
-
-        let isOpen = false;
-
-        btn.addEventListener("click", () => {
-            isOpen = !isOpen;
-
-            if (isOpen) {
-                removeHideStyle();
-                icon.style.fontVariationSettings = "'FILL' 1,'wght' 400,'GRAD' 0";
-                requestAnimationFrame(() => findSearchInput()?.focus());
-            } else {
-                injectHideStyle();
-                icon.style.fontVariationSettings = "'FILL' 0,'wght' 400,'GRAD' 0";
-                const input = findSearchInput();
-                if (input) {
-                    input.value = "";
-                    input.dispatchEvent(new Event("input", { bubbles: true }));
-                }
-            }
-        });
-
-        searchInput.insertAdjacentElement("beforebegin", btn);
-    }
-
-    const observer = new MutationObserver(() => {
-        if (!findInjectedBtn()) {
-            injectHideStyle();
-            injectSearchButton();
-        }
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    injectSearchButton();
 })();
 
 
@@ -5175,7 +5356,9 @@ function rawUrlFromLink(link) {
 
         if (u.hostname === "github.com") {
             const m = u.pathname.match(/^\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/);
-            if (m) return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
+            if (m) {
+                return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
+            }
             return link;
         }
 
@@ -5184,17 +5367,40 @@ function rawUrlFromLink(link) {
         if (u.hostname === "raw.codeberg.page") return link;
 
         if (u.hostname === "codeberg.org") {
+
+            if (u.pathname.startsWith("/api/v1/repos/")) return link;
+
             const parts = u.pathname.split("/").filter(Boolean);
+
             if (parts.length >= 5 && (parts[2] === "raw" || parts[2] === "src")) {
-                const user = parts[0];
-                const repo = parts[1];
-                const branchName = ["branch", "commit", "tag"].includes(parts[3]) ? parts[4] : parts[3];
-                const fileStart = ["branch", "commit", "tag"].includes(parts[3]) ? 5 : 4;
-                const filePath = parts.slice(fileStart).join("/");
-                return `https://raw.codeberg.page/${user}/${repo}/@${branchName}/${filePath}`;
+                const user       = parts[0];
+                const repo       = parts[1];
+                const branchName = parts[3] === "branch" || parts[3] === "commit" || parts[3] === "tag"
+                    ? parts[4]
+                    : parts[3];
+                const fileStart  = parts[3] === "branch" || parts[3] === "commit" || parts[3] === "tag"
+                    ? 5
+                    : 4;
+                const filePath   = parts.slice(fileStart).join("/");
+
+                return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branchName}`;
             }
+
             if (parts.length >= 4 && parts[2] === "raw") {
-                return `https://raw.codeberg.page/${parts[0]}/${parts[1]}/@${parts[3]}/${parts.slice(4).join("/")}`;
+                const user       = parts[0];
+                const repo       = parts[1];
+                const branchName = parts[3];
+                const filePath   = parts.slice(4).join("/");
+
+                return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branchName}`;
+            }
+
+            if (parts.length >= 5 && parts[2] === "src" && parts[3] === "branch") {
+                const user     = parts[0];
+                const repo     = parts[1];
+                const branch   = parts[4];
+                const filePath = parts.slice(5).join("/");
+                return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branch}`;
             }
         }
     } catch (_) {}
@@ -5730,6 +5936,19 @@ function injectSettingsButton() {
     referenceNode.parentElement.insertBefore(clone, referenceNode.nextSibling);
 }
 
+function registerWithAviaMenu() {
+    if (window.AviaMenu) {
+        window.AviaMenu.register({ id: "avia_official_repo", name: "Plugins & Themes Repo", icon: "palette", onClick: openWindow });
+    } else {
+        const interval = setInterval(() => {
+            if (window.AviaMenu) {
+                clearInterval(interval);
+                window.AviaMenu.register({ id: "avia_official_repo", name: "Plugins & Themes Repo", icon: "palette", onClick: openWindow });
+            }
+        }, 100);
+    }
+}
+
 window.addEventListener("avia-plugin-list-changed", () => {
     if (document.getElementById("avia-official-repo-window")) {
         updateInstallStates();
@@ -5740,79 +5959,8 @@ new MutationObserver(() => injectSettingsButton())
     .observe(document.body, { childList: true, subtree: true });
 
 injectSettingsButton();
+registerWithAviaMenu();
 
-})();
-
-
-/* --- SelectMenuFix.js --- */
-if(window.__US_BUILDER_SELECTMENUFIX_JS__){return;}window.__US_BUILDER_SELECTMENUFIX_JS__=true;
-
-(function () {
-  if (window.__SELECT_MENU_FIX__) return;
-  window.__SELECT_MENU_FIX__ = true;
-
-  const originalFetch = window.fetch.bind(window);
-
-  window.fetch = async function (resource, config = {}) {
-      try {
-          const url = resource?.toString?.() || "";
-          if(config.method=="PATCH"&&url.includes('/server')&&!url.includes('/role')&&config.body&&typeof config.body=='string'){
-              const selectmenus = document.querySelectorAll('select')
-              selectmenus.forEach(select=>{
-                const text = select.previousSibling.textContent.toLowerCase()
-                if(text.includes('user')){
-                  const parsed = JSON.parse(config.body)
-                  if(parsed){
-                    if(select.value!='none'){
-                      parsed.system_messages[`${text.replaceAll(' ','_')}`]=select.value
-                    }else if(parsed.system_messages[`${text.replaceAll(' ','_')}`]){
-                      delete parsed.system_messages[`${text.replaceAll(' ','_')}`]
-                    }
-                    config = { ...config, body: JSON.stringify(parsed) };
-                  }
-                }
-              });
-            }
-        } catch (e) { console.log(e); }
-          return originalFetch(resource, config)
-    };
-
-  function selectMenuFix() {
-    if(!document.querySelector('path[d=\'M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z\']')) return;
-    document.querySelectorAll('mdui-select').forEach(element=>{
-        const select = document.createElement('select')
-        if(element.id){
-          select.id=element.id
-        }
-        for(const child of element.children){
-          const option = document.createElement('option')
-          option.value=child.value
-          option.textContent = child.textContent
-          select.appendChild(option)
-        }
-
-       element.parentElement.replaceChild(select,element)
-       select.value = element.value
-    })
-  }
-
-  const observer = new MutationObserver(() => {
-    selectMenuFix();
-  });
-
-  function init() {
-    selectMenuFix();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
 })();
 
 
@@ -5853,8 +6001,9 @@ if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SE
           start()
         })
 
-        server.addEventListener('touchend',()=>{
+        server.addEventListener('touchend',(e)=>{
           if(long){
+            e.preventDefault()
             const balls = new Event('contextmenu',{
               bubbles:true,
               button:2
@@ -5892,226 +6041,6 @@ if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SE
   } else {
     requestAnimationFrame(init);
   }
-})();
-
-
-/* --- ServerListScrollLock.js --- */
-if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__=true;
-
-(function () {
-  'use strict';
-
-  let scrollLockEnabled = false;
-  let overlay = null;
-  let channellistoverlay = null;
-
-  function createOverlay() {
-    const serverList = document.querySelector('[aria-disabled][role="list"]');
-    const channelList = document.querySelectorAll('[aria-disabled][role="list"]').item(1)
-    if (!serverList) return;
-
-    const parent = serverList.parentElement;
-    const rect   = serverList.getBoundingClientRect();
-
-    overlay = document.createElement('div');
-    overlay.id = 'revolt-scroll-lock-overlay';
-
-    Object.assign(overlay.style, {
-      position:       'absolute',
-      top:            serverList.offsetTop + 'px',
-      left:           serverList.offsetLeft + 'px',
-      width:          serverList.offsetWidth + 'px',
-      height:         serverList.offsetHeight + 'px',
-      zIndex:         '9999',
-      background:     'transparent',
-      touchAction:    'pan-y',
-      pointerEvents:  'all',
-      cursor:         'default',
-    });
-
-    overlay.addEventListener('touchmove', (e) => {
-      const scrollable = serverList.closest('.will-change_transform') || serverList.parentElement;
-      if (scrollable) {
-        scrollable.scrollTop += e.touches[0]?.clientY
-          ? 0
-          : 0; 
-      }
-    }, { passive: true });
-
-    overlay.addEventListener('pointerdown', (e) => e.stopPropagation());
-    overlay.addEventListener('mousedown',   (e) => e.stopPropagation());
-
-    const computedPos = getComputedStyle(parent).position;
-    if (computedPos === 'static') parent.style.position = 'relative';
-
-    parent.appendChild(overlay);
-
-    if(channelList){
-      const channelListParent = channelList.parentElement
-      channellistoverlay = document.createElement('div')
-      channellistoverlay.id = 'revolt-scroll-lock-overlay2';
-
-      Object.assign(channellistoverlay.style, {
-        position:       'absolute',
-        top:            channelList.offsetTop + 'px',
-        left:           channelList.offsetLeft + 'px',
-        width:          channelList.offsetWidth + 'px',
-        height:         channelList.offsetHeight + 'px',
-        zIndex:         '9999',
-        background:     'transparent',
-        touchAction:    'pan-y',
-        pointerEvents:  'all',
-        cursor:         'default',
-      });
-
-      channellistoverlay.addEventListener('touchmove', (e) => {
-      const scrollable = channelList.closest('.will-change_transform') || channelList.parentElement;
-      if (scrollable) {
-        scrollable.scrollTop += e.touches[0]?.clientY
-          ? 0
-          : 0; 
-      }
-    }, { passive: true });
-
-      channellistoverlay.addEventListener('pointerdown', (e) => e.stopPropagation());
-      channellistoverlay.addEventListener('mousedown',   (e) => e.stopPropagation());
-
-      const computedPos = getComputedStyle(parent).position;
-      if (computedPos === 'static') parent.style.position = 'relative';
-
-      channelListParent.appendChild(channellistoverlay);
-    }
-  }
-
-  function removeOverlay() {
-    if (overlay) {
-      overlay.remove();
-      overlay = null;
-    }
-    if(channellistoverlay){
-      channellistoverlay.remove();
-      channellistoverlay = null;
-    }
-  }
-
-  function updateButtonIcon(button) {
-    button.textContent = scrollLockEnabled ? '✓' : 'x';
-
-    Object.assign(button.style, {
-      color: scrollLockEnabled
-        ? 'var(--md-sys-color-primary, #80cbc4)'
-        : '',
-        position:'inherit',
-    });
-  }
-
-  function toggle(button) {
-    scrollLockEnabled = !scrollLockEnabled;
-
-    if (scrollLockEnabled) {
-      createOverlay();
-    } else {
-      removeOverlay();
-    }
-
-    updateButtonIcon(button);
-  }
-
-  function inject() {
-    const sidebar = document.getElementsByClassName('d_flex flex-d_column fill_var(--md-sys-color-on-surface)').item(0)
-    if(!sidebar) return;
-    const sidebarclone = sidebar.cloneNode()
-    Object.assign(sidebarclone.style,{
-      width:`${sidebar.clientWidth/2}px`
-    })
-    const button = sidebar.firstChild.firstChild
-    const clone = button.cloneNode()
-    Object.assign(clone.style,{
-      width:`${button.clientWidth/2}px`,
-      position:'fixed',
-      left:`${sidebar.clientWidth*0.75}px`
-    })
-    button.dataset.scrollLockPatched = 'true';
-    clone.removeAttribute('href')
-    clone.style.cursor = 'pointer'
-    clone.textContent= '✓'
-    clone.id='serverlistscrolllock'
-    clone.setAttribute('aria-label', 'Toggle server list scroll lock');
-    updateButtonIcon(clone)
-
-    clone.addEventListener('click',(e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      toggle(clone);
-    });
-
-    if(!document.getElementById('serverlistscrolllock')){
-      sidebarclone.appendChild(clone)
-      sidebar.parentElement.insertBefore(sidebarclone,sidebar.nextSibling)
-    }
-
-    window.addEventListener('resize', () => {
-      if (scrollLockEnabled) {
-        removeOverlay();
-        createOverlay();
-      }
-    });
-  }
-
-  const observer = new MutationObserver(() => {
-    const target = document.getElementsByClassName('d_flex flex-d_column fill_var(--md-sys-color-on-surface)').item(0).firstChild.firstChild
-    if (target && !target.dataset.scrollLockPatched) {
-      inject();
-    }
-  });
-
-  observer.observe(document.body, { childList: true, subtree: true });
-
-  // Also try immediately in case page already loaded
-  inject();
-
-})();
-
-
-/* --- ShiftNewLine.js --- */
-if(window.__US_BUILDER_SHIFTNEWLINE_JS__){return;}window.__US_BUILDER_SHIFTNEWLINE_JS__=true;
-
-(function () {
-
-  function hookEditor(editor) {
-    if (editor.__shiftNewLineHooked) return;
-    editor.__shiftNewLineHooked = true;
-
-    editor.addEventListener("keydown", (e) => {
-
-      if (e.key !== "Enter") return;
-
-      if(e.shiftKey){
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        let text = ''
-        const firstLine = document.getElementsByClassName('cm-line').item(0)
-        for(const child of firstLine.parentElement.children){
-          text = text+`${child.children[0].textContent}\n`
-        }
-        editor.textContent = text
-      }
-
-    }, true);
-
-  }
-
-  const observer = new MutationObserver(() => {
-    const editor = document.querySelector(".cm-content[contenteditable='true']");
-    if (editor) hookEditor(editor);
-  });
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
-
 })();
 
 
@@ -6210,19 +6139,12 @@ if(window.__US_BUILDER_SHRINKGIFPANEL_JS__){return;}window.__US_BUILDER_SHRINKGI
             gifPanel.style.removeProperty('top')
             gifPanel.style.setProperty('right','0px')
             gifPanel.style.setProperty('bottom','12px')
+
             if(window.outerWidth<466&&gifPanel.children[0].children[1].children[1].children[1]){
                 gifPanel.style.setProperty('width',`${window.outerWidth-66}px`)
                 gifPanel.style.setProperty('height',`${window.outerWidth-66}px`)
-                for(const child of gifPanel.children[0].children[1].children[1].children[1].children[0].children){
-                    if(child?.className=='d_flex ai_center px_var(--gap-md) w_calc(40px_*_10)!'){
-                        const list = child?.style?.getPropertyValue('transform').substring(9).replaceAll('(','').replaceAll(')','').replaceAll('px','').split(', ')
-                        if(list[0]!=0){
-                            list[0]=0
-                            child?.style?.setProperty('transform',`translate(${list.map(item=>`${item}px`).join(', ')})`)
-                        }
-                    }
-                }
             }
+
             const searchbar = document.querySelector(`[placeholder='Search for GIFs...'],[placeholder='Search for emojis...']`)
             if(searchbar&&!searchbar.dataset.patched){
                 searchbar.setAttribute('contenteditable',true)
@@ -6246,170 +6168,13 @@ if(window.__US_BUILDER_SHRINKGIFPANEL_JS__){return;}window.__US_BUILDER_SHRINKGI
 })();
 
 
-/* --- ShrinkHomeButtons.js --- */
-if(window.__US_BUILDER_SHRINKHOMEBUTTONS_JS__){return;}window.__US_BUILDER_SHRINKHOMEBUTTONS_JS__=true;
-
-(function () {
-  if (window.__SHRINK_HOME_BUTTONS__) return;
-  window.__SHRINK_HOME_BUTTONS__ = true;
-
-  function shrinkHomeButtons() {
-    const homebuttons = document.getElementsByClassName('gap_8px p_8px d_flex bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface-variant) bg_var(--md-sys-color-surface-variant)')
-    .item(0)
-    if(!homebuttons||window.outerWidth>homebuttons.clientWidth) return;
-    homebuttons.style.setProperty('width',`${window.outerWidth-100}px`)
-    homebuttons.style.setProperty(`position`,'fixed')
-    homebuttons.style.setProperty(`right`,`100px`)
-
-    for(const child of homebuttons.children){
-        for(const child2 of child.children){
-            for(const child3 of child2.lastChild.children){
-                child3.style.setProperty(`font-size`,`10px`)
-            }
-        }
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    shrinkHomeButtons();
-  });
-
-  function init() {
-    shrinkHomeButtons();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
-/* --- swipe-sidebar.js --- */
-if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SIDEBAR_JS__=true;
-
-(function () {
-  if (window.__SWIPE_SIDEBAR__) return;
-  window.__SWIPE_SIDEBAR__ = true;
-
-  const SWIPE_THRESHOLD = 80;   // minimum px to count as a swipe
-  const EDGE_ZONE = 20;         // px from left edge to trigger open swipe
-
-  let touchStartX = null;
-  let touchStartY = null;
-  let startSelection = null;
-  let endSelection = null;
-
-  function getSidebar() {
-    const wrap = document.getElementsByClassName(
-      'd_flex h_100% min-w_0 c_var(--md-sys-color-outline) bg_var(--md-sys-color-surface-container-high)'
-    ).item(0);
-    return wrap && wrap.firstChild && wrap.firstChild.children[1]
-      ? wrap.firstChild
-      : null;
-  }
-
-  function showSidebar(sidebar) {
-    sidebar.style.display = 'flex';
-  }
-
-  function hideSidebar(sidebar) {
-    sidebar.style.display = 'none';
-  }
-
-  function onTouchStart(e) {
-    startSelection = document.getSelection().toString()
-    const touch = e.touches[0];
-    touchStartX = touch.clientX;
-    touchStartY = touch.clientY;
-  }
-
-  function onTouchEnd(e) {
-    endSelection = document.getSelection().toString()
-    if (touchStartX === null) return;
-
-    const touch = e.changedTouches[0];
-    const dx = touch.clientX - touchStartX;
-    const dy = touch.clientY - touchStartY;
-
-    if (Math.abs(dy) > Math.abs(dx)) {
-      touchStartX = null;
-      touchStartY = null;
-      return;
-    }
-
-    const sidebar = getSidebar();
-    const popout = document.getElementsByClassName('p_24px min-w_280px max-w_560px bdr_28px d_flex flex-d_column c_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-container-high)').item(0)
-    const smallpopout = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll c_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-container-high) bx-sh_0_0_3px_var(--md-sys-color-shadow) w_340px h_400px bdr_var(--borderRadius-xl)').item(0)
-    const aviaPanels = [...document.querySelectorAll('[style*="z-index: 999999"],[style*=\'z-index: 999998\']')].filter(e=>e.id!='avia-settings-reopen-btn'&&e.style?.display!='none')
-    if (!sidebar) return;
-    if(popout||smallpopout) return;
-    if(startSelection!=endSelection) return;
-    if (document.getElementById("avia-userscript-update-modal")) return;
-    if(aviaPanels.length>0) return;
-    
-    if(e.target.tagName=='CODE') return;
-    if(e.target.tagName=='IMG') return;
-    if(e.target.className=='flex-sh_0 fw_500 fs_15px us_none cursor_pointer pos_relative d_flex ai_center m_0_var(--gap-md) p_0_var(--gap-md) bdr_var(--borderRadius-xl) c_var(--color) fill_var(--color) [&_>_svg]:as_center [&:hover_.hover-hide,_&:not(:hover)_.hover-show]:d_none h_42px gap_var(--gap-md) --color_var(--md-sys-color-on-surface) bg_transparent') return;
-    if(e.target.className=='ov_hidden white-space_nowrap tov_ellipsis [&_*]:ov_hidden [&_*]:white-space_nowrap [&_*]:tov_ellipsis') return;
-
-    if (dx > SWIPE_THRESHOLD) {
-
-      if (touchStartX <= EDGE_ZONE || sidebar.style.display === 'none') {
-        if(document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0)){
-          const button = document.querySelector(`button[aria-label='View members']`)
-          if(button){
-            button.click()
-          }
-        }else{
-          showSidebar(sidebar);
-        }
-      }
-    } else if (dx < -SWIPE_THRESHOLD) {
-
-      if(document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0)) return;
-      if(sidebar.style.display!='none'){
-        hideSidebar(sidebar);
-      }else{
-        const button = document.querySelector(`button[aria-label='View members']`)
-        if(button){
-          button.click()
-        }
-      } 
-    }
-
-    touchStartX = null;
-    touchStartY = null;
-  }
-
-  document.addEventListener('touchstart', onTouchStart, { passive: true });
-  document.addEventListener('touchend', onTouchEnd, { passive: true });
-})();
-
-
-
-/* --- themes.user.js --- */
-if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER_JS__=true;
-
-// ==UserScript==
-// @name         Avia Client themes
-// @description  Adds theme support
-// @author       AvaLilac
-// @version      1.4
-// @match        *://*.stoat.chat/*
-// @grant        none
-// @inject-into  content
-// ==/UserScript==
+/* --- themes.js --- */
+if(window.__US_BUILDER_THEMES_JS__){return;}window.__US_BUILDER_THEMES_JS__=true;
 
 (function () {
 
-    if (window.__AVIA_THEMES_LOADED__) return;
-    window.__AVIA_THEMES_LOADED__ = true;
+    if (window.__AVIA_THEMES__) return;
+    window.__AVIA_THEMES__ = true;
 
     const STORAGE_KEY = "avia_themes";
     let editingThemeId = null;
@@ -6440,13 +6205,13 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
         });
     }
 
-    function parseMeta(css){
+    function parseMeta(css) {
         const name = css.match(/@name\s+(.+)/)?.[1] || "Unknown Theme";
         const author = css.match(/@author\s+(.+)/)?.[1] || "Unknown";
         const version = css.match(/@version\s+(.+)/)?.[1] || "1.0";
         const rawDescription = css.match(/@description\s+(.+)/)?.[1] || "No Description Available";
         const description = rawDescription.trim() === "*/" ? "No Description Available" : rawDescription;
-        return {name,author,version,description};
+        return { name, author, version, description };
     }
 
     function sanitizeFilename(name) {
@@ -6469,15 +6234,33 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
         URL.revokeObjectURL(url);
     }
 
-    function applyThemes(){
-        document.querySelectorAll(".avia-theme-style").forEach(e=>e.remove());
-        const themes = getThemes();
-        themes.forEach(theme=>{
-            if(!theme.enabled) return;
-            const style=document.createElement("style");
-            style.className="avia-theme-style";
-            style.textContent=theme.css;
-            document.head.appendChild(style);
+    function applyThemes() {
+        document.querySelectorAll(".avia-theme-style").forEach(e => e.remove());
+        getThemes().forEach(theme => {
+            if (!theme.enabled) return;
+
+            const importRegex = /@import\s+url\(["']?([^"')]+)["']?\)\s*;/g;
+            let match;
+            while ((match = importRegex.exec(theme.css)) !== null) {
+                const url = match[1];
+                fetch(url)
+                    .then(r => r.text())
+                    .then(css => {
+                        const style = document.createElement("style");
+                        style.className = "avia-theme-style";
+                        style.textContent = css;
+                        document.head.appendChild(style);
+                    })
+                    .catch(() => {});
+            }
+
+            const stripped = theme.css.replace(/@import\s+url\(["']?[^"')]+["']?\)\s*;/g, "").trim();
+            if (stripped) {
+                const style = document.createElement("style");
+                style.className = "avia-theme-style";
+                style.textContent = stripped;
+                document.head.appendChild(style);
+            }
         });
     }
 
@@ -6497,35 +6280,37 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
         btn.onmouseleave = () => btn.style.opacity = "1";
     }
 
-    function makeDraggable(panel, handle){
-        let dragging=false,offsetX,offsetY;
-        handle.addEventListener("mousedown",e=>{
-            dragging=true;
-            offsetX=e.clientX-panel.offsetLeft;
-            offsetY=e.clientY-panel.offsetTop;
-            document.body.style.userSelect="none";
+    function makeDraggable(panel, handle) {
+        let dragging = false, offsetX, offsetY;
+        handle.addEventListener("mousedown", e => {
+            dragging = true;
+            offsetX = e.clientX - panel.offsetLeft;
+            offsetY = e.clientY - panel.offsetTop;
+            document.body.style.userSelect = "none";
         });
-        document.addEventListener("mouseup",()=>{dragging=false;document.body.style.userSelect="";});
-        document.addEventListener("mousemove",e=>{
-            if(!dragging) return;
-            panel.style.left=(e.clientX-offsetX)+"px";
-            panel.style.top=(e.clientY-offsetY)+"px";
-            panel.style.right="auto";
-            panel.style.bottom="auto";
+        document.addEventListener("mouseup", () => { dragging = false; document.body.style.userSelect = ""; });
+        document.addEventListener("mousemove", e => {
+            if (!dragging) return;
+            panel.style.left = (e.clientX - offsetX) + "px";
+            panel.style.top = (e.clientY - offsetY) + "px";
+            panel.style.right = "auto";
+            panel.style.bottom = "auto";
         });
     }
 
-    async function openThemeEditor(themeId){
-        await preloadMonaco()
+    async function openThemeEditor(themeId) {
+        await preloadMonaco();
+
         editingThemeId = themeId;
         const themes = getThemes();
         const theme = themes.find(t => t.id === themeId);
         if (!theme) return;
 
         const meta = parseMeta(theme.css);
-        let panel = document.getElementById('avia-theme-editor');
-        if(panel){
-            panel.style.display="flex";
+        let panel = document.getElementById("avia-theme-editor");
+
+        if (panel) {
+            panel.style.display = "flex";
             panel.querySelector("#avia-theme-editor-title").textContent = "Theme Editor — " + meta.name;
             if (monacoEditorInstance) {
                 monacoEditorInstance._aviaThemeId = themeId;
@@ -6534,6 +6319,7 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
             }
             return;
         }
+
         panel=document.createElement("div");
         panel.id="avia-theme-editor";
         if(window.outerWidth<472){
@@ -6571,33 +6357,39 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
                 border:"1px solid rgba(255,255,255,0.08)"
             });
         }
-        const header=document.createElement("div");
-        header.textContent="Theme Editor";
-        Object.assign(header.style,{
-            padding:"14px 16px",
-            fontWeight:"600",
-            fontSize:"14px",
-            background:"var(--md-sys-color-surface-container,rgba(255,255,255,0.04))",
-            borderBottom:"1px solid rgba(255,255,255,0.08)",
-            cursor:"move"
+
+        const header = document.createElement("div");
+        header.id = "avia-theme-editor-title";
+        header.textContent = "Theme Editor — " + meta.name;
+        Object.assign(header.style, {
+            padding: "14px 16px",
+            fontWeight: "600",
+            fontSize: "14px",
+            background: "var(--md-sys-color-surface-container, rgba(255,255,255,0.04))",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            cursor: "move",
+            color: "#fff",
+            flex: "0 0 auto"
         });
-        makeDraggable(panel,header);
-        const close=document.createElement("div");
-        close.textContent="✕";
-        Object.assign(close.style,{
-            position:"absolute",
-            right:"16px",
-            top:"12px",
-            cursor:"pointer",
-            opacity:"0.6",
-            fontSize:"15px",
-            lineHeight:"1",
-            padding:"2px 4px"
+        makeDraggable(panel, header);
+
+        const close = document.createElement("div");
+        close.textContent = "✕";
+        Object.assign(close.style, {
+            position: "absolute",
+            right: "16px",
+            top: "12px",
+            cursor: "pointer",
+            opacity: "0.6",
+            fontSize: "15px",
+            lineHeight: "1",
+            padding: "2px 4px",
+            color: "#fff"
         });
-        close.onmouseenter=()=>close.style.opacity="1";
-        close.onmouseleave=()=>close.style.opacity="0.6";
-        close.onclick=()=>panel.style.display="none";
-        
+        close.onmouseenter = () => close.style.opacity = "1";
+        close.onmouseleave = () => close.style.opacity = "0.6";
+        close.onclick = () => panel.style.display = "none";
+
         const editorContainer = document.createElement("div");
         editorContainer.style.flex = "1";
 
@@ -6619,6 +6411,19 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
             right:'36px',
             cursor:'pointer',
             color:'#fff'
+        });
+
+        pasteBtn.addEventListener('click',async ()=>{
+            navigator.clipboard.readText().then(text=>{
+                const model = monacoEditorInstance.getModel();
+                const value = model.getValue()
+                model.setValue(value+`\n${text}`)
+            })
+        });
+
+        clearBtn.addEventListener('click',async ()=>{
+            const model = monacoEditorInstance.getModel();
+            model.setValue('')
         });
 
         panel.appendChild(header);
@@ -6658,181 +6463,233 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
         });
     }
 
-    function toggleThemesPanel(){
-        let panel=document.getElementById("avia-themes-panel");
-        if(panel){
-            panel.style.display = panel.style.display==="none"?"flex":"none";
+    function toggleThemesPanel() {
+        let panel = document.getElementById("avia-themes-panel");
+        if (panel) {
+            if (panel.style.display === "none") {
+                panel.style.display = "flex";
+                if (typeof window.__avia_refresh_themes_panel === "function") {
+                    window.__avia_refresh_themes_panel();
+                }
+            } else {
+                panel.style.display = "none";
+            }
             return;
         }
-        panel=document.createElement("div");
-        panel.id="avia-themes-panel";
-        if(window.outerHeight<468){
-            Object.assign(panel.style,{
-                position:"fixed",
-                bottom:"12px",
-                right:"0px",
-                width:`${window.outerWidth-52}px`,
-                height:`${window.outerWidth-72}px`,
-                background:"var(--md-sys-color-surface,#1e1e1e)",
-                color:"var(--md-sys-color-on-surface,#fff)",
-                borderRadius:"16px",
-                boxShadow:"0 8px 28px rgba(0,0,0,0.35)",
-                zIndex:999999,
-                display:"flex",
-                flexDirection:"column",
-                overflow:"hidden",
-                border:"1px solid rgba(255,255,255,0.08)"
-            });
-        }else{
-            Object.assign(panel.style,{
-                position:"fixed",
-                bottom:"12px",
-                right:"0px",
-                width:"416px",
-                height:"368px",
-                background:"#1e1e1e",
-                color:"#fff",
-                borderRadius:"16px",
-                boxShadow:"0 12px 35px rgba(0,0,0,0.45)",
-                zIndex:999999,
-                display:"flex",
-                flexDirection:"column",
-                overflow:"hidden",
-                border:"1px solid rgba(255,255,255,0.08)"
-            });
-        }
 
-        const header=document.createElement("div");
-        header.textContent="Themes";
-        Object.assign(header.style,{
-            padding:"14px 16px",
-            fontWeight:"600",
-            fontSize:"14px",
-            background:"var(--md-sys-color-surface-container,rgba(255,255,255,0.04))",
-            borderBottom:"1px solid rgba(255,255,255,0.08)",
-            cursor:"move"
-        });
-        makeDraggable(panel,header);
-
-        const close=document.createElement("div");
-        close.textContent="✕";
-        Object.assign(close.style,{
-            position:"absolute",
-            right:"16px",
-            top:"12px",
-            cursor:"pointer",
-            opacity:"0.6",
-            fontSize:"15px",
-            lineHeight:"1",
-            padding:"2px 4px"
-        });
-        close.onmouseenter=()=>close.style.opacity="1";
-        close.onmouseleave=()=>close.style.opacity="0.6";
-        close.onclick=()=>panel.style.display="none";
-
-        const btnRow=document.createElement("div");
-        Object.assign(btnRow.style,{
-            display:"flex",
-            gap:"8px",
-            padding:"12px 16px",
-            borderBottom:"1px solid rgba(255,255,255,0.08)",
-            flex:"0 0 auto"
+        panel = document.createElement("div");
+        panel.id = "avia-themes-panel";
+        Object.assign(panel.style, {
+            position: "fixed",
+            bottom: "40px",
+            right: "40px",
+            width: "500px",
+            height: "460px",
+            background: "var(--md-sys-color-surface, #1e1e1e)",
+            color: "var(--md-sys-color-on-surface, #fff)",
+            borderRadius: "16px",
+            boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
+            zIndex: "999999",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(12px)"
         });
 
-        const importBtn=document.createElement("button");
-        importBtn.textContent="Import Theme";
+        const header = document.createElement("div");
+        header.textContent = "Themes";
+        Object.assign(header.style, {
+            padding: "14px 16px",
+            fontWeight: "600",
+            fontSize: "14px",
+            background: "var(--md-sys-color-surface-container, rgba(255,255,255,0.04))",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            cursor: "move"
+        });
+        makeDraggable(panel, header);
+
+        const close = document.createElement("div");
+        close.textContent = "✕";
+        Object.assign(close.style, {
+            position: "absolute",
+            right: "16px",
+            top: "12px",
+            cursor: "pointer",
+            opacity: "0.6",
+            fontSize: "15px",
+            lineHeight: "1",
+            padding: "2px 4px"
+        });
+        close.onmouseenter = () => close.style.opacity = "1";
+        close.onmouseleave = () => close.style.opacity = "0.6";
+        close.onclick = () => panel.style.display = "none";
+
+        const btnRow = document.createElement("div");
+        Object.assign(btnRow.style, {
+            display: "flex",
+            gap: "8px",
+            padding: "12px 16px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            flex: "0 0 auto"
+        });
+
+        const importBtn = document.createElement("button");
+        importBtn.textContent = "Import Theme";
         styleBtn(importBtn);
-        importBtn.style.flex="1";
-        importBtn.style.padding="8px 12px";
+        importBtn.style.flex = "1";
+        importBtn.style.padding = "8px 12px";
 
-        const newBtn=document.createElement("button");
-        newBtn.textContent="+ New";
+        const newBtn = document.createElement("button");
+        newBtn.textContent = "+ New";
         styleBtn(newBtn);
-        newBtn.style.flex="1";
-        newBtn.style.padding="8px 12px";
+        newBtn.style.flex = "1";
+        newBtn.style.padding = "8px 12px";
 
         btnRow.appendChild(importBtn);
         btnRow.appendChild(newBtn);
 
-        const list=document.createElement("div");
-        Object.assign(list.style,{
-            flex:"1",
-            overflowY:"auto",
-            padding:"16px",
-            display:"flex",
-            flexDirection:"column",
-            gap:"8px"
+        const list = document.createElement("div");
+        Object.assign(list.style, {
+            flex: "1",
+            overflowY: "auto",
+            padding: "16px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px"
+        });
+
+        const dropOverlay = document.createElement("div");
+        dropOverlay.textContent = "Drop .css or .txt files here";
+        Object.assign(dropOverlay.style, {
+            position: "absolute",
+            inset: "0",
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "18px",
+            fontWeight: "600",
+            color: "#fff",
+            opacity: "0",
+            pointerEvents: "none",
+            transition: "opacity 0.15s ease",
+            borderRadius: "16px"
         });
 
         panel.appendChild(header);
         panel.appendChild(close);
         panel.appendChild(btnRow);
         panel.appendChild(list);
+        panel.appendChild(dropOverlay);
         document.body.appendChild(panel);
 
-        function render(){
-            list.innerHTML="";
-            const themes=getThemes();
+        let dragDepth = 0;
 
-            if(themes.length === 0){
-                const empty=document.createElement("div");
-                empty.textContent="No themes yet. Import or create one above.";
-                Object.assign(empty.style,{opacity:"0.4",fontSize:"13px"});
+        panel.addEventListener("dragenter", e => {
+            e.preventDefault();
+            e.stopPropagation();
+            dragDepth++;
+            dropOverlay.style.opacity = "1";
+            panel.style.border = "1px dashed rgba(255,255,255,0.4)";
+        });
+
+        panel.addEventListener("dragover", e => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        panel.addEventListener("dragleave", e => {
+            e.preventDefault();
+            e.stopPropagation();
+            dragDepth--;
+            if (dragDepth <= 0) {
+                dropOverlay.style.opacity = "0";
+                panel.style.border = "1px solid rgba(255,255,255,0.08)";
+                dragDepth = 0;
+            }
+        });
+
+        panel.addEventListener("drop", async e => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropOverlay.style.opacity = "0";
+            panel.style.border = "1px solid rgba(255,255,255,0.08)";
+            dragDepth = 0;
+            const files = [...e.dataTransfer.files].filter(f => f.name.endsWith(".css") || f.name.endsWith(".txt"));
+            if (!files.length) return;
+            const themes = getThemes();
+            for (const file of files) {
+                const css = await file.text();
+                themes.push({ id: crypto.randomUUID(), css, enabled: true });
+            }
+            setThemes(themes);
+            applyThemes();
+            render();
+        });
+
+        function render() {
+            list.innerHTML = "";
+            const themes = getThemes();
+
+            if (themes.length === 0) {
+                const empty = document.createElement("div");
+                empty.textContent = "No themes yet. Import or create one above.";
+                Object.assign(empty.style, { opacity: "0.4", fontSize: "13px" });
                 list.appendChild(empty);
                 return;
             }
 
-            themes.forEach(theme=>{
-                const meta=parseMeta(theme.css);
+            themes.forEach(theme => {
+                const meta = parseMeta(theme.css);
 
-                const card=document.createElement("div");
-                Object.assign(card.style,{
-                    display:"flex",
-                    justifyContent:"space-between",
-                    alignItems:"center",
-                    padding:"10px 12px",
-                    borderRadius:"10px",
-                    background:"rgba(255,255,255,0.04)",
-                    border:"1px solid rgba(255,255,255,0.06)",
-                    marginBottom:"0"
+                const card = document.createElement("div");
+                Object.assign(card.style, {
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    borderRadius: "10px",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.06)"
                 });
 
-                const left=document.createElement("div");
-                Object.assign(left.style,{display:"flex",alignItems:"center",gap:"10px"});
+                const left = document.createElement("div");
+                Object.assign(left.style, { display: "flex", alignItems: "center", gap: "10px" });
 
-                const dot=document.createElement("div");
-                Object.assign(dot.style,{
-                    width:"10px",
-                    height:"10px",
-                    borderRadius:"50%",
-                    flexShrink:"0",
+                const dot = document.createElement("div");
+                Object.assign(dot.style, {
+                    width: "10px",
+                    height: "10px",
+                    borderRadius: "50%",
+                    flexShrink: "0",
                     background: theme.enabled ? "#4dff88" : "#777",
                     boxShadow: theme.enabled ? "0 0 6px #4dff88" : "none"
                 });
 
-                const info=document.createElement("div");
-                info.innerHTML=`<div style="font-weight:600;font-size:13px">${meta.name}</div><div style="font-size:11px;opacity:.5">${meta.author} • v${meta.version}</div><div style="font-size:11px;opacity:.4">${meta.description}</div>`;
+                const info = document.createElement("div");
+                info.innerHTML = `<div style="font-weight:600;font-size:13px">${meta.name}</div><div style="font-size:11px;opacity:.5">${meta.author} • v${meta.version}</div><div style="font-size:11px;opacity:.4">${meta.description}</div>`;
 
                 left.appendChild(dot);
                 left.appendChild(info);
 
-                const controls=document.createElement("div");
-                Object.assign(controls.style,{display:"flex",gap:"6px"});
+                const controls = document.createElement("div");
+                Object.assign(controls.style, { display: "flex", gap: "6px" });
 
-                const toggle=document.createElement("button");
-                toggle.textContent=theme.enabled?"Disable":"Enable";
+                const toggle = document.createElement("button");
+                toggle.textContent = theme.enabled ? "Disable" : "Enable";
                 styleBtn(toggle);
-                toggle.onclick=()=>{
-                    theme.enabled=!theme.enabled;
+                toggle.onclick = () => {
+                    theme.enabled = !theme.enabled;
                     setThemes(themes);
                     applyThemes();
                     render();
                 };
 
-                const edit=document.createElement("button");
-                edit.textContent="Edit";
+                const edit = document.createElement("button");
+                edit.textContent = "Edit";
                 styleBtn(edit, "rgba(100,160,255,0.15)");
-                edit.onclick=()=>openThemeEditor(theme.id);
+                edit.onclick = () => openThemeEditor(theme.id);
 
                 const dlBtn = document.createElement("button");
                 dlBtn.textContent = "Export";
@@ -6843,11 +6700,11 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
                     downloadTheme(theme);
                 };
 
-                const del=document.createElement("button");
-                del.textContent="✕";
+                const del = document.createElement("button");
+                del.textContent = "✕";
                 styleBtn(del, "rgba(255,80,80,0.15)");
-                del.onclick=()=>{
-                    const updated=themes.filter(t=>t.id!==theme.id);
+                del.onclick = () => {
+                    const updated = themes.filter(t => t.id !== theme.id);
                     setThemes(updated);
                     applyThemes();
                     render();
@@ -6865,16 +6722,19 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
 
         window.__avia_refresh_themes_panel = render;
 
-        importBtn.onclick=()=>{
-            const input=document.createElement("input");
-            input.type="file";
-            input.accept=".css,.txt";
-            input.onchange=async()=>{
-                const file=input.files[0];
-                if(!file) return;
-                const css=await file.text();
-                const themes=getThemes();
-                themes.push({id:crypto.randomUUID(),css,enabled:true});
+        importBtn.onclick = () => {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = ".css,.txt";
+            input.multiple = true;
+            input.onchange = async () => {
+                const files = [...input.files];
+                if (!files.length) return;
+                const themes = getThemes();
+                for (const file of files) {
+                    const css = await file.text();
+                    themes.push({ id: crypto.randomUUID(), css, enabled: true });
+                }
                 setThemes(themes);
                 applyThemes();
                 render();
@@ -6882,9 +6742,9 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
             input.click();
         };
 
-        newBtn.onclick=()=>{
-            const themes=getThemes();
-            themes.push({id:crypto.randomUUID(),css:TEMPLATE,enabled:true});
+        newBtn.onclick = () => {
+            const themes = getThemes();
+            themes.push({ id: crypto.randomUUID(), css: TEMPLATE, enabled: true });
             setThemes(themes);
             applyThemes();
             render();
@@ -6893,25 +6753,39 @@ if(window.__US_BUILDER_THEMES_USER_JS__){return;}window.__US_BUILDER_THEMES_USER
         render();
     }
 
-    function injectButton(){
-        if(document.getElementById("avia-themes-btn")) return;
-        const appearanceBtn=[...document.querySelectorAll("a")].find(a=>a.textContent.trim()==="Appearance");
-        const quickCSS=document.getElementById("stoat-fake-quickcss");
-        if(!appearanceBtn || !quickCSS) return;
-        const clone=appearanceBtn.cloneNode(true);
-        clone.id="avia-themes-btn";
-        const text=[...clone.querySelectorAll("div")].find(d=>d.children.length===0);
-        if(text) text.textContent="(Avia) Themes";
-        clone.onclick=toggleThemesPanel;
+    function injectButton() {
+        if (document.getElementById("avia-themes-btn")) return;
+        const appearanceBtn = [...document.querySelectorAll("a")].find(a => a.textContent.trim() === "Appearance");
+        const quickCSS = document.getElementById("stoat-fake-quickcss");
+        if (!appearanceBtn || !quickCSS) return;
+        const clone = appearanceBtn.cloneNode(true);
+        clone.id = "avia-themes-btn";
+        const text = [...clone.querySelectorAll("div")].find(d => d.children.length === 0);
+        if (text) text.textContent = "(Avia) Themes";
+        clone.onclick = toggleThemesPanel;
         quickCSS.parentElement.insertBefore(clone, quickCSS.nextSibling);
     }
 
-    new MutationObserver(injectButton).observe(document.body,{childList:true,subtree:true});
+    function registerWithAviaMenu() {
+        if (window.AviaMenu) {
+            window.AviaMenu.register({ id: "avia_themes", name: "Themes", icon: "palette", onClick: toggleThemesPanel });
+        } else {
+            const interval = setInterval(() => {
+                if (window.AviaMenu) {
+                    clearInterval(interval);
+                    window.AviaMenu.register({ id: "avia_themes", name: "Themes", icon: "palette", onClick: toggleThemesPanel });
+                }
+            }, 100);
+        }
+    }
+
+    new MutationObserver(injectButton).observe(document.body, { childList: true, subtree: true });
     injectButton();
     applyThemes();
+    preloadMonaco();
+    registerWithAviaMenu();
 
 })();
-
 
 
 /* --- UnsentMessageContextMenuFix.js --- */
@@ -7197,255 +7071,395 @@ if(window.__US_BUILDER_VIDEOTHUMBNAILFIX_JS__){return;}window.__US_BUILDER_VIDEO
 })();
 
 
-/* --- Whisper.js --- */
-if(window.__US_BUILDER_WHISPER_JS__){return;}window.__US_BUILDER_WHISPER_JS__=true;
+/* --- whatsnew.js --- */
+if(window.__US_BUILDER_WHATSNEW_JS__){return;}window.__US_BUILDER_WHATSNEW_JS__=true;
 
 (function () {
-    if (window.__WHISPER__) return;
-    window.__WHISPER__ = true;
 
-    const style = document.createElement("style");
-    style.id = "whisper-hide";
-    style.textContent = `
-        [style*="position: fixed"] div.w_360px.h_120px {
-            visibility: hidden !important;
-            pointer-events: none !important;
-            transition: none !important;
-        }
-        div.w_360px.h_120px[data-whisper-switch] {
-            visibility: hidden !important;
-            pointer-events: none !important;
-            transition: none !important;
-        }
-    `;
+    if (window.__WHATS_NEW___) return;
+    window.__WHATS_NEW__ = true;
 
-    function isDM() {
-        return window.location.pathname.startsWith("/channel/");
-    }
+    const version = window.__USERSCRIPT_VERSION__.replaceAll('.', '-');
+    const BACKEND_URL = "https://raw.githubusercontent.com/0simp/AviaClientMobileWhatsnew/refs/heads/main/backend" + version + ".json";
 
-    function applyCSS() {
-        if (isDM()) {
-            if (!document.getElementById("whisper-hide")) {
-                document.head.appendChild(style);
+    function injectStyles() {
+        if (document.getElementById("avia-whatsnew-styles")) return;
+        const style = document.createElement("style");
+        style.id = "avia-whatsnew-styles";
+        style.textContent = `
+            #avia-whatsnew-scrim {
+                position: fixed;
+                inset: 0;
+                z-index: 999999;
+                background: rgba(0,0,0,0.6);
+                display: grid;
+                place-items: center;
+                padding: 80px;
+                overflow-y: auto;
+                animation: aviaScrimIn 0.1s forwards;
             }
-        } else {
-            document.getElementById("whisper-hide")?.remove();
+            @keyframes aviaScrimIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            #avia-whatsnew-modal {
+                opacity: 1;
+                padding: 24px;
+                min-width: 280px;
+                max-width: 560px;
+                width: 100%;
+                border-radius: 28px;
+                display: flex;
+                flex-direction: column;
+                color: var(--md-sys-color-on-surface, #fff);
+                background: var(--md-sys-color-surface-container-high, #2a2a2a);
+                box-sizing: border-box;
+            }
+            #avia-whatsnew-modal * { box-sizing: border-box; }
+            .avia-wn-title {
+                line-height: 2rem;
+                font-size: 1.5rem;
+                letter-spacing: 0;
+                font-weight: 400;
+                margin-bottom: 16px;
+            }
+            .avia-wn-body {
+                color: var(--md-sys-color-on-surface-variant, rgba(255,255,255,0.7));
+                line-height: 1.25rem;
+                font-size: 0.875rem;
+                letter-spacing: 0.015625rem;
+                font-weight: 400;
+            }
+            .avia-wn-body > * + * { margin-top: 0; }
+            .avia-wn-date {
+                display: block;
+                margin-bottom: 12px;
+                font-size: 0.875rem;
+                color: var(--md-sys-color-on-surface-variant, rgba(255,255,255,0.5));
+            }
+            .avia-wn-h1 {
+                font-size: 2em;
+                font-weight: 600;
+                margin: 0 0 4px 0;
+                color: var(--md-sys-color-on-surface, #fff);
+            }
+            .avia-wn-h2 {
+                font-size: 1.6em;
+                font-weight: 600;
+                margin: 0 0 4px 0;
+                color: var(--md-sys-color-on-surface, #fff);
+            }
+            .avia-wn-h3 {
+                font-size: 1.4em;
+                font-weight: 600;
+                margin: 0 0 4px 0;
+                color: var(--md-sys-color-on-surface, #fff);
+            }
+            .avia-wn-p {
+                margin: 0;
+                line-height: 1.6;
+            }
+            .avia-wn-spacer { display: block; height: 0.75em; }
+            .avia-wn-img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 12px;
+                display: block;
+            }
+            .avia-wn-ul {
+                padding-left: 1.5em;
+                margin: 0;
+                list-style-position: outside;
+            }
+            .avia-wn-ul li {
+                list-style-type: disc;
+                margin-bottom: 4px;
+                line-height: 1.5;
+            }
+            .avia-wn-ol {
+                padding-left: 1.5em;
+                margin: 0;
+                list-style-position: outside;
+            }
+            .avia-wn-ol li {
+                list-style-type: decimal;
+                margin-bottom: 4px;
+                line-height: 1.5;
+            }
+            .avia-wn-hr {
+                border: none;
+                border-top: 1px solid rgba(255,255,255,0.1);
+                margin: 4px 0;
+            }
+            .avia-wn-code {
+                font-family: var(--fonts-monospace, monospace);
+                font-size: 0.85em;
+                background: #0d1117;
+                color: #c9d1d9;
+                padding: 1px 4px;
+                border-radius: 4px;
+            }
+            .avia-wn-blockquote {
+                border-left: 3px solid rgba(255,255,255,0.2);
+                margin: 0;
+                padding: 4px 12px;
+                color: rgba(255,255,255,0.5);
+                font-style: italic;
+            }
+            .avia-wn-bold { font-weight: bold; }
+            .avia-wn-footer {
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                margin-top: 24px;
+            }
+            .avia-wn-close-btn {
+                line-height: 1.25rem;
+                font-size: 0.875rem;
+                letter-spacing: 0.015625rem;
+                font-weight: 400;
+                position: relative;
+                padding: 0 16px;
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: inherit;
+                cursor: pointer;
+                border: none;
+                transition: opacity 0.15s;
+                color: var(--md-sys-color-primary, #90caf9);
+                background: transparent;
+                height: 40px;
+                border-radius: 9999px;
+            }
+            .avia-wn-close-btn:hover { opacity: 0.75; }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function renderBlock(block) {
+        switch (block.type) {
+            case "image": {
+                const img = document.createElement("img");
+                img.src = block.src;
+                img.alt = block.alt || "";
+                img.className = "avia-wn-img";
+                img.loading = "lazy";
+                return img;
+            }
+            case "spacer": {
+                const s = document.createElement("span");
+                s.className = "avia-wn-spacer";
+                return s;
+            }
+            case "h1": {
+                const el = document.createElement("h1");
+                el.className = "avia-wn-h1";
+                el.textContent = block.text || "";
+                return el;
+            }
+            case "h2": {
+                const el = document.createElement("h2");
+                el.className = "avia-wn-h2";
+                el.textContent = block.text || "";
+                return el;
+            }
+            case "h3": {
+                const el = document.createElement("h3");
+                el.className = "avia-wn-h3";
+                el.textContent = block.text || "";
+                return el;
+            }
+            case "paragraph": {
+                const el = document.createElement("p");
+                el.className = "avia-wn-p";
+                el.innerHTML = renderInline(block.text || "");
+                return el;
+            }
+            case "ul": {
+                const ul = document.createElement("ul");
+                ul.className = "avia-wn-ul";
+                (block.items || []).forEach(item => {
+                    const li = document.createElement("li");
+                    li.innerHTML = renderInline(item);
+                    ul.appendChild(li);
+                });
+                return ul;
+            }
+            case "ol": {
+                const ol = document.createElement("ol");
+                ol.className = "avia-wn-ol";
+                (block.items || []).forEach(item => {
+                    const li = document.createElement("li");
+                    li.innerHTML = renderInline(item);
+                    ol.appendChild(li);
+                });
+                return ol;
+            }
+            case "hr": {
+                const hr = document.createElement("hr");
+                hr.className = "avia-wn-hr";
+                return hr;
+            }
+            case "blockquote": {
+                const bq = document.createElement("blockquote");
+                bq.className = "avia-wn-blockquote";
+                bq.innerHTML = renderInline(block.text || "");
+                return bq;
+            }
+            default:
+                return null;
         }
     }
 
-    function findVoiceCard() {
-        return [...document.querySelectorAll("div.cursor_pointer")]
-            .find(el => el.classList.contains("w_360px") && el.classList.contains("h_120px"));
+    function renderInline(text) {
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\*\*(.+?)\*\*/g, '<strong class="avia-wn-bold">$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            .replace(/`(.+?)`/g, '<code class="avia-wn-code">$1</code>')
+            .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" style="color:inherit;text-decoration:underline;opacity:0.8;">$1</a>');
     }
 
-    function findVoiceInner() {
-        return findVoiceCard()?.querySelector("div.pos_relative");
-    }
+    function openModal(entry) {
+        if (document.getElementById("avia-whatsnew-scrim")) return;
 
-    function findVoiceWrapper() {
-        let el = findVoiceCard()?.parentElement;
-        while (el) {
-            if (el.style?.position === "fixed") return el;
-            el = el.parentElement;
+        injectStyles();
+
+        const scrim = document.createElement("div");
+        scrim.id = "avia-whatsnew-scrim";
+        scrim.onclick = (e) => { if (e.target === scrim) scrim.remove(); };
+
+        const modal = document.createElement("div");
+        modal.id = "avia-whatsnew-modal";
+
+        const titleEl = document.createElement("span");
+        titleEl.className = "avia-wn-title";
+        titleEl.textContent = "What's new";
+        modal.appendChild(titleEl);
+
+        const body = document.createElement("div");
+        body.className = "avia-wn-body";
+
+        const inner = document.createElement("div");
+        inner.style.cssText = "display:flex;flex-direction:column;gap:0;";
+
+        if (entry.date) {
+            const dateEl = document.createElement("span");
+            dateEl.className = "avia-wn-date";
+            dateEl.textContent = entry.date;
+            inner.appendChild(dateEl);
         }
-        return null;
-    }
 
-    function findActiveCall() {
-        return [...document.querySelectorAll("div.pointer-events_all")]
-            .find(el => el.classList.contains("h_40vh") && el.classList.contains("w_100%"));
-    }
-
-    function findPinButton() {
-        return document.querySelector('button[aria-label="View pinned messages"]');
-    }
-
-    function findInjectedBtn() {
-        return document.querySelector("[data-avia-voice-btn]");
-    }
-
-    function showVoiceWrapper() {
-        const wrapper = findVoiceWrapper();
-        if (!wrapper) return;
-        wrapper.style.transition = "none";
-        wrapper.style.visibility = "visible";
-        wrapper.style.pointerEvents = "none";
-    }
-
-    function restoreVoiceWrapper() {
-        const wrapper = findVoiceWrapper();
-        if (!wrapper) return;
-        wrapper.style.transition = "";
-        wrapper.style.visibility = "";
-        wrapper.style.pointerEvents = "";
-    }
-
-    function removeInjectedBtn() {
-        findInjectedBtn()?.remove();
-    }
-
-    let whisperTooltip = null;
-
-    function getTooltip() {
-        if (!whisperTooltip) {
-            whisperTooltip = document.createElement("div");
-            whisperTooltip.style.cssText = "position:fixed;z-index:999;display:none;pointer-events:none;";
-            const inner = document.createElement("div");
-            inner.className = "c_white bg_black p_var(--gap-md) bdr_var(--borderRadius-md) lh_0.875rem fs_0.6875rem ls_0.03125rem fw_500";
-            inner.textContent = "Start voice call";
-            whisperTooltip.appendChild(inner);
-            document.body.appendChild(whisperTooltip);
-        }
-        return whisperTooltip;
-    }
-
-    function showTooltip(btn) {
-        const t = getTooltip();
-        t.style.display = "block";
-        const rect = btn.getBoundingClientRect();
-        requestAnimationFrame(() => {
-            const tw = t.getBoundingClientRect().width;
-            const x = rect.left + (rect.width / 2) - (tw / 2);
-            const y = rect.bottom + 6;
-            t.style.left = x + "px";
-            t.style.top  = y + "px";
+        (entry.content || []).forEach(block => {
+            const el = renderBlock(block);
+            if (el) inner.appendChild(el);
         });
+
+        body.appendChild(inner);
+        modal.appendChild(body);
+
+        const footer = document.createElement("div");
+        footer.className = "avia-wn-footer";
+
+        const closeBtn = document.createElement("button");
+        closeBtn.className = "avia-wn-close-btn";
+        closeBtn.textContent = "Close";
+        closeBtn.onclick = () => scrim.remove();
+
+        footer.appendChild(closeBtn);
+        modal.appendChild(footer);
+        scrim.appendChild(modal);
+        document.body.appendChild(scrim);
     }
 
-    function hideTooltip() {
-        getTooltip().style.display = "none";
-    }
-
-    function onRouteChange() {
-        applyCSS();
-        if (!isDM()) {
-            removeInjectedBtn();
-            restoreVoiceWrapper();
-            unstampSwitchCard();
+    async function fetchAndOpen() {
+        try {
+            const res = await fetch(BACKEND_URL);
+            const data = await res.json();
+            const entries = data.entries || [];
+            const latest = entries[0];
+            if (latest) openModal(latest);
+        } catch (e) {
+            injectStyles();
+            const scrim = document.createElement("div");
+            scrim.id = "avia-whatsnew-scrim";
+            scrim.onclick = (e) => { if (e.target === scrim) scrim.remove(); };
+            const modal = document.createElement("div");
+            modal.id = "avia-whatsnew-modal";
+            modal.innerHTML = `<div style="opacity:0.5;text-align:center;padding:24px 0;font-size:13px;">Failed to load What's New.</div>`;
+            const footer = document.createElement("div");
+            footer.className = "avia-wn-footer";
+            const closeBtn = document.createElement("button");
+            closeBtn.className = "avia-wn-close-btn";
+            closeBtn.textContent = "Close";
+            closeBtn.onclick = () => scrim.remove();
+            footer.appendChild(closeBtn);
+            modal.appendChild(footer);
+            scrim.appendChild(modal);
+            document.body.appendChild(scrim);
         }
     }
 
-    const _pushState = history.pushState.bind(history);
-    const _replaceState = history.replaceState.bind(history);
+    function injectButton() {
+        if (document.getElementById("avia-whatsnew-btn")) return;
 
-    history.pushState = function (...args) {
-        _pushState(...args);
-        onRouteChange();
-    };
+        const appearanceBtn = [...document.querySelectorAll("a")]
+            .find(a => a.textContent.trim() === "Appearance");
+        const referenceNode = document.getElementById("stoat-fake-quickcss");
+        if (!appearanceBtn || !referenceNode) return;
 
-    history.replaceState = function (...args) {
-        _replaceState(...args);
-        onRouteChange();
-    };
+        const btn = appearanceBtn.cloneNode(true);
+        btn.id = "avia-whatsnew-btn";
 
-    window.addEventListener("popstate", onRouteChange);
+        const label = [...btn.querySelectorAll("div")].find(d => d.children.length === 0);
+        if (label) label.textContent = "(Avia) What's New";
 
-    function injectVoiceButton() {
-        if (!isDM()) {
-            removeInjectedBtn();
-            restoreVoiceWrapper();
-            unstampSwitchCard();
-            return;
-        }
+        const iconSpan = btn.querySelector("span.material-symbols-outlined");
+        if (iconSpan) iconSpan.remove();
 
-        const voiceCard = findVoiceCard();
-        const pinBtn    = findPinButton();
+        const oldSvg = btn.querySelector("svg");
+        if (oldSvg) oldSvg.remove();
 
-        if (!voiceCard) {
-            removeInjectedBtn();
-            return;
-        }
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, "svg");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("width", "20");
+        svg.setAttribute("height", "20");
+        svg.setAttribute("fill", "currentColor");
+        svg.style.cssText = "margin-right:8px;flex-shrink:0;";
 
-        if (!pinBtn) return;
-        if (findInjectedBtn()) return;
+        const path = document.createElementNS(svgNS, "path");
+        path.setAttribute("d", "M18 11v2h4v-2zm-2 6.61c.96.71 2.21 1.65 3.2 2.39.4-.53.8-1.07 1.2-1.6-.99-.74-2.24-1.68-3.2-2.4-.4.54-.8 1.08-1.2 1.61M20.4 5.6c-.4-.53-.8-1.07-1.2-1.6-.99.74-2.24 1.68-3.2 2.4.4.53.8 1.07 1.2 1.6.96-.72 2.21-1.65 3.2-2.4M4 9c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1v4h2v-4h1l5 3V6L8 9zm5.03 1.71L11 9.53v4.94l-1.97-1.18-.48-.29H4v-2h4.55zM15.5 12c0-1.33-.58-2.53-1.5-3.35v6.69c.92-.81 1.5-2.01 1.5-3.34");
+        svg.appendChild(path);
 
-        const btn = pinBtn.cloneNode(false);
-        btn.setAttribute("data-avia-voice-btn", "true");
-        btn.setAttribute("aria-label", "Start voice call");
+        const firstChild = btn.firstChild;
+        btn.insertBefore(svg, firstChild);
 
-        const ripple = document.createElement("md-ripple");
-        ripple.setAttribute("aria-hidden", "true");
-        btn.appendChild(ripple);
-
-        const icon = document.createElement("span");
-        icon.className = "material-symbols-outlined";
-        icon.style.cssText = "display:block;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;font-size:24px;";
-        icon.textContent = "call";
-        btn.appendChild(icon);
-
-        btn.addEventListener("mouseenter", () => showTooltip(btn));
-        btn.addEventListener("mouseleave", hideTooltip);
-
-        btn.addEventListener("click", (e) => {
-            e.stopPropagation();
+        btn.onclick = (e) => {
             e.preventDefault();
-            hideTooltip();
+            fetchAndOpen();
+        };
 
-            if (findActiveCall()) return;
-
-            const inner = findVoiceInner();
-            if (!inner) return;
-
-            showVoiceWrapper();
-
-            const eventOpts = { bubbles: true, cancelable: true, view: window };
-            inner.dispatchEvent(new PointerEvent("pointerenter", eventOpts));
-            inner.dispatchEvent(new PointerEvent("pointerdown",  { ...eventOpts, pointerId: 1, isPrimary: true }));
-            inner.dispatchEvent(new PointerEvent("pointerup",    { ...eventOpts, pointerId: 1, isPrimary: true }));
-            inner.dispatchEvent(new MouseEvent("click",          eventOpts));
-
-            setTimeout(() => {
-                if (findActiveCall()) {
-                    restoreVoiceWrapper();
-                } else {
-                    applyCSS();
-                }
-            }, 300);
-        });
-
-        pinBtn.insertAdjacentElement("afterend", btn);
+        referenceNode.parentElement.insertBefore(btn, referenceNode.nextSibling);
     }
 
-    function stampSwitchCard() {
-        document.querySelectorAll("div.w_360px.h_120px.trs-tmf_ease-in-out").forEach(el => {
-            if (el.innerText?.includes("Switch to this voice channel")) {
-                el.setAttribute("data-whisper-switch", "");
-            }
-        });
-    }
+    injectStyles();
 
-    function unstampSwitchCard() {
-        document.querySelectorAll("[data-whisper-switch]")
-            .forEach(el => el.removeAttribute("data-whisper-switch"));
-    }
+    new MutationObserver(() => injectButton())
+        .observe(document.body, { childList: true, subtree: true });
 
-    function enforceHidden() {
-        if (!isDM()) {
-            restoreVoiceWrapper();
-            unstampSwitchCard();
-            return;
-        }
-        if (findActiveCall()) return;
-        applyCSS();
-        stampSwitchCard();
-    }
+    injectButton();
 
-    const observer = new MutationObserver(() => {
-        injectVoiceButton();
-        enforceHidden();
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    applyCSS();
-    injectVoiceButton();
-    enforceHidden();
 })();
 
 
 /* --- Embedded Themes --- */
 const __BUILDER_THEMES__ = [
-  {id:"CSS_CSS",name:"css.css",css:"/*Fixs Attachment files with text showing inside to only show half way*/\n.d_grid[style*=\"width: 420px\"]:has(pre code) {\n  width: 100% !important;\n  max-width: 100% !important;\n  height: auto !important;\n}\n\n/* Fix bio overflow, showing the full bio */\n#floating div.will-change_transform > div > div.ov_hidden:last-child {\n    aspect-ratio: unset;\n}\n\n/* Makes scrolling server and channel lists without accidentally reordering them possible */\n.scr-bar-w_none {\n    scrollbar-width: thin;\n    overflow-x:hidden;\n}\n\n/* Align Voice Call button to top right */\n[class=\"top_var(--gap-md) p_var(--gap-md) w_100% pos_absolute z_2 us_none d_flex ai_center flex-d_column\"] {\n    align-items: end;\n}\n\n/*Make Voice Call button smaller*/\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px {\n\n  width: 240px !important;   /* was 360px */ /*Now 240*/\n  height: 80px !important;   /* was 120px */ /*Now 80*/\n\n  border-radius: 12px;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px span {\n  \n  font-size: 0.85rem !important;\n  line-height: 1.1 !important;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px .material-symbols-outlined {\n  \n  font-size: 18px !important;\n}\n/*Normal Version*/\n\n/* Shrink placeholder text */\n.cm-placeholder {\n    font-size: 10px !important;\n}\n\n/*Shrink text in chat bar */\n[class='cm-line']{\n    font-size : 10px;\n}\n\n/*Fixes join button on invites going off the screen */\n[class='lh_1.25rem fs_0.875rem ls_0.015625rem fw_500 pos_relative px_var(--padding-inline) flex-sh_0 d_flex ai_center jc_center ff_inherit cursor_not-allowed bd_none trs_var(--transitions-medium)_all c_var(--color) fill_var(--color) h_40px --padding-inline_16px bdr_48px bg_color-mix(in_srgb,_10%_var(--md-sys-color-on-surface),_transparent) --color_color-mix(in_srgb,_38%_var(--md-sys-color-on-surface),_transparent)'][type=button]{\n    position:relative;\n    left:-15%;\n    font-size:6.3px;\n}\n\n/*Shrink search bar placeholder text*/\n[class='h_40px w_240px px_16px bdr_var(--borderRadius-full) bg_var(--md-sys-color-surface-container-high)']{\n    font-size:10px;\n}\n\n/*Shrink channel names*/\n[class='white-space_nowrap [&_*]:white-space_nowrap lh_1.5rem fs_1rem ls_0.009375rem fw_550']{\n    font-size:10px;\n}\n[class='gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0']{\n    font-size:10px;\n}\n\nimg[class='cursor_pointer']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n}\n\na[href]{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n}\n\n/* Remove Rounded Edges*/\nmain.bdr_var\\(--borderRadius-xl\\) {\n    border-radius: 0 !important;\n    margin: 0 !important;\n}\n\n/*Make The Status Card Not Clip When User Has Long Status*/\ndiv.asp_1\\/1:has(> span.us_text) {\n    aspect-ratio: auto !important;\n    height: fit-content !important;\n    overflow: visible !important;\n}\n\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)']{\n    overflow-y :auto;\n}\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg) ov-y_scroll! ov-x_hidden!']{\n    overflow-y :auto;\n}",enabled:true},
+  {id:"CSS_CSS",name:"css.css",css:"/*Fixs Attachment files with text showing inside to only show half way*/\n.d_grid[style*=\"width: 420px\"]:has(pre code) {\n  width: 100% !important;\n  max-width: 100% !important;\n  height: auto !important;\n}\n\n/* Fix bio overflow, showing the full bio */\n#floating div.will-change_transform > div > div.ov_hidden:last-child {\n    aspect-ratio: unset;\n}\n\n/* Makes scrolling server and channel lists without accidentally reordering them possible */\n.scr-bar-w_none {\n    scrollbar-width: thin;\n    overflow-x:hidden;\n}\n\n/* Align Voice Call button to top right */\n[class=\"top_var(--gap-md) p_var(--gap-md) w_100% pos_absolute z_2 us_none d_flex ai_center flex-d_column\"] {\n    align-items: end;\n}\n\n/*Make Voice Call button smaller*/\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px {\n\n  width: 240px !important;   /* was 360px */ /*Now 240*/\n  height: 80px !important;   /* was 120px */ /*Now 80*/\n\n  border-radius: 12px;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px span {\n  \n  font-size: 0.85rem !important;\n  line-height: 1.1 !important;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px .material-symbols-outlined {\n  \n  font-size: 18px !important;\n}\n/*Normal Version*/\n\n/* Shrink placeholder text */\n.cm-placeholder {\n    font-size: 10px !important;\n}\n\n/*Shrink text in chat bar */\n[class='cm-line']{\n    font-size : 10px;\n}\n\n/*Fixes join button on invites going off the screen */\n[class='lh_1.25rem fs_0.875rem ls_0.015625rem fw_500 pos_relative px_var(--padding-inline) flex-sh_0 d_flex ai_center jc_center ff_inherit cursor_not-allowed bd_none trs_var(--transitions-medium)_all c_var(--color) fill_var(--color) h_40px --padding-inline_16px bdr_48px bg_color-mix(in_srgb,_10%_var(--md-sys-color-on-surface),_transparent) --color_color-mix(in_srgb,_38%_var(--md-sys-color-on-surface),_transparent)'][type=button]{\n    position:relative;\n    left:-15%;\n    font-size:6.3px;\n}\n\n/*Shrink search bar placeholder text*/\n[class='h_40px w_240px px_16px bdr_var(--borderRadius-full) bg_var(--md-sys-color-surface-container-high)']{\n    font-size:10px;\n}\n\n/*Shrink channel names*/\n[class='white-space_nowrap [&_*]:white-space_nowrap lh_1.5rem fs_1rem ls_0.009375rem fw_550']{\n    font-size:10px;\n}\n[class='gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0']{\n    font-size:10px;\n}\n\nimg[class='cursor_pointer']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\na[href]{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\nvideo{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\npre[class='d_flex ov_auto scr-bar-w_thin flex-d_column']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\n/* Remove Rounded Edges*/\nmain.bdr_var\\(--borderRadius-xl\\) {\n    border-radius: 0 !important;\n    margin: 0 !important;\n}\n\n/*Make The Status Card Not Clip When User Has Long Status*/\ndiv.asp_1\\/1:has(> span.us_text) {\n    aspect-ratio: auto !important;\n    height: fit-content !important;\n    overflow: visible !important;\n}\n\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)']{\n    overflow-y :auto;\n}\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg) ov-y_scroll! ov-x_hidden!']{\n    overflow-y :auto;\n}\n",enabled:true},
 ];
 ;(function(){
   try{
