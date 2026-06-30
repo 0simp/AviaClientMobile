@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile DEV
 // @namespace   userscript.builder
-// @version     1.7.1
+// @version     1.7.2
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://beta.stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-06-29T19:54:37.013Z';
+'@preserve - Built on 2026-06-30T17:46:02.096Z';
 window.__USERSCRIPT_VERSION__ = "1.7";
 
 /* --- 3TapRely.js --- */
@@ -1856,7 +1856,9 @@ if(window.__US_BUILDER_FIXUSERPOPUPS_JS__){return;}window.__US_BUILDER_FIXUSERPO
     const names = [...document.getElementsByClassName('ov_hidden white-space_nowrap tov_ellipsis [&_*]:ov_hidden [&_*]:white-space_nowrap [&_*]:tov_ellipsis')]
     .filter(e=>e.offsetParent?.id)
     const onlinemembers = [...document.getElementsByClassName('flex-sh_0 fw_500 fs_15px us_none cursor_pointer pos_relative d_flex ai_center m_0_var(--gap-md) p_0_var(--gap-md) bdr_var(--borderRadius-xl) c_var(--color) fill_var(--color) [&_>_svg]:as_center [&:hover_.hover-hide,_&:not(:hover)_.hover-show]:d_none h_42px gap_var(--gap-md) --color_var(--md-sys-color-on-surface) bg_transparent')]
+    .filter(e=>e.offsetParent?.offsetParent?.className=='virtual-container-ztnei0mpwa')
     const offlinemembers = [...document.getElementsByClassName('flex-sh_0 fw_500 fs_15px us_none cursor_pointer pos_relative d_flex ai_center m_0_var(--gap-md) p_0_var(--gap-md) bdr_var(--borderRadius-xl) c_var(--color) fill_var(--color) [&_>_svg]:as_center [&:hover_.hover-hide,_&:not(:hover)_.hover-show]:d_none h_42px gap_var(--gap-md) --color_var(--md-sys-color-outline-variant) bg_transparent [&_img]:op_0.3')]
+    .filter(e=>e.offsetParent?.offsetParent?.className=='virtual-container-ztnei0mpwa')
 
     const balls = new Event('contextmenu',{
         bubbles:true,
@@ -1874,11 +1876,8 @@ if(window.__US_BUILDER_FIXUSERPOPUPS_JS__){return;}window.__US_BUILDER_FIXUSERPO
 
                 setTimeout(() => {
                     pfp.dispatchEvent(balls)
-
-                    setTimeout(() => {
-                        const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
-                        contextmenu.firstChild.click()
-                    }, 100);
+                    const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
+                    contextmenu.firstChild.click()
                 }, 100);
             };
 
@@ -1889,11 +1888,8 @@ if(window.__US_BUILDER_FIXUSERPOPUPS_JS__){return;}window.__US_BUILDER_FIXUSERPO
 
               setTimeout(() => {
                   pfp.dispatchEvent(balls)
-
-                  setTimeout(() => {
-                      const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
-                      contextmenu.firstChild.click()
-                  }, 100);
+                  const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
+                  contextmenu.firstChild.click()
               }, 100);
             }
 
@@ -1911,10 +1907,27 @@ if(window.__US_BUILDER_FIXUSERPOPUPS_JS__){return;}window.__US_BUILDER_FIXUSERPO
 
               setTimeout(() => {
                   pfp.dispatchEvent(balls)
-                  setTimeout(() => {
-                      const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
-                      contextmenu.firstChild.click()
-                }, 100);
+                  const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
+                  contextmenu.firstChild.click()
+              }, 100);
+            }
+
+            member.dataset.userpopupfixed = true
+        }
+    })
+
+    offlinemembers.forEach(member=>{
+        if(!member.dataset.userpopupfixed){
+            const pfp = member.querySelector(`img`)
+            member.onclick = function(e){
+              e.preventDefault()
+              e.stopImmediatePropagation()
+              e.stopPropagation()
+
+              setTimeout(() => {
+                  pfp.dispatchEvent(balls)
+                  const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
+                  contextmenu.firstChild.click()
               }, 100);
             }
 
