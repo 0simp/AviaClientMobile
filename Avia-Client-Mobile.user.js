@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.6.3
+// @version     1.7
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,8 +9,8 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-06-27T11:24:36.707Z';
-window.__USERSCRIPT_VERSION__ = "1.6.3";
+'@preserve - Built on 2026-07-01T15:31:41.075Z';
+window.__USERSCRIPT_VERSION__ = "1.7";
 
 /* --- 3TapRely.js --- */
 if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=true;
@@ -27,7 +27,12 @@ if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=
         message.addEventListener('click',()=>{
             clicks = clicks+1
             if(clicks==3){
-                message.children[0].children[0].click()
+                const bar = message.querySelector(`[class='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar']`) 
+                bar.children[0].click()
+                setTimeout(() => {
+                  const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
+                  contextmenu.firstChild.click()
+                }, 100);
                 clicks = 0
             }
             setTimeout(() => {
@@ -41,7 +46,12 @@ if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=
         message.addEventListener('click',()=>{
             clicks = clicks+1
             if(clicks==3){
-                message.children[0].children[0].click()
+                const bar = message.querySelector(`[class='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar']`) 
+                bar.children[0].click()
+                setTimeout(() => {
+                  const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
+                  contextmenu.firstChild.click()
+                }, 100);
                 clicks = 0
             }
             setTimeout(() => {
@@ -847,16 +857,60 @@ if(window.__US_BUILDER_AVIASERVERBUTTON_JS__){return;}window.__US_BUILDER_AVIASE
     const homebuttons = document.getElementsByClassName('gap_8px p_8px d_flex bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface-variant) bg_var(--md-sys-color-surface-variant)')
       .item(0)
       if(!homebuttons) return;
-      const button = homebuttons.children[0].children[1]
-      const title = button.querySelector("div.flex-g_1 > div");
-      if(!title.textContent.includes('ACM Server')){
-        const server = document.querySelector(`a[href*='/server/01KKQHXPKHSFBJNA2DY4XMP0DB']`)
-        if(server){
-          title.textContent='Go to the ACM Server'
-        }else{
-          title.textContent='Join the ACM Server'
+      const server = document.querySelector(`a[href*='/server/01KKQHXPKHSFBJNA2DY4XMP0DB']`)
+      const button = [...homebuttons.children[0].children].find(e=>e.querySelector(`path[d="M16.24 13.65c-1.17-.52-2.61-.9-4.24-.9s-3.07.39-4.24.9A2.99 2.99 0 0 0 6 16.39V18h12v-1.61c0-1.18-.68-2.26-1.76-2.74m-15.02.93A2.01 2.01 0 0 0 0 16.43V18h4.5v-1.61c0-.83.23-1.61.63-2.29-.37-.06-.74-.1-1.13-.1-.99 0-1.93.21-2.78.58m21.56 0A6.95 6.95 0 0 0 20 14c-.39 0-.76.04-1.13.1.4.68.63 1.46.63 2.29V18H24v-1.57c0-.81-.48-1.53-1.22-1.85M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3M1.497 11 4 8.497 6.503 11 4 13.503zM20 9l-2.5 4h5z"]`))
+      if(button){
+        const title = button.querySelector("div.flex-g_1 > div");
+        if(!title.textContent.includes('ACM Server')){
+          if(server){
+            title.textContent='Go to the ACM Server'
+          }else{
+            title.textContent='Join the ACM Server'
+          }
+          button.addEventListener('click',(e)=>{
+            e.preventDefault();
+            e.stopPropagation()
+            if(server){
+              server.click()
+            }else{
+              window.open(AVIA_INVITE,'_blank')
+            }
+          },true)
         }
-        button.addEventListener('click',(e)=>{
+      }else{
+        const fakebutton = document.createElement('a')
+        fakebutton.className='pos_relative gap_16px p_13px bdr_var(--borderRadius-md) us_none cursor_pointer trs_background-color_0.1s_ease-in-out d_flex ai_center flex-d_row c_var(--color) fill_var(--color) bg_var(--md-sys-color-secondary-container) --color_var(--md-sys-color-on-secondary-container)'
+
+        const mdripple = document.createElement('md-ripple')
+        mdripple.ariaHidden=true
+
+        const idkwhattocallthis = document.createElement('div')
+        idkwhattocallthis.className='fill_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-dim) w_36px h_36px d_flex flex-sh_0 ai_center jc_center bdr_var(--borderRadius-full)'
+        idkwhattocallthis.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M16.24 13.65c-1.17-.52-2.61-.9-4.24-.9s-3.07.39-4.24.9A2.99 2.99 0 0 0 6 16.39V18h12v-1.61c0-1.18-.68-2.26-1.76-2.74m-15.02.93A2.01 2.01 0 0 0 0 16.43V18h4.5v-1.61c0-.83.23-1.61.63-2.29-.37-.06-.74-.1-1.13-.1-.99 0-1.93.21-2.78.58m21.56 0A6.95 6.95 0 0 0 20 14c-.39 0-.76.04-1.13.1.4.68.63 1.46.63 2.29V18H24v-1.57c0-.81-.48-1.53-1.22-1.85M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3M1.497 11 4 8.497 6.503 11 4 13.503zM20 9l-2.5 4h5z"></path></svg>`
+
+        const textparent = document.createElement('div')
+        textparent.className='d_flex flex-g_1 flex-d_column fw_500 fs_14px gap_2px white-space_nowrap ov_hidden tov_ellipsis'
+
+        const title = document.createElement('div')
+        title.className='ov_hidden white-space_nowrap tov_ellipsis [&_*]:ov_hidden [&_*]:white-space_nowrap [&_*]:tov_ellipsis'
+        if(server){
+          title.textContent=`Go to the ACM Server`
+        }else{
+          title.textContent=`Join the ACM Server`
+        }
+
+        const text = document.createElement('span')
+        text.className='lh_1rem fs_0.75rem ls_0.03125rem fw_500 tw_wrap [&_a:hover]:td_underline'
+        text.textContent='You can report issues and discuss improvements with us directly here.'
+
+        fakebutton.appendChild(mdripple)
+        fakebutton.appendChild(idkwhattocallthis)
+        fakebutton.appendChild(textparent)
+        textparent.appendChild(title)
+        textparent.appendChild(text)
+        homebuttons.children[0].insertBefore(fakebutton,homebuttons.children[0].lastChild)
+
+        fakebutton.addEventListener('click',(e)=>{
           e.preventDefault();
           e.stopPropagation()
           if(server){
@@ -864,7 +918,7 @@ if(window.__US_BUILDER_AVIASERVERBUTTON_JS__){return;}window.__US_BUILDER_AVIASE
           }else{
             window.open(AVIA_INVITE,'_blank')
           }
-        },true)
+        });
       }
   }
 
@@ -1058,76 +1112,6 @@ if(window.__US_BUILDER_BADGES_JS__){return;}window.__US_BUILDER_BADGES_JS__=true
 
 
 
-/* --- BetterScrolling.js --- */
-if(window.__US_BUILDER_BETTERSCROLLING_JS__){return;}window.__US_BUILDER_BETTERSCROLLING_JS__=true;
-
-(function () {
-  if (window.__BETTER_SCROLLING__) return;
-  window.__BETTER_SCROLLING__ = true;
-
-  function betterScrolling() {
-    const channellist = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll').item(1)
-    if(!channellist) return;
-    const clone = channellist.lastChild.lastChild.cloneNode(true)
-    clone.style.opacity=0
-    clone.id='betterscrolling'
-
-    setTimeout(() => {
-        if(document.baseURI.includes('/server')){
-            for(const child of clone.lastChild.children){
-                child.remove()
-            }
-
-
-            for(const child of clone.lastChild.children){
-                child.remove()
-            }
-        }else{
-            for(const child of clone.children){
-                for(const child2 of child.children){
-                    child2.remove()
-                }
-            }
-        }
-    }, 100);
-
-    if(!document.getElementById('betterscrolling')){
-        channellist.lastChild.appendChild(clone)
-    }
-
-    const serverlist = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll').item(0)
-    if(!serverlist) return;
-    const target = serverlist.parentElement
-
-    const clone2 = target.lastChild.cloneNode(true)
-    clone2.style.opacity=0
-    clone2.id='betterscrollingserverlist'
-
-    if(!document.getElementById('betterscrollingserverlist')){
-      target.appendChild(clone2)
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    betterScrolling();
-  });
-
-  function init() {
-    betterScrolling();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
 /* --- ButtonFix.js --- */
 if(window.__US_BUILDER_BUTTONFIX_JS__){return;}window.__US_BUILDER_BUTTONFIX_JS__=true;
 
@@ -1181,7 +1165,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
     if(!channelList) return;
     channelList = channelList.children[0]
     if(channelList.querySelector('a[href=\'/app\']')){
-      for(const child of channelList.lastChild.previousSibling.children){
+      for(const child of channelList.lastChild.children){
         let timer;
         let long = false;
 
@@ -1248,6 +1232,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
 
             category.addEventListener('touchend',function(e){
               if(long){
+                e.preventDefault()
                 const rect = category.getBoundingClientRect();
                 const contextMenuX = rect.left + rect.width / 2;
                 const contextMenuY = rect.top + rect.height / 2;
@@ -1291,6 +1276,7 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
                 start()
           });
           child.addEventListener('touchend', function(e){
+          if(e.target!=child) return;
           if(long){
               setTimeout(() => {
                 child.dispatchEvent(balls)
@@ -1327,19 +1313,20 @@ if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_C
                 }
 
                 if(!child2.dataset.patched){
-                  child2.firstChild.firstChild.addEventListener('touchstart', function(e){
+                  child2.firstChild.addEventListener('touchstart', function(e){
                         start()
                   });
-                  child2.firstChild.firstChild.addEventListener('touchend', function(e){
+                  child2.firstChild.addEventListener('touchend', function(e){
                   if(long){
+                    e.preventDefault()
                       setTimeout(() => {
-                        child2.firstChild.firstChild.firstChild.dispatchEvent(balls)
+                        child2.firstChild.dispatchEvent(balls)
                       }, 100);
                   }
                   stop()
                   });
-                  child2.firstChild.firstChild.addEventListener('touchcancel',stop);
-                  child2.firstChild.firstChild.addEventListener('touchmove',stop);
+                  child2.firstChild.addEventListener('touchcancel',stop);
+                  child2.firstChild.addEventListener('touchmove',stop);
                   child2.dataset.patched=true
                 }
             }
@@ -1584,382 +1571,6 @@ if(window.__US_BUILDER_CLIENTBACKUP_JS__){return;}window.__US_BUILDER_CLIENTBACK
 
 
 
-/* --- CollapseChannelName.js --- */
-if(window.__US_BUILDER_COLLAPSECHANNELNAME_JS__){return;}window.__US_BUILDER_COLLAPSECHANNELNAME_JS__=true;
-
-(function () {
-  if (window.__COLLAPSE_CHANNEL_NAME__) return;
-  window.__COLLAPSE_CHANNEL_NAME__ = true;
-  let baseuris = []
-  let username = '';
-
-  function collapseChannelName() {
-    const bar = document.getElementsByClassName('gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0').item(0)
-    if(bar){
-        const button = document.createElement('button')
-        button.id='collpasechannelname'
-        button.className='lh_1.25rem fs_0.875rem ls_0.015625rem fw_500 pos_relative asp_1/1 flex-sh_0 d_flex ai_center jc_center ff_inherit cursor_pointer bd_none trs_var(--transitions-fast)_all c_var(--colour) fill_var(--colour) --colour_var(--md-sys-color-on-surface-variant) bdr_var(--borderRadius-full) h_40px px_8px'
-
-        const ripple = document.createElement('md-ripple')
-        ripple.ariaHidden=true
-
-        const span = document.createElement('span')
-        span.className='material-symbols-outlined'
-        span.style='display: block; font-variation-settings: &quot;FILL&quot; 0, &quot;wght&quot; 400, &quot;GRAD&quot; 0; font-size: 24px;'
-        span.textContent='arrow_back_ios'
-
-        button.appendChild(ripple)
-        button.appendChild(span)
-
-        button.onclick = function(){
-          for(const child of button.parentElement.children){
-              if(child.id=='collpasechannelname') break;
-              if(!child.style.display){
-                  child.style.display='none'
-                  button.querySelector('span').textContent='arrow_forward_ios'
-              }else{
-                  child.style.removeProperty('display')
-                  button.querySelector('span').textContent='arrow_back_ios'
-              }
-          }
-          if(!bar.querySelectorAll('svg')[1].previousSibling.tagName){
-            if(bar.querySelectorAll('svg')[1].previousSibling.textContent){
-              username = bar.querySelectorAll('svg')[1].previousSibling.textContent
-              bar.querySelectorAll('svg')[1].previousSibling.textContent=''
-            }else{
-              bar.querySelectorAll('svg')[1].previousSibling.textContent=username
-            }
-          }
-        }
-
-        if(!document.getElementById('collpasechannelname')){
-          if(bar.querySelector(`[aria-label='Click to show full description']`)){
-            bar.insertBefore(button,bar.querySelector(`[aria-label='Click to show full description']`).nextSibling)
-          }else{
-              if(bar.children[1]){
-                bar.insertBefore(button,bar.children[1].nextSibling)
-              }
-          }
-        }
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    if(baseuris[baseuris.length-1]!=document.baseURI){
-      const bar = document.getElementsByClassName('gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0').item(0)
-      for(const child of bar.children){
-        if(child.style?.display){
-          child.style.removeProperty('display')
-        }
-      }
-      if(document.getElementById('collpasechannelname')){
-        document.getElementById('collpasechannelname').remove()
-      }
-    }
-    baseuris.push(document.baseURI)
-    collapseChannelName();
-  });
-
-  function init() {
-    collapseChannelName();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
-/* --- CollapseSettingsSidebar.js --- */
-if(window.__US_BUILDER_COLLAPSESETTINGSSIDEBAR_JS__){return;}window.__US_BUILDER_COLLAPSESETTINGSSIDEBAR_JS__=true;
-
-let fuckyou = [];
-(function () {
-  if (window.__COLLAPSE_SETTINGS_SIDEBAR__) return;
-  window.__COLLAPSE_SETTINGS_SIDEBAR__ = true;
-
-  function apply() {
-    if(document.getElementsByClassName('d_flex flex_1_0_218px pl_8px jc_flex-end').item(0)){
-        if(fuckyou.length>1){
-            fuckyou = [];
-        }
-        const thing = document.getElementsByClassName('d_flex flex_1_0_218px pl_8px jc_flex-end').item(0).children[0].children[0].children[0]
-        const collapsebutton = document.createElement('div')
-        collapsebutton.className = 'd_flex cursor_pointer ai_center'
-        collapsebutton.ariaLabel = 'Collapse'
-        collapsebutton.innerHTML = `
-            <svg stroke-width="0" color="currentColor" fill="currentColor" viewBox="0 0 24 24" size="20" height="20" width="20" xmlns="http://www.w3.org/2000/svg" style="overflow: visible;"><path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path></svg>
-        `
-        collapsebutton.addEventListener('click',()=>{
-            document.getElementsByClassName('d_flex flex_1_0_218px pl_8px jc_flex-end').item(0).style.display ='none'
-        });
-
-        if(!document.querySelector('div[aria-label=\'Collapse\']')&&window.outerWidth<window.outerHeight){
-          thing.insertBefore(collapsebutton,thing.children[0])
-        }
-  
-        document.querySelectorAll(`a[class='pos_relative min-w_0 d_flex ai_center p_6px_8px bdr_8px fw_500 me_12px fs_15px us_none trs_background-color_0.1s_ease-in-out c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg_unset [&_svg]:flex-sh_0']`).forEach(e=>{
-          if(e.children[1].children[0]?.children[0]?.getAttribute('d')=='m17 8-1.41 1.41L17.17 11H9v2h8.17l-1.58 1.58L17 16l4-4zM5 5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h7v-2H5z'
-          ||e.children[1].children[0]?.children[0]?.getAttribute('d')=='M18.5 3H6c-1.1 0-2 .9-2 2v5.71c0 3.83 2.95 7.18 6.78 7.29 3.96.12 7.22-3.06 7.22-7v-1h.5c1.93 0 3.5-1.57 3.5-3.5S20.43 3 18.5 3M16 5v3H6V5zm0 5v1c0 2.76-2.24 5-5 5s-5-2.24-5-5v-1m12.5-2H18V5h.5c.83 0 1.5.67 1.5 1.5S19.33 8 18.5 8M4 19h16v2H4z'
-          ||e.children[1].children[0]?.children[0]?.getAttribute('d')=='M15 9H9v6h6zm-2 4h-2v-2h2zm8-2V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9v2H7c-1.1 0-2 .9-2 2v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2zm-4 6H7V7h10z'
-          ||e.textContent.includes('Avia')){
-              return;
-          }
-          const oldClick = e.$$click
-          e.$$click = async function(){
-            await oldClick()
-            const collapsebutton = document.querySelector('div[aria-label=\'Collapse\']')
-            if(collapsebutton){
-              collapsebutton.click()
-            }
-          }
-      })
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    apply();
-  });
-
-  function init() {
-    apply();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
-/* --- __COLLAPSE_SETTINGS_SIDEBAR_FULLSCREEN__.js --- */
-if(window.__US_BUILDER_COLLAPSE_SETTINGS_SIDEBAR_FULLSCREEN_JS__){return;}window.__US_BUILDER_COLLAPSE_SETTINGS_SIDEBAR_FULLSCREEN_JS__=true;
-
-(function(){
-if(window.__COLLAPSE_SETTINGS_SIDEBAR_FULLSCREEN__) return;
-window.__COLLAPSE_SETTINGS_SIDEBAR_FULLSCREEN__ = true;
-
-function getPanel(){
-  return document.getElementsByClassName('d_flex flex_1_0_218px pl_8px jc_flex-end').item(0);
-}
-
-function getContentPanel(){
-  return document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden min-w_0 flex_1_1_800px').item(0);
-}
-
-function getSettingsRoot(){
-  // the flex row that contains both the sidebar panel and content panel
-  const panel = getPanel();
-  if(!panel) return null;
-  return panel.parentElement;
-}
-
-function ensureReopenBtn(){
-  if(document.getElementById('avia-settings-reopen-btn')) return;
-
-  const btn = document.createElement('div');
-  btn.id = 'avia-settings-reopen-btn';
-  Object.assign(btn.style, {
-    position: 'fixed',
-    top: '12px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    zIndex: '999999',
-    background: 'var(--md-sys-color-surface-container-high, #2a2a2a)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: '0 0 8px 8px',
-    padding: '4px 16px 6px',
-    cursor: 'pointer',
-    display: 'none',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
-    color: 'var(--md-sys-color-on-surface, #fff)',
-    fontSize: '12px',
-    fontWeight: '500',
-  });
-
-  // down chevron + label
-  btn.innerHTML = `
-    <svg stroke-width="0" fill="currentColor" viewBox="0 0 24 24" height="16" width="16" xmlns="http://www.w3.org/2000/svg">
-      <path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/>
-    </svg>
-    <span>Settings</span>
-  `;
-
-  btn.addEventListener('click', () => {
-    const panel = getPanel();
-    if(!panel) return;
-
-    // restore sidebar
-    panel.style.display = '';
-    Object.assign(panel.style, {
-      position: '',
-      top: '',
-      left: '',
-      width: '',
-      height: '',
-      zIndex: '',
-    });
-
-    // hide content again
-    const content = getContentPanel();
-    if(content) content.style.display = 'none';
-
-    btn.style.display = 'none';
-  });
-
-  document.body.appendChild(btn);
-}
-
-function applyFullscreenSidebar(){
-  const panel = getPanel();
-  //ignore on tablets/ipads
-  if(!panel || panel.__avia_fullscreen_applied__||window.outerHeight<window.outerWidth) return;
-  panel.__avia_fullscreen_applied__ = true;
-
-  // make the sidebar fill the screen, centered
-  Object.assign(panel.style, {
-    position: 'fixed',
-    top: '0',
-    left: '0',
-    width: '100vw',
-    height: '100vh',
-    zIndex: '99997',
-    display: 'flex',
-    justifyContent: 'center',
-    background: 'var(--md-sys-color-surface, #1e1e1e)',
-    overflowY: 'auto',
-  });
-
-  const content = getContentPanel();
-  if(content) content.style.display = 'none';
-}
-
-function resetFullscreenSidebar(){
-  const panel = getPanel();
-  if(!panel) return;
-  panel.__avia_fullscreen_applied__ = false;
-  Object.assign(panel.style, {
-    position: '',
-    top: '',
-    left: '',
-    width: '',
-    height: '',
-    zIndex: '',
-    display: '',
-    justifyContent: '',
-    background: '',
-    overflowY: '',
-  });
-}
-
-function syncReopenBtn(){
-  const btn = document.getElementById('avia-settings-reopen-btn');
-  if(!btn) return;
-  const panel = getPanel();
-  // if not in settings at all, hide the btn
-  if(!panel){
-    btn.style.display = 'none';
-    return;
-  }
-
-  if(panel.style.display !== 'none'){
-    btn.style.display = 'none';
-  }
-}
-
-function hijack(){
-  const panel = getPanel();
-  if(!panel) return;
-
-  applyFullscreenSidebar();
-
-  const collapseBtn = panel.querySelector('[aria-label="Collapse"]');
-  if(!collapseBtn || collapseBtn.__avia_fs_hijacked__) return;
-  collapseBtn.__avia_fs_hijacked__ = true;
-
-  collapseBtn.addEventListener('click', (e) => {
-    e.stopImmediatePropagation();
-
-    // hide sidebar
-    panel.style.display = 'none';
-
-    // show content panel
-    const content = getContentPanel();
-    if(content){
-      content.style.display = '';
-      // center it nicely
-      Object.assign(content.style, {
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        width: '100vw',
-        height: '100vh',
-        zIndex: '99996',
-        overflowY: 'auto',
-      });
-    }
-
-    const reopenBtn = document.getElementById('avia-settings-reopen-btn');
-    if(reopenBtn) reopenBtn.style.display = 'flex';
-  }, true);
-}
-
-ensureReopenBtn();
-
-let lastInSettings = false;
-
-new MutationObserver(() => {
-  ensureReopenBtn();
-
-  const inSettings = !!getPanel();
-
-  if(inSettings && !lastInSettings){
-    // just entered settings — reset any stale state
-    const content = getContentPanel();
-    if(content){
-      Object.assign(content.style, {
-        position: '',
-        top: '',
-        left: '',
-        width: '',
-        height: '',
-        zIndex: '',
-        overflowY: '',
-      });
-    }
-  }
-
-  if(!inSettings && lastInSettings){
-    // just left settings
-    const btn = document.getElementById('avia-settings-reopen-btn');
-    if(btn) btn.style.display = 'none';
-  }
-
-  lastInSettings = inSettings;
-
-  hijack();
-  syncReopenBtn();
-
-}).observe(document.body, { childList: true, subtree: true });
-
-hijack();
-
-})();
-
-
 /* --- CustomTitle.js --- */
 if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE_JS__=true;
 
@@ -1972,8 +1583,8 @@ if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE
     if(!icon) return;
     icon.href='https://cdn.stoatusercontent.com/icons/vnGRb1M_UiP4-oj1qfqQODDCsyYOWa3f92ib3ac-K_/original'
 
-    if(document.title!='Stoat (Avia Client Mobile 1.6.3)'){
-        document.title='Stoat (Avia Client Mobile 1.6.3)'
+    if(document.title!='Stoat (Avia Client Mobile 1.7)'){
+        document.title='Stoat (Avia Client Mobile 1.7)'
     }
   }
 
@@ -2016,6 +1627,47 @@ if(window.__US_BUILDER_EMOJIFIX_JS__){return;}window.__US_BUILDER_EMOJIFIX_JS__=
 
   function init() {
     emojiFix();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+
+
+/* --- FixBanList.js --- */
+if(window.__US_BUILDER_FIXBANLIST_JS__){return;}window.__US_BUILDER_FIXBANLIST_JS__=true;
+
+(function () {
+  if (window.__FIX_BAN_LIST__) return;
+  window.__FIX_BAN_LIST__ = true;
+
+  function fixBanList() {
+    const reasontextfield = document.querySelector(`mdui-text-field[label='Reason']`)
+    if(window.outerWidth>window.outerHeight){
+        if(reasontextfield?.style.width){
+            reasontextfield.style.removeProperty('width')
+        }
+        return;
+    }
+
+    if(reasontextfield){
+        reasontextfield.style.width='170%'
+    }
+  }
+
+  const observer = new MutationObserver(() => {
+    fixBanList();
+  });
+
+  function init() {
+    fixBanList();
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
@@ -2169,199 +1821,61 @@ if(window.__US_BUILDER_FIXCOLOURPICKER_JS__){return;}window.__US_BUILDER_FIXCOLO
 })();
 
 
-/* --- FullscreenSidebar.js --- */
-if(window.__US_BUILDER_FULLSCREENSIDEBAR_JS__){return;}window.__US_BUILDER_FULLSCREENSIDEBAR_JS__=true;
+/* --- HideSearchbarButton.js --- */
+if(window.__US_BUILDER_HIDESEARCHBARBUTTON_JS__){return;}window.__US_BUILDER_HIDESEARCHBARBUTTON_JS__=true;
 
 (function () {
-  if (window.__FULL_SCREEN_SIDEBAR__) return;
-  window.__FULL_SCREEN_SIDEBAR__ = true;
+  if (window.__HIDE_SEARCHBAR_BUTTON__) return;
+  window._HIDE_SEARCHBAR_BUTTON__ = true;
 
-  function getSidebar() {
-    const wrap = document.getElementsByClassName(
-      'd_flex h_100% min-w_0 c_var(--md-sys-color-outline) bg_var(--md-sys-color-surface-container-high)'
-    ).item(0);
-    return wrap && wrap.firstChild && wrap.firstChild.children[1]
-      ? wrap.firstChild
-      : null;
-  }
+  function hideSearchbarButton() {
+    if(window.outerWidth>window.outerHeight) return;
 
-  function undo(){
-    const sidebar = getSidebar()
-    if(!sidebar||sidebar.style.display=='none'||sidebar.style.width!='100vw') return;
-    sidebar.style= 'display: flex; flex-shrink: 0;'
+    const pinbutton = document.querySelector(`[aria-label='View pinned messages']`)
+    if(!pinbutton) return;
+    if(pinbutton.parentElement.lastChild.placeholder&&!document.getElementById('hidesearchbarbutton')){
+        const searchbutton = document.createElement('button')
+        searchbutton.className='ov-wrap_anywhere lh_1.25rem fs_0.875rem ls_0.015625rem fw_500 pos_relative asp_1/1 flex-sh_0 d_flex ai_center jc_center ff_inherit cursor_pointer bd_none trs_var(--transitions-fast)_all c_var(--colour) fill_var(--colour) --colour_var(--md-sys-color-on-surface-variant) bdr_var(--borderRadius-full) h_40px px_8px'
+        searchbutton.ariaLabel='Search'
+        searchbutton.id='hidesearchbarbutton'
 
-    const channels = document.querySelectorAll(`a[href*='/channel'][role='listitem']`)
-    channels.forEach(channel=>{
-        const clone = channel.cloneNode(true)
-        channel.parentElement.replaceChild(clone,channel)
-        delete clone.dataset.fuck
-    })
+        const mdripple = document.createElement('md-ripple')
+        mdripple.ariaHidden=true
 
-    const homebutton = document.querySelectorAll(`a[href='/app']`).item(1)
-    if(homebutton){
-      const clone = homebutton.cloneNode(true)
-      homebutton.parentElement.replaceChild(clone,homebutton)
-      delete clone.dataset.patched
+        const span = document.createElement('span')
+        span.ariaHidden=true
+        span.className='material-symbols-outlined fs_inherit fw_undefined!'
+        span.style='display: block; font-variation-settings: &quot;FILL&quot; 0, &quot;wght&quot; 400, &quot;GRAD&quot; 0;'
+        span.textContent='search'
+
+        searchbutton.appendChild(mdripple)
+        searchbutton.appendChild(span)
+
+        searchbutton.onclick = function(e){
+            const searchbar = pinbutton.parentElement.lastChild
+            const searchresults = document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0)
+            searchbar.remove()
+            searchbutton.remove()
+            searchresults.remove()
+
+            pinbutton.click()
+            pinbutton.click()
+        }
+
+        pinbutton.parentElement.insertBefore(searchbutton,pinbutton.parentElement.lastChild)
     }
 
-    const friends = document.querySelector(`a[href='/friends']`)
-    if(friends){
-      const savednotesclone = friends.nextSibling.nextSibling.cloneNode(true)
-      friends.parentElement.replaceChild(savednotesclone,friends.nextSibling.nextSibling)
-      delete savednotesclone.dataset.patched
-
-      const friendsclone = friends.cloneNode(true)
-      friends.parentElement.replaceChild(friendsclone,friends)
-      delete friendsclone.dataset.patched
-    }
-  }
-
-  function fullScreenSidebar() {
-    const sidebar = getSidebar()
-    if(!sidebar||window.outerHeight<window.outerWidth) return;
-
-    Object.assign(sidebar.style, {
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        width: '100vw',
-        height: '100vh',
-        zIndex: '99997',
-        justifyContent: 'center',
-        background: 'var(--md-sys-color-surface, #1e1e1e)',
-        overflowY: 'auto',
-    } );
-
-    const discoverbutton = document.querySelector(`a[href*='/discover']`)
-    if(discoverbutton){
-      discoverbutton.href='https://stt.gg/discover'
-      discoverbutton.target='_blank'
-    }
-
-    const stoatserversbutton = document.getElementById('stoatservers-sidebar-btn')
-    if(stoatserversbutton&&!stoatserversbutton.dataset.patched){
-      const clone = stoatserversbutton.firstChild.cloneNode(true)
-      stoatserversbutton.replaceChild(clone,stoatserversbutton.firstChild)
-      stoatserversbutton.onclick = function(e){
-        window.open('https://stoatservers.com')
-      }
-      stoatserversbutton.dataset.patched=true
-    }
-
-    const channels = document.querySelectorAll(`a[href*='/channel'][role='listitem']`)
-    channels.forEach(channel=>{
-      if(!channel.dataset.fuck){
-        channel.addEventListener('click',()=>{
-            const sidebar = getSidebar()
-            sidebar.style.display='none'
-          });
-          channel.dataset.fuck=true
-      }
-    })
-
-    const homebutton = document.querySelectorAll(`a[href='/app']`).item(1)
-    if(homebutton&&!homebutton.dataset.patched){
-      homebutton.firstChild.addEventListener('click',()=>{
-        const sidebar = getSidebar()
-        sidebar.style.display='none'
-      });
-      homebutton.dataset.patched=true
-    }
-
-    const friends = document.querySelector(`a[href='/friends']`)
-    if(friends&&!friends.dataset.patched){
-      friends.firstChild.addEventListener('click',()=>{
-        const sidebar = getSidebar()
-        sidebar.style.display='none'
-      });
-
-      friends.nextSibling.nextSibling.firstChild.addEventListener('click',()=>{
-        const sidebar = getSidebar()
-        sidebar.style.display='none'
-      });
-      friends.nextSibling.nextSibling.dataset.patched=true
+    if(pinbutton.parentElement.lastChild.textContent=='search'&&document.getElementById('hidesearchbarbutton')){
+        document.getElementById('hidesearchbarbutton').remove()
     }
   }
 
   const observer = new MutationObserver(() => {
-    fullScreenSidebar();
-    if(window.outerHeight<window.outerWidth){
-      undo()
-    }
+    hideSearchbarButton();
   });
 
   function init() {
-    fullScreenSidebar();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
-/* --- GifAutoPlayfix.js --- */
-if(window.__US_BUILDER_GIFAUTOPLAYFIX_JS__){return;}window.__US_BUILDER_GIFAUTOPLAYFIX_JS__=true;
-
-(function () {
-    if (window.__GIF_AUTOPLAY_FIX__) return;
-    window.__GIF_AUTOPLAY_FIX__ = true;
-
-    function fixGifAutoPlay(){
-        document.querySelectorAll('video').forEach(video=>{
-            if(video.className=='w_200px h_120px cursor_pointer obj-f_cover'||video.className=='cursor_pointer'){
-                video.setAttribute('playsinline','true')
-            }
-        });
-    }
-    
-    const observer = new MutationObserver(()=>{
-        fixGifAutoPlay()
-    });
-    observer.observe(document.documentElement, {childList: true, subtree: true })
-})();
-
-
-/* --- HideChatButtonsOnFocus.js --- */
-if(window.__US_BUILDER_HIDECHATBUTTONSONFOCUS_JS__){return;}window.__US_BUILDER_HIDECHATBUTTONSONFOCUS_JS__=true;
-
-(function () {
-  if (window.__HIDE_CHAT_BUTTONS_ON_FOCUS__) return;
-  window.__HIDE_CHAT_BUTTONS_ON_FOCUS__ = true;
-
-  function hideChatButtonsOnFocus() {
-    const chatbar = document.getElementsByClassName('cm-content cm-lineWrapping').item(0)
-    if(!chatbar) return;
-    if(!chatbar.dataset.patched){
-        chatbar.addEventListener('focus',()=>{
-            for(const button of chatbar.parentElement.parentElement.parentElement.parentElement.querySelectorAll(`div[class='flex-sh_0 d_flex ai_end jc_center w_42px']`)){
-                button.style.display='none'
-            }
-        })
-
-        chatbar.addEventListener('blur',()=>{
-            for(const button of chatbar.parentElement.parentElement.parentElement.parentElement.querySelectorAll(`div[class='flex-sh_0 d_flex ai_end jc_center w_42px']`)){
-                if(button.textContent!='gif'){
-                  button.style.removeProperty('display')
-                }
-            }
-        })
-        chatbar.dataset.patched=true
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    hideChatButtonsOnFocus();
-  });
-
-  function init() {
-    hideChatButtonsOnFocus();
+    hideSearchbarButton();
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
@@ -2380,7 +1894,7 @@ if(window.__US_BUILDER_HIDECHATBUTTONSONFOCUS_JS__){return;}window.__US_BUILDER_
 if(window.__US_BUILDER_HIDESERVERLIST_JS__){return;}window.__US_BUILDER_HIDESERVERLIST_JS__=true;
 
 (function () {
-  if (window.__HIDE_SERVER_LIST__) return;
+  if (window.__HIDE_SERVER_LIST__||window.outerHeight>window.outerWidth) return;
   window.__HIDE_SERVER_LIST__ = true;
 
   function hideServerList() {
@@ -3088,7 +2602,7 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     el.appendChild(element)
                     element.outerHTML = `
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
-                                Avia Client Mobile 1.6.3<br>
+                                Avia Client Mobile 1.7<br>
                                 <span style="font-size:10px;opacity:0.7;">
                                     Based on Avia Client 1.7.1
                                 </span>
@@ -4620,6 +4134,73 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
 })();
 
 
+/* --- MessageContextMenuFix.js --- */
+if(window.__US_BUILDER_MESSAGECONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_MESSAGECONTEXTMENUFIX_JS__=true;
+
+(function () {
+  if (window.__MESSAGE_CONTEXT_MENU_FIX__) return;
+  window.__MESSAGE_CONTEXT_MENU_FIX__ = true;
+
+  function messageContextMenuFix() {
+    const messages = document.querySelectorAll(`div[id][class*='group']`)
+    for(const message of messages){
+        const originalbar = message.querySelector(`div[class='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar']`)
+        const bar = document.createElement('div')
+        bar.className='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar'
+        const dots = document.createElement('div')
+        dots.className='cursor_pointer pos_relative p_var(--gap-sm)'
+        const ripple = document.createElement('md-ripple')
+        ripple.ariaHidden = true
+        const svg = document.createElement('svg')
+        dots.appendChild(ripple)
+        dots.appendChild(svg)
+        svg.outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2m0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2"></path></svg>`
+        bar.appendChild(dots)
+
+        bar.onclick = function(){
+            const rect = message.getBoundingClientRect();
+
+            const contextMenuX = rect.left + rect.width / 2;
+            const contextMenuY = rect.top + rect.height / 2;
+
+            const contextMenuEvent = new MouseEvent('contextmenu', {
+                bubbles: true,
+                cancelable: true,
+                clientX: contextMenuX,
+                clientY: contextMenuY
+            });
+            setTimeout(() => {
+                message.dispatchEvent(contextMenuEvent);
+            }, 100);
+        }
+
+        if(!message.dataset.contextmenupatched&&!originalbar){
+            message.appendChild(bar)
+            message.dataset.contextmenupatched=true
+        }
+    }
+  }
+
+  const observer = new MutationObserver(() => {
+    messageContextMenuFix();
+  });
+
+  function init() {
+    messageContextMenuFix();
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+
+
 /* --- MoveChannelSettingsButton.js --- */
 if(window.__US_BUILDER_MOVECHANNELSETTINGSBUTTON_JS__){return;}window.__US_BUILDER_MOVECHANNELSETTINGSBUTTON_JS__=true;
 
@@ -5506,96 +5087,6 @@ if(window.__US_BUILDER_REMOVEGIFBUTTON_JS__){return;}window.__US_BUILDER_REMOVEG
 })();
 
 
-/* --- ReplaceSearchbar.js --- */
-if(window.__US_BUILDER_REPLACESEARCHBAR_JS__){return;}window.__US_BUILDER_REPLACESEARCHBAR_JS__=true;
-
-(function () {
-    if (window.__AVIA_SEARCH__) return;
-    window.__AVIA_SEARCH__ = true;
-
-    function injectHideStyle() {
-        if (document.getElementById("avia-search-hide")) return;
-        const style = document.createElement("style");
-        style.id = "avia-search-hide";
-        style.textContent = `input[placeholder="Search messages..."] { display: none !important; }`;
-        document.head.appendChild(style);
-    }
-
-    function removeHideStyle() {
-        document.getElementById("avia-search-hide")?.remove();
-    }
-
-    injectHideStyle();
-
-    function findSearchInput() {
-        return document.querySelector('input[placeholder="Search messages..."]');
-    }
-
-    function findPinButton() {
-        return document.querySelector('button[aria-label="View pinned messages"]');
-    }
-
-    function findInjectedBtn() {
-        return document.querySelector("[data-avia-search-btn]");
-    }
-
-    function injectSearchButton() {
-        if (findInjectedBtn()) return;
-
-        const searchInput = findSearchInput();
-        const pinBtn = findPinButton();
-        if (!searchInput || !pinBtn) return;
-
-        const btn = pinBtn.cloneNode(false);
-        btn.setAttribute("data-avia-search-btn", "true");
-        btn.setAttribute("aria-label", "Search messages");
-
-        const ripple = document.createElement("md-ripple");
-        ripple.setAttribute("aria-hidden", "true");
-        btn.appendChild(ripple);
-
-        const icon = document.createElement("span");
-        icon.className = "material-symbols-outlined";
-        icon.style.cssText = "display:block;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;font-size:24px;";
-        icon.textContent = "search";
-        btn.appendChild(icon);
-
-        let isOpen = false;
-
-        btn.addEventListener("click", () => {
-            isOpen = !isOpen;
-
-            if (isOpen) {
-                removeHideStyle();
-                icon.style.fontVariationSettings = "'FILL' 1,'wght' 400,'GRAD' 0";
-                requestAnimationFrame(() => findSearchInput()?.focus());
-            } else {
-                injectHideStyle();
-                icon.style.fontVariationSettings = "'FILL' 0,'wght' 400,'GRAD' 0";
-                const input = findSearchInput();
-                if (input) {
-                    input.value = "";
-                    input.dispatchEvent(new Event("input", { bubbles: true }));
-                }
-            }
-        });
-
-        searchInput.insertAdjacentElement("beforebegin", btn);
-    }
-
-    const observer = new MutationObserver(() => {
-        if (!findInjectedBtn()) {
-            injectHideStyle();
-            injectSearchButton();
-        }
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    injectSearchButton();
-})();
-
-
 /* --- repofrontend.js --- */
 if(window.__US_BUILDER_REPOFRONTEND_JS__){return;}window.__US_BUILDER_REPOFRONTEND_JS__=true;
 
@@ -6415,7 +5906,7 @@ new MutationObserver(() => injectSettingsButton())
     .observe(document.body, { childList: true, subtree: true });
 
 injectSettingsButton();
-registerWithAviaMenu()
+registerWithAviaMenu();
 
 })();
 
@@ -6457,8 +5948,9 @@ if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SE
           start()
         })
 
-        server.addEventListener('touchend',()=>{
+        server.addEventListener('touchend',(e)=>{
           if(long){
+            e.preventDefault()
             const balls = new Event('contextmenu',{
               bubbles:true,
               button:2
@@ -6473,6 +5965,10 @@ if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SE
         server.addEventListener('touchcancel',()=>{
             stop()
         })
+
+        server.addEventListener('touchmove',(e)=>{
+          stop()
+        });
 
         server.dataset.patched=true
       }
@@ -6504,6 +6000,7 @@ if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SE
 
 (function () {
   'use strict';
+  if(window.outerHeight>window.outerWidth) return;
 
   let scrollLockEnabled = false;
   let overlay = null;
@@ -6687,48 +6184,6 @@ if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SE
 })();
 
 
-/* --- ShiftNewLine.js --- */
-if(window.__US_BUILDER_SHIFTNEWLINE_JS__){return;}window.__US_BUILDER_SHIFTNEWLINE_JS__=true;
-
-(function () {
-
-  function hookEditor(editor) {
-    if (editor.__shiftNewLineHooked) return;
-    editor.__shiftNewLineHooked = true;
-
-    editor.addEventListener("keydown", (e) => {
-
-      if (e.key !== "Enter") return;
-
-      if(e.shiftKey){
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        let text = ''
-        const firstLine = document.getElementsByClassName('cm-line').item(0)
-        for(const child of firstLine.parentElement.children){
-          text = text+`${child.children[0].textContent}\n`
-        }
-        editor.textContent = text
-      }
-
-    }, true);
-
-  }
-
-  const observer = new MutationObserver(() => {
-    const editor = document.querySelector(".cm-content[contenteditable='true']");
-    if (editor) hookEditor(editor);
-  });
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
-
-})();
-
-
 /* --- ShrinkAviaPanels.js --- */
 if(window.__US_BUILDER_SHRINKAVIAPANELS_JS__){return;}window.__US_BUILDER_SHRINKAVIAPANELS_JS__=true;
 
@@ -6853,55 +6308,11 @@ if(window.__US_BUILDER_SHRINKGIFPANEL_JS__){return;}window.__US_BUILDER_SHRINKGI
 })();
 
 
-/* --- ShrinkHomeButtons.js --- */
-if(window.__US_BUILDER_SHRINKHOMEBUTTONS_JS__){return;}window.__US_BUILDER_SHRINKHOMEBUTTONS_JS__=true;
-
-(function () {
-  if (window.__SHRINK_HOME_BUTTONS__) return;
-  window.__SHRINK_HOME_BUTTONS__ = true;
-
-  function shrinkHomeButtons() {
-    const homebuttons = document.getElementsByClassName('gap_8px p_8px d_flex bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface-variant) bg_var(--md-sys-color-surface-variant)')
-    .item(0)
-    if(!homebuttons||window.outerWidth>homebuttons.clientWidth) return;
-    homebuttons.style.setProperty('width',`${window.outerWidth-100}px`)
-    homebuttons.style.setProperty(`position`,'fixed')
-    homebuttons.style.setProperty(`right`,`100px`)
-
-    for(const child of homebuttons.children){
-        for(const child2 of child.children){
-            for(const child3 of child2.lastChild.children){
-                child3.style.setProperty(`font-size`,`10px`)
-            }
-        }
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    shrinkHomeButtons();
-  });
-
-  function init() {
-    shrinkHomeButtons();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
 /* --- swipe-sidebar.js --- */
 if(window.__US_BUILDER_SWIPE_SIDEBAR_JS__){return;}window.__US_BUILDER_SWIPE_SIDEBAR_JS__=true;
 
 (function () {
-  if (window.__SWIPE_SIDEBAR__) return;
+  if (window.__SWIPE_SIDEBAR__||window.outerHeight>window.outerWidth) return;
   window.__SWIPE_SIDEBAR__ = true;
 
   const SWIPE_THRESHOLD = 80;   // minimum px to count as a swipe
@@ -8291,7 +7702,7 @@ if(window.__US_BUILDER_WHATSNEW_JS__){return;}window.__US_BUILDER_WHATSNEW_JS__=
 
 /* --- Embedded Themes --- */
 const __BUILDER_THEMES__ = [
-  {id:"CSS_CSS",name:"css.css",css:"/*Fixs Attachment files with text showing inside to only show half way*/\n.d_grid[style*=\"width: 420px\"]:has(pre code) {\n  width: 100% !important;\n  max-width: 100% !important;\n  height: auto !important;\n}\n\n/* Fix bio overflow, showing the full bio */\n#floating div.will-change_transform > div > div.ov_hidden:last-child {\n    aspect-ratio: unset;\n}\n\n/* Makes scrolling server and channel lists without accidentally reordering them possible */\n.scr-bar-w_none {\n    scrollbar-width: thin;\n    overflow-x:hidden;\n}\n\n/* Align Voice Call button to top right */\n[class=\"top_var(--gap-md) p_var(--gap-md) w_100% pos_absolute z_2 us_none d_flex ai_center flex-d_column\"] {\n    align-items: end;\n}\n\n/*Make Voice Call button smaller*/\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px {\n\n  width: 240px !important;   /* was 360px */ /*Now 240*/\n  height: 80px !important;   /* was 120px */ /*Now 80*/\n\n  border-radius: 12px;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px span {\n  \n  font-size: 0.85rem !important;\n  line-height: 1.1 !important;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px .material-symbols-outlined {\n  \n  font-size: 18px !important;\n}\n/*Normal Version*/\n\n/* Shrink placeholder text */\n.cm-placeholder {\n    font-size: 10px !important;\n}\n\n/*Shrink text in chat bar */\n[class='cm-line']{\n    font-size : 10px;\n}\n\n/*Fixes join button on invites going off the screen */\n[class='lh_1.25rem fs_0.875rem ls_0.015625rem fw_500 pos_relative px_var(--padding-inline) flex-sh_0 d_flex ai_center jc_center ff_inherit cursor_not-allowed bd_none trs_var(--transitions-medium)_all c_var(--color) fill_var(--color) h_40px --padding-inline_16px bdr_48px bg_color-mix(in_srgb,_10%_var(--md-sys-color-on-surface),_transparent) --color_color-mix(in_srgb,_38%_var(--md-sys-color-on-surface),_transparent)'][type=button]{\n    position:relative;\n    left:-15%;\n    font-size:6.3px;\n}\n\n/*Shrink search bar placeholder text*/\n[class='h_40px w_240px px_16px bdr_var(--borderRadius-full) bg_var(--md-sys-color-surface-container-high)']{\n    font-size:10px;\n}\n\n/*Shrink channel names*/\n[class='white-space_nowrap [&_*]:white-space_nowrap lh_1.5rem fs_1rem ls_0.009375rem fw_550']{\n    font-size:10px;\n}\n[class='gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0']{\n    font-size:10px;\n}\n\nimg[class='cursor_pointer']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\na[href]{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\nvideo{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\npre[class='d_flex ov_auto scr-bar-w_thin flex-d_column']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\n/* Remove Rounded Edges*/\nmain.bdr_var\\(--borderRadius-xl\\) {\n    border-radius: 0 !important;\n    margin: 0 !important;\n}\n\n/*Make The Status Card Not Clip When User Has Long Status*/\ndiv.asp_1\\/1:has(> span.us_text) {\n    aspect-ratio: auto !important;\n    height: fit-content !important;\n    overflow: visible !important;\n}\n\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)']{\n    overflow-y :auto;\n}\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg) ov-y_scroll! ov-x_hidden!']{\n    overflow-y :auto;\n}\n",enabled:true},
+  {id:"CSS_CSS",name:"css.css",css:"/*Fixs Attachment files with text showing inside to only show half way*/\n.d_grid[style*=\"width: 420px\"]:has(pre code) {\n  width: 100% !important;\n  max-width: 100% !important;\n  height: auto !important;\n}\n\n/* Fix bio overflow, showing the full bio */\n#floating div.will-change_transform > div > div.ov_hidden:last-child {\n    aspect-ratio: unset;\n}\n\n/* Makes scrolling server and channel lists without accidentally reordering them possible */\n.scr-bar-w_none {\n    scrollbar-width: thin;\n    overflow-x:hidden;\n}\n\n/* Align Voice Call button to top right */\n[class=\"top_var(--gap-md) p_var(--gap-md) w_100% pos_absolute z_2 us_none d_flex ai_center flex-d_column\"] {\n    align-items: end;\n}\n\n/*Make Voice Call button smaller*/\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px {\n\n  width: 240px !important;   /* was 360px */ /*Now 240*/\n  height: 80px !important;   /* was 120px */ /*Now 80*/\n\n  border-radius: 12px;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px span {\n  \n  font-size: 0.85rem !important;\n  line-height: 1.1 !important;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px .material-symbols-outlined {\n  \n  font-size: 18px !important;\n}\n/*Normal Version*/\n\n/* Shrink placeholder text */\n.cm-placeholder {\n    font-size: 10px !important;\n}\n\n/*Shrink text in chat bar */\n[class='cm-line']{\n    font-size : 10px;\n}\n\n/*Shrink search bar placeholder text*/\n[class='h_40px w_240px px_16px bdr_var(--borderRadius-full) bg_var(--md-sys-color-surface-container-high)']{\n    font-size:10px;\n}\n\n/*Shrink channel names*/\n[class='white-space_nowrap [&_*]:white-space_nowrap lh_1.5rem fs_1rem ls_0.009375rem fw_550']{\n    font-size:10px;\n}\n[class='gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0']{\n    font-size:10px;\n}\n\nimg[class='cursor_pointer']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\na[href]{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\nvideo{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\npre[class='d_flex ov_auto scr-bar-w_thin flex-d_column']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\n/* Remove Rounded Edges*/\nmain.bdr_var\\(--borderRadius-xl\\) {\n    border-radius: 0 !important;\n    margin: 0 !important;\n}\n\n/*Make The Status Card Not Clip When User Has Long Status*/\ndiv.asp_1\\/1:has(> span.us_text) {\n    aspect-ratio: auto !important;\n    height: fit-content !important;\n    overflow: visible !important;\n}\n\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)']{\n    overflow-y :auto;\n}\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg) ov-y_scroll! ov-x_hidden!']{\n    overflow-y :auto;\n}\n",enabled:true},
 ];
 ;(function(){
   try{
