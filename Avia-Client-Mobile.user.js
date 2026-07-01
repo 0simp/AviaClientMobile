@@ -1583,8 +1583,8 @@ if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE
     if(!icon) return;
     icon.href='https://cdn.stoatusercontent.com/icons/vnGRb1M_UiP4-oj1qfqQODDCsyYOWa3f92ib3ac-K_/original'
 
-    if(document.title!='Stoat (Avia Client Mobile 1.7)'){
-        document.title='Stoat (Avia Client Mobile 1.7)'
+    if(document.title!='Stoat (Avia Client Mobile 1.7.1)'){
+        document.title='Stoat (Avia Client Mobile 1.7.1)'
     }
   }
 
@@ -2602,7 +2602,7 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     el.appendChild(element)
                     element.outerHTML = `
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
-                                Avia Client Mobile 1.7<br>
+                                Avia Client Mobile 1.7.1<br>
                                 <span style="font-size:10px;opacity:0.7;">
                                     Based on Avia Client 1.7.1
                                 </span>
