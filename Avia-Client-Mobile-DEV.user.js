@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name        Avia Client Mobile DEV
 // @namespace   userscript.builder
-// @version     1.7.2
+// @version     1.8
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
-// @match       https://beta.stoat.chat/*
+// @match       https://stoat.chat/*
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-06-30T17:46:02.096Z';
-window.__USERSCRIPT_VERSION__ = "1.7";
+'@preserve - Built on 2026-07-07T15:08:38.759Z';
+window.__USERSCRIPT_VERSION__ = "1.8";
 
 /* --- 3TapRely.js --- */
 if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=true;
@@ -1607,8 +1607,8 @@ if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE
     if(!icon) return;
     icon.href='https://cdn.stoatusercontent.com/icons/vnGRb1M_UiP4-oj1qfqQODDCsyYOWa3f92ib3ac-K_/original'
 
-    if(document.title!='Stoat (Avia Client Mobile 1.7)'){
-        document.title='Stoat (Avia Client Mobile 1.7)'
+    if(document.title!='Stoat (Avia Client Mobile 1.8)'){
+        document.title='Stoat (Avia Client Mobile 1.8)'
     }
   }
 
@@ -1842,117 +1842,6 @@ if(window.__US_BUILDER_FIXCOLOURPICKER_JS__){return;}window.__US_BUILDER_FIXCOLO
     } else {
         requestAnimationFrame(init);
     }
-})();
-
-
-/* --- FixUserPopups.js --- */
-if(window.__US_BUILDER_FIXUSERPOPUPS_JS__){return;}window.__US_BUILDER_FIXUSERPOPUPS_JS__=true;
-
-(function () {
-  if (window.__FIX_USER_POPUPS__||window.outerWidth>window.outerHeight) return;
-  window.__FIX_USER_POPUPS__ = true;
-
-  function fixUserPopups() {
-    const names = [...document.getElementsByClassName('ov_hidden white-space_nowrap tov_ellipsis [&_*]:ov_hidden [&_*]:white-space_nowrap [&_*]:tov_ellipsis')]
-    .filter(e=>e.offsetParent?.id)
-    const onlinemembers = [...document.getElementsByClassName('flex-sh_0 fw_500 fs_15px us_none cursor_pointer pos_relative d_flex ai_center m_0_var(--gap-md) p_0_var(--gap-md) bdr_var(--borderRadius-xl) c_var(--color) fill_var(--color) [&_>_svg]:as_center [&:hover_.hover-hide,_&:not(:hover)_.hover-show]:d_none h_42px gap_var(--gap-md) --color_var(--md-sys-color-on-surface) bg_transparent')]
-    .filter(e=>e.offsetParent?.offsetParent?.className=='virtual-container-ztnei0mpwa')
-    const offlinemembers = [...document.getElementsByClassName('flex-sh_0 fw_500 fs_15px us_none cursor_pointer pos_relative d_flex ai_center m_0_var(--gap-md) p_0_var(--gap-md) bdr_var(--borderRadius-xl) c_var(--color) fill_var(--color) [&_>_svg]:as_center [&:hover_.hover-hide,_&:not(:hover)_.hover-show]:d_none h_42px gap_var(--gap-md) --color_var(--md-sys-color-outline-variant) bg_transparent [&_img]:op_0.3')]
-    .filter(e=>e.offsetParent?.offsetParent?.className=='virtual-container-ztnei0mpwa')
-
-    const balls = new Event('contextmenu',{
-        bubbles:true,
-        button:2
-    });
-
-    names.forEach(name=>{
-        if(name.firstChild.firstChild?.dataset&&!name.firstChild.firstChild.dataset.userpopupfixed){
-            const pfp = name.parentElement.parentElement.previousSibling.querySelector(`img[class='w_100% h_100% obj-f_cover']`)
-
-            name.firstChild.firstChild.onclick = function(e){
-                e.preventDefault()
-                e.stopImmediatePropagation()
-                e.stopPropagation()
-
-                setTimeout(() => {
-                    pfp.dispatchEvent(balls)
-                    const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
-                    contextmenu.firstChild.click()
-                }, 100);
-            };
-
-            pfp.onclick = function(e){
-              e.preventDefault()
-              e.stopImmediatePropagation()
-              e.stopPropagation()
-
-              setTimeout(() => {
-                  pfp.dispatchEvent(balls)
-                  const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
-                  contextmenu.firstChild.click()
-              }, 100);
-            }
-
-            name.firstChild.firstChild.dataset.userpopupfixed=true
-        }
-    });
-
-    onlinemembers.forEach(member=>{
-        if(!member.dataset.userpopupfixed){
-            const pfp = member.querySelector(`img`)
-            member.onclick = function(e){
-              e.preventDefault()
-              e.stopImmediatePropagation()
-              e.stopPropagation()
-
-              setTimeout(() => {
-                  pfp.dispatchEvent(balls)
-                  const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
-                  contextmenu.firstChild.click()
-              }, 100);
-            }
-
-            member.dataset.userpopupfixed = true
-        }
-    })
-
-    offlinemembers.forEach(member=>{
-        if(!member.dataset.userpopupfixed){
-            const pfp = member.querySelector(`img`)
-            member.onclick = function(e){
-              e.preventDefault()
-              e.stopImmediatePropagation()
-              e.stopPropagation()
-
-              setTimeout(() => {
-                  pfp.dispatchEvent(balls)
-                  const contextmenu = document.getElementsByClassName('d_flex flex-d_column p_var(--gap-md)_0 ov_hidden bdr_var(--borderRadius-xs) bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) us_none').item(0)
-                  contextmenu.firstChild.click()
-              }, 100);
-            }
-
-            member.dataset.userpopupfixed = true
-        }
-    })
-  }
-
-  const observer = new MutationObserver(() => {
-    fixUserPopups();
-  });
-
-  function init() {
-    fixUserPopups();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
 })();
 
 
@@ -2737,9 +2626,9 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     el.appendChild(element)
                     element.outerHTML = `
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
-                                Avia Client Mobile 1.7<br>
+                                Avia Client Mobile 1.8<br>
                                 <span style="font-size:10px;opacity:0.7;">
-                                    Based on Avia Client 1.7.1
+                                    Based on Avia Client 1.8
                                 </span>
                             </span>
                     `
@@ -4277,8 +4166,9 @@ if(window.__US_BUILDER_MESSAGECONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_M
   window.__MESSAGE_CONTEXT_MENU_FIX__ = true;
 
   function messageContextMenuFix() {
-    const messages = document.querySelectorAll(`div[id][class*='group']`)
+    const messages = [...document.querySelectorAll(`div[id][class*='group']`)].filter(e=>e.parentElement?.tagName=='DIV')
     for(const message of messages){
+        const originalbar = message.querySelector(`div[class='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar']`)
         const bar = document.createElement('div')
         bar.className='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar'
         const dots = document.createElement('div')
@@ -4308,7 +4198,7 @@ if(window.__US_BUILDER_MESSAGECONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_M
             }, 100);
         }
 
-        if(!message.dataset.contextmenupatched){
+        if(!message.dataset.contextmenupatched&&!originalbar){
             message.appendChild(bar)
             message.dataset.contextmenupatched=true
         }
@@ -6314,6 +6204,51 @@ if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SE
 })();
 
 
+/* --- ShiftNewLine.js --- */
+if(window.__US_BUILDER_SHIFTNEWLINE_JS__){return;}window.__US_BUILDER_SHIFTNEWLINE_JS__=true;
+
+(function () {
+
+  function hookEditor(editor) {
+    if (editor.__shiftNewLineHooked) return;
+    editor.__shiftNewLineHooked = true;
+
+    editor.addEventListener("keydown", (e) => {
+
+      if (e.key == "Enter"){
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        const button = editor.parentElement.parentElement.parentElement.parentElement.nextSibling
+
+        if(e.shiftKey){
+            const line = document.createElement('div')
+            line.className='cm-line'
+
+            const br = document.createElement('br')
+            line.appendChild(br)
+            editor.appendChild(line)
+        }else if(button&&!button.disabled){
+            button.click()
+        }
+      }
+    }, true);
+
+  }
+
+  const observer = new MutationObserver(() => {
+    const editor = document.querySelector(".cm-content[contenteditable='true']");
+    if (editor) hookEditor(editor);
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
+})();
+
+
 /* --- ShrinkAviaPanels.js --- */
 if(window.__US_BUILDER_SHRINKAVIAPANELS_JS__){return;}window.__US_BUILDER_SHRINKAVIAPANELS_JS__=true;
 
@@ -7832,7 +7767,7 @@ if(window.__US_BUILDER_WHATSNEW_JS__){return;}window.__US_BUILDER_WHATSNEW_JS__=
 
 /* --- Embedded Themes --- */
 const __BUILDER_THEMES__ = [
-  {id:"CSS_CSS",name:"css.css",css:"/*Fixs Attachment files with text showing inside to only show half way*/\n.d_grid[style*=\"width: 420px\"]:has(pre code) {\n  width: 100% !important;\n  max-width: 100% !important;\n  height: auto !important;\n}\n\n/* Fix bio overflow, showing the full bio */\n#floating div.will-change_transform > div > div.ov_hidden:last-child {\n    aspect-ratio: unset;\n}\n\n/* Makes scrolling server and channel lists without accidentally reordering them possible */\n.scr-bar-w_none {\n    scrollbar-width: thin;\n    overflow-x:hidden;\n}\n\n/* Align Voice Call button to top right */\n[class=\"top_var(--gap-md) p_var(--gap-md) w_100% pos_absolute z_2 us_none d_flex ai_center flex-d_column\"] {\n    align-items: end;\n}\n\n/*Make Voice Call button smaller*/\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px {\n\n  width: 240px !important;   /* was 360px */ /*Now 240*/\n  height: 80px !important;   /* was 120px */ /*Now 80*/\n\n  border-radius: 12px;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px span {\n  \n  font-size: 0.85rem !important;\n  line-height: 1.1 !important;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px .material-symbols-outlined {\n  \n  font-size: 18px !important;\n}\n/*Normal Version*/\n\n/* Shrink placeholder text */\n.cm-placeholder {\n    font-size: 10px !important;\n}\n\n/*Shrink text in chat bar */\n[class='cm-line']{\n    font-size : 10px;\n}\n\n/*Fixes join button on invites going off the screen */\n[class='lh_1.25rem fs_0.875rem ls_0.015625rem fw_500 pos_relative px_var(--padding-inline) flex-sh_0 d_flex ai_center jc_center ff_inherit cursor_not-allowed bd_none trs_var(--transitions-medium)_all c_var(--color) fill_var(--color) h_40px --padding-inline_16px bdr_48px bg_color-mix(in_srgb,_10%_var(--md-sys-color-on-surface),_transparent) --color_color-mix(in_srgb,_38%_var(--md-sys-color-on-surface),_transparent)'][type=button]{\n    position:relative;\n    left:-15%;\n    font-size:6.3px;\n}\n\n/*Shrink search bar placeholder text*/\n[class='h_40px w_240px px_16px bdr_var(--borderRadius-full) bg_var(--md-sys-color-surface-container-high)']{\n    font-size:10px;\n}\n\n/*Shrink channel names*/\n[class='white-space_nowrap [&_*]:white-space_nowrap lh_1.5rem fs_1rem ls_0.009375rem fw_550']{\n    font-size:10px;\n}\n[class='gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0']{\n    font-size:10px;\n}\n\nimg[class='cursor_pointer']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\na[href]{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\nvideo{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\npre[class='d_flex ov_auto scr-bar-w_thin flex-d_column']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\n/* Remove Rounded Edges*/\nmain.bdr_var\\(--borderRadius-xl\\) {\n    border-radius: 0 !important;\n    margin: 0 !important;\n}\n\n/*Make The Status Card Not Clip When User Has Long Status*/\ndiv.asp_1\\/1:has(> span.us_text) {\n    aspect-ratio: auto !important;\n    height: fit-content !important;\n    overflow: visible !important;\n}\n\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)']{\n    overflow-y :auto;\n}\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg) ov-y_scroll! ov-x_hidden!']{\n    overflow-y :auto;\n}\n",enabled:true},
+  {id:"CSS_CSS",name:"css.css",css:"/*Fixs Attachment files with text showing inside to only show half way*/\n.d_grid[style*=\"width: 420px\"]:has(pre code) {\n  width: 100% !important;\n  max-width: 100% !important;\n  height: auto !important;\n}\n\n/* Fix bio overflow, showing the full bio */\n#floating div.will-change_transform > div > div.ov_hidden:last-child {\n    aspect-ratio: unset;\n}\n\n/* Makes scrolling server and channel lists without accidentally reordering them possible */\n.scr-bar-w_none {\n    scrollbar-width: thin;\n    overflow-x:hidden;\n}\n\n/* Align Voice Call button to top right */\n[class=\"top_var(--gap-md) p_var(--gap-md) w_100% pos_absolute z_2 us_none d_flex ai_center flex-d_column\"] {\n    align-items: end;\n}\n\n/*Make Voice Call button smaller*/\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px {\n\n  width: 240px !important;   /* was 360px */ /*Now 240*/\n  height: 80px !important;   /* was 120px */ /*Now 80*/\n\n  border-radius: 12px;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px span {\n  \n  font-size: 0.85rem !important;\n  line-height: 1.1 !important;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px .material-symbols-outlined {\n  \n  font-size: 18px !important;\n}\n/*Normal Version*/\n\n/* Shrink placeholder text */\n.cm-placeholder {\n    font-size: 10px !important;\n}\n\n/*Shrink text in chat bar */\n[class='cm-line']{\n    font-size : 10px;\n}\n\n/*Shrink search bar placeholder text*/\n[class='h_40px w_240px px_16px bdr_var(--borderRadius-full) bg_var(--md-sys-color-surface-container-high)']{\n    font-size:10px;\n}\n\n/*Shrink channel names*/\n[class='white-space_nowrap [&_*]:white-space_nowrap lh_1.5rem fs_1rem ls_0.009375rem fw_550']{\n    font-size:10px;\n}\n[class='gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0']{\n    font-size:10px;\n}\n\nimg[class='cursor_pointer']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\na[href]{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\nvideo{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\npre[class='d_flex ov_auto scr-bar-w_thin flex-d_column']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\n/* Remove Rounded Edges*/\nmain.bdr_var\\(--borderRadius-xl\\) {\n    border-radius: 0 !important;\n    margin: 0 !important;\n}\n\n/*Make The Status Card Not Clip When User Has Long Status*/\ndiv.asp_1\\/1:has(> span.us_text) {\n    aspect-ratio: auto !important;\n    height: fit-content !important;\n    overflow: visible !important;\n}\n\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)']{\n    overflow-y :auto;\n}\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg) ov-y_scroll! ov-x_hidden!']{\n    overflow-y :auto;\n}\n\n/*Make emoji picker scrollable horizontally*/\ndiv[class='will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll flex-g_1']:has(div[class*='virtual-container']){\n    overflow-x:scroll;\n}",enabled:true},
 ];
 ;(function(){
   try{
