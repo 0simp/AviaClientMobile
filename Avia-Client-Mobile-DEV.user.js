@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile DEV
 // @namespace   userscript.builder
-// @version     1.8.1
+// @version     1.8.2
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.7.1 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -2628,7 +2628,7 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
                                 Avia Client Mobile 1.8<br>
                                 <span style="font-size:10px;opacity:0.7;">
-                                    Based on Avia Client 1.8
+                                    Based on Avia Client 1.7.1
                                 </span>
                             </span>
                     `
