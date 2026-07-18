@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name        Avia Client Mobile STOATBETA
 // @namespace   userscript.builder
-// @version     1.7.1
-// @description Avia Client Mobile by 0simp. Based on Avia Client 1.7 by AvaLilac
+// @version     1.8
+// @description Avia Client Mobile by 0simp. Based on Avia Client 1.8 by AvaLilac
 // @match       https://beta.stoat.chat/*
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-07-02T20:07:22.102Z';
-window.__USERSCRIPT_VERSION__ = "1.7.1";
+'@preserve - Built on 2026-07-18T16:29:45.617Z';
+window.__USERSCRIPT_VERSION__ = "1.8";
 
 /* --- 3TapRely.js --- */
 if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=true;
@@ -79,6 +79,540 @@ if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=
     requestAnimationFrame(init);
   }
 })();
+
+
+/* --- AccountSwitcher.js --- */
+if(window.__US_BUILDER_ACCOUNTSWITCHER_JS__){return;}window.__US_BUILDER_ACCOUNTSWITCHER_JS__=true;
+
+(function () {
+    if (window.__ACCOUNT_SWITCHER__) return;
+    window.__ACCOUNT_SWITCHER__ = true;
+
+    const LS_KEY = "accountswitcher";
+    const CDN = "https://cdn.stoatusercontent.com";
+    const API = "https://api.stoat.chat";
+
+    function openDB() {
+        return new Promise((resolve, reject) => {
+            const r = indexedDB.open("localforage");
+            r.onsuccess = () => resolve(r.result);
+            r.onerror = () => reject(r.error);
+        });
+    }
+
+    async function getTokens() {
+        try {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const r = db.transaction("keyvaluepairs", "readonly")
+                            .objectStore("keyvaluepairs").get(LS_KEY);
+                r.onsuccess = () => resolve(Array.isArray(r.result) ? r.result : []);
+                r.onerror = () => reject(r.error);
+            });
+        } catch { return []; }
+    }
+
+    async function saveTokens(arr) {
+        try {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const r = db.transaction("keyvaluepairs", "readwrite")
+                            .objectStore("keyvaluepairs").put(arr, LS_KEY);
+                r.onsuccess = () => resolve();
+                r.onerror = () => reject(r.error);
+            });
+        } catch {}
+    }
+
+    async function addToken(token) {
+        const tokens = (await getTokens()).filter(t => t !== token);
+        tokens.push(token);
+        await saveTokens(tokens);
+    }
+
+    async function removeToken(token) {
+        await saveTokens((await getTokens()).filter(t => t !== token));
+    }
+
+    async function getCurrentToken() {
+        try {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const r = db.transaction("keyvaluepairs", "readonly")
+                            .objectStore("keyvaluepairs").get("auth");
+                r.onsuccess = () => resolve(r.result?.session?.token || null);
+                r.onerror = () => reject(r.error);
+            });
+        } catch { return null; }
+    }
+
+    async function loginWithToken(token) {
+        const db = await openDB();
+        const res = await fetch(`${API}/users/@me`, {
+            headers: { "x-session-token": token }
+        });
+        if (!res.ok) throw new Error("Token is invalid or expired");
+        const user = await res.json();
+        await new Promise((resolve, reject) => {
+            const r = db.transaction("keyvaluepairs", "readwrite")
+                        .objectStore("keyvaluepairs")
+                        .put({ session: { _id: user._id, token, userId: user._id, valid: true } }, "auth");
+            r.onsuccess = () => resolve();
+            r.onerror = () => reject(r.error);
+        });
+        location.href = "https://stoat.chat/app";
+    }
+
+    async function fetchProfile(token) {
+        try {
+            const res = await fetch(`${API}/users/@me`, {
+                headers: { "x-session-token": token }
+            });
+            if (!res.ok) return null;
+            const u = await res.json();
+            return {
+                displayName: u.display_name || u.username || "Unknown",
+                username: u.username || "",
+                avatarUrl: u.avatar ? `${CDN}/avatars/${u.avatar._id}` : null
+            };
+        } catch { return null; }
+    }
+
+    async function loginWithCredentials(email, password) {
+        const res = await fetch("https://api.stoat.chat/auth/session/login", {
+            method: "POST",
+            headers: { "accept": "application/json", "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password, friendly_name: "AviaAccountSwitcher" })
+        });
+        const data = await res.json();
+        if (!res.ok || data.result !== "Success") {
+            throw new Error(data.type || data.result || "Login failed");
+        }
+        await addToken(data.token);
+        return data.token;
+    }
+
+    function ensureStyles() {
+        if (document.getElementById("avia-accsw-styles")) return;
+        const s = document.createElement("style");
+        s.id = "avia-accsw-styles";
+        s.textContent = `
+            @keyframes accsw-scrim-in { from{opacity:0}to{opacity:1} }
+            @keyframes accsw-modal-in { from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)} }
+            #accsw-modal { animation: accsw-modal-in 0.15s forwards; }
+            .accsw-btn {
+                height:40px; border-radius:999px; border:none; padding:0 16px;
+                font-size:0.875rem; font-weight:500; cursor:pointer;
+                display:flex; align-items:center; justify-content:center;
+                transition:opacity 0.15s; font-family:inherit;
+            }
+            .accsw-btn:hover{opacity:0.8}
+            .accsw-btn:disabled{cursor:not-allowed;opacity:0.38}
+            .accsw-field {
+                width:100%; box-sizing:border-box; padding:13px 14px;
+                border-radius:12px; border:1px solid rgba(255,255,255,0.12);
+                background:rgba(255,255,255,0.06); color:var(--md-sys-color-on-surface,#fff);
+                font-size:0.875rem; outline:none; font-family:inherit;
+                transition:border-color 0.15s;
+            }
+            .accsw-field:focus{border-color:var(--md-sys-color-primary,rgba(103,80,164,0.9))}
+            .accsw-field::placeholder{color:rgba(255,255,255,0.35)}
+            .accsw-list{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;scrollbar-width:thin;}
+            .accsw-list::-webkit-scrollbar{width:3px}
+            .accsw-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:3px}
+            .accsw-item {
+                display:flex; align-items:center; gap:12px; padding:10px 14px;
+                border-radius:12px; background:rgba(255,255,255,0.04);
+                border:1px solid rgba(255,255,255,0.07);
+                cursor:pointer; transition:background 0.12s; user-select:none;
+            }
+            .accsw-item:hover{background:rgba(255,255,255,0.09)}
+            .accsw-item.loading{opacity:0.5;pointer-events:none}
+            .accsw-avatar {
+                width:40px; height:40px; border-radius:50%; flex-shrink:0;
+                background:var(--md-sys-color-primary,rgba(103,80,164,0.9));
+                display:flex; align-items:center; justify-content:center;
+                font-size:16px; font-weight:700; color:#fff; overflow:hidden;
+                text-transform:uppercase;
+            }
+            .accsw-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+            .accsw-info{flex:1;min-width:0}
+            .accsw-name{font-size:14px;font-weight:600;color:var(--md-sys-color-on-surface,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            .accsw-sub{font-size:11px;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            .accsw-del{background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.2);font-size:13px;padding:4px 6px;border-radius:6px;flex-shrink:0;transition:color 0.12s;line-height:1}
+            .accsw-del:hover{color:rgba(255,80,80,0.8)}
+            .accsw-empty{text-align:center;color:rgba(255,255,255,0.3);font-size:13px;padding:24px 0;font-style:italic}
+            .accsw-warning{background:rgba(255,180,0,0.1);border:1px solid rgba(255,180,0,0.25);border-radius:10px;padding:10px 14px;font-size:12px;color:rgba(255,200,80,0.9);line-height:1.5}
+            .accsw-hr{border:none;border-top:1px solid rgba(255,255,255,0.07);margin:18px 0}
+            .accsw-feedback{font-size:12px;min-height:16px;margin-top:4px;transition:color 0.15s}
+            .accsw-icon-btn {
+                width:36px;height:36px;border-radius:50%;border:none;
+                background:rgba(255,255,255,0.08); cursor:pointer;
+                display:flex;align-items:center;justify-content:center;
+                color:var(--md-sys-color-on-surface,#fff);
+                transition:background 0.15s; flex-shrink:0;
+            }
+            .accsw-icon-btn:hover{background:rgba(255,255,255,0.15)}
+            .accsw-icon-btn .material-symbols-outlined{font-size:20px;display:block;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0}
+        `;
+        document.head.appendChild(s);
+    }
+
+    function buildLoginForm(onSuccess) {
+        const wrap = document.createElement("div");
+        Object.assign(wrap.style, { display:"flex", flexDirection:"column", gap:"10px" });
+
+        const emailInput = document.createElement("input");
+        emailInput.className = "accsw-field";
+        emailInput.type = "email";
+        emailInput.placeholder = "Email";
+
+        const passInput = document.createElement("input");
+        passInput.className = "accsw-field";
+        passInput.type = "password";
+        passInput.placeholder = "Password";
+
+        const feedback = document.createElement("div");
+        feedback.className = "accsw-feedback";
+
+        const row = document.createElement("div");
+        Object.assign(row.style, { display:"flex", justifyContent:"flex-end", gap:"8px" });
+
+        const cancelBtn = document.createElement("button");
+        cancelBtn.textContent = "Cancel";
+        cancelBtn.className = "accsw-btn";
+        Object.assign(cancelBtn.style, { color:"var(--md-sys-color-primary,#cfbcff)", background:"transparent" });
+
+        const submitBtn = document.createElement("button");
+        submitBtn.textContent = "Add Account";
+        submitBtn.className = "accsw-btn";
+        Object.assign(submitBtn.style, { background:"var(--md-sys-color-primary,rgba(103,80,164,0.9))", color:"#fff" });
+
+        submitBtn.onclick = async () => {
+            const email = emailInput.value.trim();
+            const pass = passInput.value;
+            if (!email || !pass) {
+                feedback.textContent = "Please enter both email and password.";
+                feedback.style.color = "rgba(255,100,100,0.9)";
+                return;
+            }
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Adding...";
+            feedback.textContent = "";
+            try {
+                await loginWithCredentials(email, pass);
+                feedback.textContent = "Account added!";
+                feedback.style.color = "rgba(100,220,100,0.9)";
+                emailInput.value = "";
+                passInput.value = "";
+                onSuccess();
+            } catch (err) {
+                feedback.textContent = "Error: " + (err.message || "Unknown error");
+                feedback.style.color = "rgba(255,100,100,0.9)";
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Add Account";
+            }
+        };
+
+        row.appendChild(cancelBtn);
+        row.appendChild(submitBtn);
+        wrap.appendChild(emailInput);
+        wrap.appendChild(passInput);
+        wrap.appendChild(feedback);
+        wrap.appendChild(row);
+
+        return { wrap, cancelBtn };
+    }
+
+    async function renderList(listEl, statusEl) {
+        listEl.innerHTML = "";
+        statusEl.textContent = "Loading accounts...";
+        statusEl.style.color = "rgba(255,255,255,0.35)";
+
+        const tokens = await getTokens();
+        if (!tokens.length) {
+            listEl.innerHTML = `<div class="accsw-empty">No accounts saved. Click + to add one.</div>`;
+            statusEl.textContent = "";
+            return;
+        }
+
+        statusEl.textContent = `Fetching ${tokens.length} account(s)...`;
+        const profiles = await Promise.all(tokens.map(t => fetchProfile(t).then(p => ({ token: t, profile: p }))));
+        statusEl.textContent = "";
+        listEl.innerHTML = "";
+
+        [...profiles].reverse().forEach(({ token, profile }) => {
+            const item = document.createElement("div");
+            item.className = "accsw-item";
+            item.title = "Click to switch to this account";
+
+            const avatar = document.createElement("div");
+            avatar.className = "accsw-avatar";
+            if (profile && profile.avatarUrl) {
+                const img = document.createElement("img");
+                img.src = profile.avatarUrl;
+                img.onerror = () => { img.remove(); avatar.textContent = (profile.displayName || "?")[0]; };
+                avatar.appendChild(img);
+            } else {
+                avatar.textContent = profile ? (profile.displayName || "?")[0] : "?";
+            }
+
+            const info = document.createElement("div");
+            info.className = "accsw-info";
+            const nameEl = document.createElement("div");
+            nameEl.className = "accsw-name";
+            nameEl.textContent = profile ? profile.displayName : "Unable to fetch";
+            const subEl = document.createElement("div");
+            subEl.className = "accsw-sub";
+            subEl.textContent = profile ? (profile.username ? `@${profile.username}` : "") : "Token may be expired";
+            info.appendChild(nameEl);
+            info.appendChild(subEl);
+
+            const delBtn = document.createElement("button");
+            delBtn.className = "accsw-del";
+            delBtn.textContent = "✕";
+            delBtn.title = "Remove account";
+            delBtn.onclick = async (e) => {
+                e.stopPropagation();
+                await removeToken(token);
+                await renderList(listEl, statusEl);
+            };
+
+            item.onclick = async () => {
+                item.classList.add("loading");
+                try {
+                    await loginWithToken(token);
+                } catch (err) {
+                    item.classList.remove("loading");
+                    subEl.textContent = "Switch failed: " + (err.message || "error");
+                    subEl.style.color = "rgba(255,100,100,0.8)";
+                    nameEl.textContent = "Unable to switch";
+                }
+            };
+
+            item.appendChild(avatar);
+            item.appendChild(info);
+            item.appendChild(delBtn);
+            listEl.appendChild(item);
+        });
+    }
+
+    async function openModal() {
+        if (document.getElementById("accsw-scrim")) return;
+        ensureStyles();
+
+        const scrim = document.createElement("div");
+        scrim.id = "accsw-scrim";
+        Object.assign(scrim.style, {
+            position:"fixed", top:"0", left:"0", right:"0", bottom:"0",
+            zIndex:"9999999", display:"grid", placeItems:"center",
+            background:"rgba(0,0,0,0.65)", padding:"60px",
+            overflowY:"auto", animation:"accsw-scrim-in 0.1s forwards",
+            boxSizing:"border-box"
+        });
+        scrim.addEventListener("click", e => { if (e.target === scrim) scrim.remove(); });
+
+        const modal = document.createElement("div");
+        modal.id = "accsw-modal";
+        Object.assign(modal.style, {
+            padding:"28px", minWidth:"340px", maxWidth:"420px", width:"100%",
+            borderRadius:"28px", display:"flex", flexDirection:"column",
+            color:"var(--md-sys-color-on-surface,#fff)",
+            background:"var(--md-sys-color-surface-container-high,#2b2b2f)",
+            boxSizing:"border-box", gap:"0"
+        });
+
+        const headerRow = document.createElement("div");
+        Object.assign(headerRow.style, {
+            display:"flex", alignItems:"center", justifyContent:"space-between",
+            marginBottom:"14px"
+        });
+
+        const title = document.createElement("span");
+        title.textContent = "Account Switcher";
+        Object.assign(title.style, { fontSize:"1.5rem", fontWeight:"400", lineHeight:"2rem" });
+
+        const headerBtns = document.createElement("div");
+        Object.assign(headerBtns.style, { display:"flex", gap:"8px", alignItems:"center" });
+
+        const addCurrentBtn = document.createElement("button");
+        addCurrentBtn.className = "accsw-icon-btn";
+        addCurrentBtn.title = "Save currently logged-in account";
+        const saveIcon = document.createElement("span");
+        saveIcon.className = "material-symbols-outlined";
+        saveIcon.textContent = "bookmark_add";
+        addCurrentBtn.appendChild(saveIcon);
+        addCurrentBtn.onclick = async () => {
+            addCurrentBtn.disabled = true;
+            try {
+                const tok = await getCurrentToken();
+                if (!tok) { alert("Could not find a session token. Are you logged in?"); return; }
+                const tokens = await getTokens();
+                if (tokens.includes(tok)) { alert("This account is already saved."); return; }
+                await addToken(tok);
+                await renderList(listEl, statusEl);
+            } finally { addCurrentBtn.disabled = false; }
+        };
+
+        const plusBtn = document.createElement("button");
+        plusBtn.className = "accsw-icon-btn";
+        plusBtn.title = "Add account with email and password";
+        const plusIcon = document.createElement("span");
+        plusIcon.className = "material-symbols-outlined";
+        plusIcon.textContent = "add";
+        plusBtn.appendChild(plusIcon);
+
+        headerBtns.appendChild(addCurrentBtn);
+        headerBtns.appendChild(plusBtn);
+        headerRow.appendChild(title);
+        headerRow.appendChild(headerBtns);
+        modal.appendChild(headerRow);
+
+        const warning = document.createElement("div");
+        warning.className = "accsw-warning";
+        warning.textContent = "Accounts with two-factor authentication are not supported.";
+        Object.assign(warning.style, { marginBottom:"16px" });
+        modal.appendChild(warning);
+
+        const statusEl = document.createElement("div");
+        Object.assign(statusEl.style, { fontSize:"12px", color:"rgba(255,255,255,0.35)", marginBottom:"8px", minHeight:"16px" });
+        modal.appendChild(statusEl);
+
+        const listEl = document.createElement("div");
+        listEl.className = "accsw-list";
+        Object.assign(listEl.style, { marginBottom:"8px" });
+        modal.appendChild(listEl);
+
+        const formHr = document.createElement("hr");
+        formHr.className = "accsw-hr";
+        formHr.style.display = "none";
+        modal.appendChild(formHr);
+
+        const formContainer = document.createElement("div");
+        formContainer.style.display = "none";
+        modal.appendChild(formContainer);
+
+        const bottomRow = document.createElement("div");
+        Object.assign(bottomRow.style, { display:"flex", justifyContent:"flex-end", marginTop:"16px" });
+        const closeBtn = document.createElement("button");
+        closeBtn.textContent = "Close";
+        closeBtn.className = "accsw-btn";
+        Object.assign(closeBtn.style, { color:"var(--md-sys-color-primary,#cfbcff)", background:"transparent" });
+        closeBtn.onclick = () => scrim.remove();
+        bottomRow.appendChild(closeBtn);
+        modal.appendChild(bottomRow);
+
+        let formVisible = false;
+        plusBtn.onclick = () => {
+            formVisible = !formVisible;
+            if (formVisible) {
+                formHr.style.display = "block";
+                formContainer.style.display = "block";
+                const { wrap, cancelBtn } = buildLoginForm(async () => {
+                    await renderList(listEl, statusEl);
+                });
+                formContainer.innerHTML = "";
+                formContainer.appendChild(wrap);
+                cancelBtn.onclick = () => {
+                    formVisible = false;
+                    formHr.style.display = "none";
+                    formContainer.style.display = "none";
+                };
+            } else {
+                formHr.style.display = "none";
+                formContainer.style.display = "none";
+            }
+        };
+
+        scrim.appendChild(modal);
+        document.body.appendChild(scrim);
+        await renderList(listEl, statusEl);
+    }
+
+    const CTX_BTN_ID = "avia-accsw-ctx-btn";
+
+    function findProfileAnchorInMenu() {
+
+        const anchors = document.querySelectorAll("a");
+        for (const a of anchors) {
+            const svg = a.querySelector('svg[viewBox="0 0 32 32"]');
+            if (!svg || !svg.querySelector("foreignObject")) continue;
+
+            const textDiv = a.querySelector("div > span, div span");
+            if (!textDiv) continue;
+            const spans = a.querySelectorAll("span");
+            if (spans.length < 2) continue;
+
+            const hasTag = Array.from(spans).some(s => s.textContent.includes("#"));
+            if (!hasTag) continue;
+            return a;
+        }
+        return null;
+    }
+
+    function injectContextMenuButton() {
+        const existing = document.getElementById(CTX_BTN_ID);
+        if (existing && !document.body.contains(existing)) existing.remove();
+        if (document.getElementById(CTX_BTN_ID)) return;
+
+        const profileAnchor = findProfileAnchorInMenu();
+        if (!profileAnchor) return;
+        const container = profileAnchor.parentElement;
+        if (!container) return;
+
+        const btn = document.createElement("a");
+        btn.id = CTX_BTN_ID;
+        btn.className = "d_flex gap_var(--gap-md) ai_center p_var(--gap-md)_var(--gap-lg) [&:hover]:bg_color-mix(in_srgb,_var(--md-sys-color-on-surface)_8%,_transparent) [&_span]:flex-g_1 [&_span]:mt_1px cursor_pointer";
+        btn.style.cssText = "cursor:pointer;user-select:none;";
+
+        const iconWrap = document.createElement("div");
+        iconWrap.style.cssText = "width:16px;display:flex;justify-content:center;align-items:center;flex-shrink:0;";
+        iconWrap.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M287-527q-47-47-47-113t47-113q47-47 113-47t113 47q47 47 47 113t-47 113q-47 47-113 47t-113-47ZM80-160v-112q0-33 17-62t47-44q51-26 115-44t141-18h14q6 0 12 2-8 18-13.5 37.5T404-360h-4q-71 0-127.5 18T180-306q-9 5-14.5 14t-5.5 20v32h252q6 21 16 41.5t22 38.5H80Zm560 40-12-60q-12-5-22.5-10.5T584-204l-58 18-40-68 46-40q-2-14-2-26t2-26l-46-40 40-68 58 18q11-8 21.5-13.5T628-460l12-60h80l12 60q12 5 22.5 11t21.5 15l58-20 40 70-46 40q2 12 2 25t-2 25l46 40-40 68-58-18q-11 8-21.5 13.5T732-180l-12 60h-80Zm96.5-143.5Q760-287 760-320t-23.5-56.5Q713-400 680-400t-56.5 23.5Q600-353 600-320t23.5 56.5Q647-240 680-240t56.5-23.5Zm-280-320Q480-607 480-640t-23.5-56.5Q433-720 400-720t-56.5 23.5Q320-673 320-640t23.5 56.5Q367-560 400-560t56.5-23.5ZM400-640Zm12 400Z"/></svg>`;
+
+        const label = document.createElement("span");
+        label.className = "ov-wrap_anywhere lh_1.25rem fs_0.875rem ls_0.015625rem fw_400";
+        label.textContent = "Switch Accounts";
+
+        btn.appendChild(iconWrap);
+        btn.appendChild(label);
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openModal();
+        });
+
+        profileAnchor.insertAdjacentElement("afterend", btn);
+    }
+
+    function registerWithAviaMenu() {
+        const reg = () => window.AviaMenu && window.AviaMenu.register({
+            id: "avia_account_switcher",
+            name: "Account Switcher",
+            icon: "manage_accounts",
+            onClick: openModal
+        });
+        if (window.AviaMenu) reg();
+        else {
+            const iv = setInterval(() => { if (window.AviaMenu) { clearInterval(iv); reg(); } }, 100);
+        }
+    }
+
+    let rafPending = false;
+    const observer = new MutationObserver(() => {
+        if (rafPending) return;
+        rafPending = true;
+        requestAnimationFrame(() => {
+            rafPending = false;
+            injectContextMenuButton();
+        });
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+    registerWithAviaMenu();
+
+})();
+
 
 
 /* --- AttachmentContextMenuFix.js --- */
@@ -1112,6 +1646,30 @@ if(window.__US_BUILDER_BADGES_JS__){return;}window.__US_BUILDER_BADGES_JS__=true
 
 
 
+/* --- BettersSwiping.js --- */
+if(window.__US_BUILDER_BETTERSSWIPING_JS__){return;}window.__US_BUILDER_BETTERSSWIPING_JS__=true;
+
+(function () {
+  if (window.__BETTER_SWIPING__) return;
+  window.__BETTER_SWIPING__ = true;
+  let startselection = null;
+  let newselection =null;
+
+  document.addEventListener('touchstart',(e)=>{
+    startselection = document.getSelection().toString()
+  });
+
+  document.addEventListener('touchmove',(e)=>{
+    newselection = document.getSelection().toString()
+    if(startselection!=newselection){
+        e.preventDefault()
+        e.stopImmediatePropagation()
+        e.stopPropagation()
+    }
+  });
+})();
+
+
 /* --- ButtonFix.js --- */
 if(window.__US_BUILDER_BUTTONFIX_JS__){return;}window.__US_BUILDER_BUTTONFIX_JS__=true;
 
@@ -1583,8 +2141,8 @@ if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE
     if(!icon) return;
     icon.href='https://cdn.stoatusercontent.com/icons/vnGRb1M_UiP4-oj1qfqQODDCsyYOWa3f92ib3ac-K_/original'
 
-    if(document.title!='Stoat (Avia Client Mobile 1.7.1)'){
-        document.title='Stoat (Avia Client Mobile 1.7.1)'
+    if(document.title!='Stoat (Avia Client Mobile 1.8)'){
+        document.title='Stoat (Avia Client Mobile 1.8)'
     }
   }
 
@@ -1819,6 +2377,104 @@ if(window.__US_BUILDER_FIXCOLOURPICKER_JS__){return;}window.__US_BUILDER_FIXCOLO
         requestAnimationFrame(init);
     }
 })();
+
+
+/* --- forceapperance.js --- */
+
+(function () {
+  "@preserve - Built on 2026-03-18T15:07:32.044Z";
+
+  if (window.__US_BUILDER_FORCEUSERSETTINGS_JS__) {
+    return;
+  }
+  window.__US_BUILDER_FORCEUSERSETTINGS_JS__ = true;
+
+  (function () {
+    "use strict";
+
+    if (window.__AVIA_FORCE_USER_SETTINGS__) return;
+    window.__AVIA_FORCE_USER_SETTINGS__ = true;
+
+    let userSettingsSpan = null;
+
+    function findUserSettingsSpan() {
+      if (userSettingsSpan && document.body.contains(userSettingsSpan))
+        return userSettingsSpan;
+      const spans = document.querySelectorAll("span.ov_hidden");
+      for (const s of spans) {
+        const parent = s.parentElement;
+        if (!parent) continue;
+        if (parent.id === "avia-cloned-settings") continue;
+        if (parent.querySelector("#avia-cloned-settings")) continue;
+        const svgPath = parent.querySelector("a svg path");
+        if (!svgPath) continue;
+        const d = svgPath.getAttribute("d") || "";
+        if (d.startsWith("M12 2C6.48 2")) {
+          userSettingsSpan = s;
+          return s;
+        }
+      }
+      userSettingsSpan = null;
+      return null;
+    }
+
+    function enforceUserSettingsLabel() {
+      const span = findUserSettingsSpan();
+      if (span && span.textContent !== "User Settings")
+        span.textContent = "User Settings";
+    }
+
+    const observer = new MutationObserver(() => enforceUserSettingsLabel());
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    enforceUserSettingsLabel();
+  })();
+
+  if (window.__US_BUILDER_FORCEAPPARENCE_JS__) {
+    return;
+  }
+  window.__US_BUILDER_FORCEAPPARENCE_JS__ = true;
+
+  (function () {
+    if (window.__AVIA_FORCE_APPEARANCE__) return;
+    window.__AVIA_FORCE_APPEARANCE__ = true;
+
+    function setAppearanceLabel(root = document) {
+      const links = root.querySelectorAll(
+        ".settings_sidebar .content a.button:not([id^='avia-']):not([id^='stoat-fake-'])",
+      );
+
+      links.forEach((a) => {
+        const svg = a.querySelector("svg");
+        if (!svg) return;
+
+        const path = svg.querySelector("path");
+        if (!path) return;
+
+        if (path.getAttribute("d")?.startsWith("M12 22C6.49 22")) {
+          const label = a.querySelector("div.ov_hidden");
+          if (label && label.textContent !== "Appearance") {
+            label.textContent = "Appearance";
+          }
+        }
+      });
+    }
+
+    const observer = new MutationObserver((muts) => {
+      for (const m of muts) {
+        for (const n of m.addedNodes) {
+          if (!(n instanceof HTMLElement)) continue;
+          setAppearanceLabel(n);
+        }
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    setAppearanceLabel();
+  })();
+})();
+
 
 
 /* --- HideSearchbarButton.js --- */
@@ -2602,9 +3258,9 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     el.appendChild(element)
                     element.outerHTML = `
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
-                                Avia Client Mobile 1.7.1<br>
+                                Avia Client Mobile 1.8<br>
                                 <span style="font-size:10px;opacity:0.7;">
-                                    Based on Avia Client 1.7.1
+                                    Based on Avia Client 1.8
                                 </span>
                             </span>
                     `
@@ -2742,6 +3398,17 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
             };
             document.head.appendChild(loader);
         });
+    }
+
+    function exportPlugin(plugin) {
+        const filename = plugin.name.endsWith(".js") ? plugin.name : plugin.name + ".js";
+        const blob = new Blob([plugin.code || ""], { type: "text/javascript" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
     }
 
     function runLocalPlugin(plugin) {
@@ -3392,6 +4059,12 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
                 });
             };
 
+            const exportBtn = document.createElement("button");
+            exportBtn.textContent = "Export";
+            styleLocalBtn(exportBtn, "rgba(80,200,120,0.15)");
+            exportBtn.title = "Download as .js file";
+            exportBtn.onclick = () => exportPlugin(plugin);
+
             const removeBtn = document.createElement("button");
             removeBtn.textContent = "✕";
             styleLocalBtn(removeBtn, "rgba(255,80,80,0.15)");
@@ -3405,6 +4078,7 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
                 renderLocalPanel(filter);
             };
 
+            footer.appendChild(exportBtn)
             footer.appendChild(editBtn);
             footer.appendChild(removeBtn);
 
@@ -3843,11 +4517,26 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
 
     const ITEM_HEIGHT = 32;
     const MAX_VISIBLE = 12;
+    const SUBMENU_MAX_VISIBLE = 8;
     const PIN_STORAGE_KEY = "avia_menu_pins";
 
     const registeredItems = [];
+    const submenuParents = [];
+    const submenuItems = [];
+
     let menuEl = null;
     let menuOpen = false;
+    let activeSubmenuEl = null;
+    let activeSubmenuParentBtn = null;
+    let submenuHoverTimeout = null;
+
+    function allIds() {
+        return [
+            ...registeredItems.map(i => i.id),
+            ...submenuParents.map(i => i.id),
+            ...submenuItems.map(i => i.id)
+        ];
+    }
 
     function getPins() {
         try { return JSON.parse(localStorage.getItem(PIN_STORAGE_KEY) || "[]"); }
@@ -3872,38 +4561,34 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
         return getPins().includes(id);
     }
 
-    function getSortedItems() {
+    function getSortedMainItems() {
         const pins = getPins();
+        const all = [...registeredItems, ...submenuParents];
         const pinned = [];
         for (const id of pins) {
-            const found = registeredItems.find(i => i.id === id);
+            const found = all.find(i => i.id === id);
             if (found) pinned.push(found);
         }
-        const unpinned = registeredItems.filter(i => !isPinned(i.id));
+        const unpinned = all.filter(i => !isPinned(i.id));
         return [...pinned, ...unpinned];
     }
 
     window.AviaMenu = {
         register: function (item) {
             if (!item || typeof item !== "object") {
-                console.error("[AviaMenu] Registration failed: item must be an object, got", typeof item);
-                return;
+                console.error("[AviaMenu] register: item must be an object, got", typeof item); return;
             }
             if (typeof item.id !== "string" || !item.id.trim()) {
-                console.error("[AviaMenu] Registration failed: item.id must be a non-empty string, got", item.id);
-                return;
+                console.error("[AviaMenu] register: item.id must be a non-empty string, got", item.id); return;
             }
             if (!item.name || typeof item.name !== "string") {
-                console.error("[AviaMenu] Registration failed for id '%s': item.name must be a non-empty string, got", item.id, item.name);
-                return;
+                console.error("[AviaMenu] register failed for id '%s': item.name must be a non-empty string, got", item.id, item.name); return;
             }
             if (typeof item.onClick !== "function") {
-                console.error("[AviaMenu] Registration failed for id '%s': item.onClick must be a function, got", item.id, typeof item.onClick);
-                return;
+                console.error("[AviaMenu] register failed for id '%s': item.onClick must be a function, got", item.id, typeof item.onClick); return;
             }
-            if (registeredItems.find(i => i.id === item.id.trim())) {
-                console.error("[AviaMenu] Registration failed: an item with id '%s' is already registered", item.id.trim());
-                return;
+            if (allIds().includes(item.id.trim())) {
+                console.error("[AviaMenu] register: id '%s' is already registered", item.id.trim()); return;
             }
             registeredItems.push({
                 id: item.id.trim(),
@@ -3912,15 +4597,288 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
                 icon: typeof item.icon === "string" && item.icon.trim() ? item.icon.trim() : null
             });
             if (menuEl) rebuildMenu();
+        },
+
+        submenuregister: function (item) {
+            if (!item || typeof item !== "object") {
+                console.error("[AviaMenu] submenuregister: item must be an object, got", typeof item); return;
+            }
+            if (typeof item.id !== "string" || !item.id.trim()) {
+                console.error("[AviaMenu] submenuregister: item.id must be a non-empty string, got", item.id); return;
+            }
+            if (!item.name || typeof item.name !== "string") {
+                console.error("[AviaMenu] submenuregister failed for id '%s': item.name must be a non-empty string, got", item.id, item.name); return;
+            }
+            if (allIds().includes(item.id.trim())) {
+                console.error("[AviaMenu] submenuregister: id '%s' is already registered", item.id.trim()); return;
+            }
+            submenuParents.push({
+                id: item.id.trim(),
+                name: item.name,
+                icon: typeof item.icon === "string" && item.icon.trim() ? item.icon.trim() : null
+            });
+            if (menuEl) rebuildMenu();
+        },
+
+        submenu: function (item) {
+            if (!item || typeof item !== "object") {
+                console.error("[AviaMenu] submenu: item must be an object, got", typeof item); return;
+            }
+            if (typeof item.parent !== "string" || !item.parent.trim()) {
+                console.error("[AviaMenu] submenu: item.parent must be a non-empty string, got", item.parent); return;
+            }
+            if (typeof item.id !== "string" || !item.id.trim()) {
+                console.error("[AviaMenu] submenu: item.id must be a non-empty string, got", item.id); return;
+            }
+            if (!item.name || typeof item.name !== "string") {
+                console.error("[AviaMenu] submenu failed for id '%s': item.name must be a non-empty string, got", item.id, item.name); return;
+            }
+            if (typeof item.onClick !== "function") {
+                console.error("[AviaMenu] submenu failed for id '%s': item.onClick must be a function, got", item.id, typeof item.onClick); return;
+            }
+            if (!submenuParents.find(p => p.id === item.parent.trim())) {
+                console.error("[AviaMenu] submenu: no submenuregister found with id '%s'", item.parent.trim()); return;
+            }
+            if (allIds().includes(item.id.trim())) {
+                console.error("[AviaMenu] submenu: id '%s' is already registered", item.id.trim()); return;
+            }
+            submenuItems.push({
+                parent: item.parent.trim(),
+                id: item.id.trim(),
+                name: item.name,
+                onClick: item.onClick,
+                icon: typeof item.icon === "string" && item.icon.trim() ? item.icon.trim() : null
+            });
+            if (menuEl) rebuildMenu();
+        },
+
+        updatesubmenu: function (item) {
+            if (!item || typeof item !== "object") {
+                console.error("[AviaMenu] updatesubmenu: item must be an object, got", typeof item); return;
+            }
+            if (typeof item.parent !== "string" || !item.parent.trim()) {
+                console.error("[AviaMenu] updatesubmenu: item.parent must be a non-empty string, got", item.parent); return;
+            }
+            if (typeof item.id !== "string" || !item.id.trim()) {
+                console.error("[AviaMenu] updatesubmenu: item.id must be a non-empty string, got", item.id); return;
+            }
+            const entry = submenuItems.find(i => i.parent === item.parent.trim() && i.id === item.id.trim());
+            if (!entry) {
+                console.error("[AviaMenu] updatesubmenu: no submenu item found with parent '%s' and id '%s'", item.parent.trim(), item.id.trim()); return;
+            }
+            if (typeof item.text === "string" && item.text.trim()) {
+                entry.name = item.text.trim();
+            }
+            if (typeof item.icon === "string") {
+                entry.icon = item.icon.trim() || null;
+            }
+            if (activeSubmenuEl && activeSubmenuParentBtn) {
+                const parentEntry = submenuParents.find(p => p.id === item.parent.trim());
+                if (parentEntry) openSubmenu(parentEntry, activeSubmenuParentBtn);
+            }
+        },
+
+        unregister: function (item) {
+            if (!item || typeof item.id !== "string" || !item.id.trim()) {
+                console.error("[AviaMenu] unregister: item.id must be a non-empty string, got", item?.id); return;
+            }
+            const id = item.id.trim();
+
+            const rIdx = registeredItems.findIndex(i => i.id === id);
+            if (rIdx !== -1) {
+                registeredItems.splice(rIdx, 1);
+                if (menuEl) rebuildMenu();
+                return;
+            }
+
+            const pIdx = submenuParents.findIndex(i => i.id === id);
+            if (pIdx !== -1) {
+                submenuParents.splice(pIdx, 1);
+                const children = submenuItems.filter(i => i.parent === id);
+                children.forEach(c => {
+                    const cIdx = submenuItems.findIndex(s => s.id === c.id);
+                    if (cIdx !== -1) submenuItems.splice(cIdx, 1);
+                });
+                closeSubmenu();
+                if (menuEl) rebuildMenu();
+                return;
+            }
+
+            const sIdx = submenuItems.findIndex(i => i.id === id);
+            if (sIdx !== -1) {
+                const parentId = submenuItems[sIdx].parent;
+                submenuItems.splice(sIdx, 1);
+                const remaining = submenuItems.filter(i => i.parent === parentId);
+                if (remaining.length === 0) {
+                    const pIdx2 = submenuParents.findIndex(i => i.id === parentId);
+                    if (pIdx2 !== -1) submenuParents.splice(pIdx2, 1);
+                    closeSubmenu();
+                }
+                if (menuEl) rebuildMenu();
+                return;
+            }
+
+            console.error("[AviaMenu] unregister: no item with id '%s' found", id);
         }
     };
 
+    function closeSubmenu() {
+        if (activeSubmenuEl) {
+            activeSubmenuEl.remove();
+            activeSubmenuEl = null;
+        }
+        activeSubmenuParentBtn = null;
+        clearTimeout(submenuHoverTimeout);
+    }
+
     function closeMenu() {
+        closeSubmenu();
         if (menuEl) {
             menuEl.remove();
             menuEl = null;
         }
         menuOpen = false;
+    }
+
+    function openSubmenu(parentItem, anchorBtn) {
+        if (activeSubmenuParentBtn === anchorBtn) return;
+        closeSubmenu();
+        activeSubmenuParentBtn = anchorBtn;
+
+        const items = submenuItems.filter(i => i.parent === parentItem.id);
+        if (items.length === 0) return;
+
+        const sub = document.createElement("div");
+        activeSubmenuEl = sub;
+        Object.assign(sub.style, {
+            position: "fixed",
+            zIndex: "9999999",
+            background: "var(--md-sys-color-surface, #1e1e1e)",
+            borderRadius: "16px",
+            boxShadow: "0 8px 28px rgba(0,0,0,0.4)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(12px)",
+            overflow: "hidden",
+            minWidth: "180px",
+            display: "flex",
+            flexDirection: "column"
+        });
+
+        const subList = document.createElement("div");
+        Object.assign(subList.style, {
+            display: "flex",
+            flexDirection: "column",
+            padding: "8px",
+            boxSizing: "border-box",
+            maxHeight: (SUBMENU_MAX_VISIBLE * ITEM_HEIGHT + 16) + "px",
+            overflowY: items.length > SUBMENU_MAX_VISIBLE ? "auto" : "hidden",
+            scrollbarWidth: "none"
+        });
+
+        for (const subItem of items) {
+            const btn = document.createElement("div");
+            Object.assign(btn.style, {
+                padding: "0 12px",
+                height: ITEM_HEIGHT + "px",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                fontSize: "13px",
+                fontWeight: "500",
+                color: "var(--md-sys-color-on-surface, #fff)",
+                cursor: "pointer",
+                borderRadius: "10px",
+                transition: "background 0.12s",
+                userSelect: "none",
+                flexShrink: "0"
+            });
+
+            if (subItem.icon) {
+                const iconEl = document.createElement("span");
+                iconEl.className = "material-symbols-outlined";
+                iconEl.textContent = subItem.icon;
+                iconEl.style.cssText = "font-size:20px;display:block;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;flex-shrink:0;opacity:0.85;";
+                btn.appendChild(iconEl);
+            }
+
+            const label = document.createElement("span");
+            label.textContent = subItem.name;
+            label.style.flex = "1";
+            btn.appendChild(label);
+
+            btn.addEventListener("mouseenter", () => { btn.style.background = "rgba(255,255,255,0.07)"; });
+            btn.addEventListener("mouseleave", () => { btn.style.background = "transparent"; });
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                closeMenu();
+                try { subItem.onClick(); } catch (err) { console.error("[AviaMenu]", err); }
+            });
+
+            subList.appendChild(btn);
+        }
+
+        sub.appendChild(subList);
+        document.body.appendChild(sub);
+
+        if (items.length > SUBMENU_MAX_VISIBLE) {
+            function makeSubArrow(id, rotation) {
+                const el = document.createElement("div");
+                el.id = id;
+                Object.assign(el.style, {
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "20px",
+                    pointerEvents: "none",
+                    flexShrink: "0",
+                    visibility: "hidden"
+                });
+                const icon = document.createElement("span");
+                icon.className = "material-symbols-outlined";
+                icon.textContent = "arrow_back_2";
+                icon.style.cssText = `font-size:16px;display:block;transform:rotate(${rotation}deg);color:var(--md-sys-color-on-surface,#fff);opacity:0.5;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;`;
+                el.appendChild(icon);
+                return el;
+            }
+
+            const subArrowTop = makeSubArrow("avia-submenu-scroll-top", 90);
+            const subArrowBot = makeSubArrow("avia-submenu-scroll-bot", 270);
+            subArrowBot.style.display = "none";
+            subArrowBot.style.visibility = "visible";
+
+            sub.insertBefore(subArrowTop, subList);
+            sub.insertBefore(subArrowBot, subList.nextSibling);
+
+            function updateSubArrows() {
+                const canUp = subList.scrollTop > 0;
+                const canDown = subList.scrollTop + subList.clientHeight < subList.scrollHeight - 1;
+                subArrowTop.style.visibility = canUp ? "visible" : "hidden";
+                subArrowBot.style.display = canDown ? "flex" : "none";
+            }
+
+            subList.addEventListener("scroll", updateSubArrows);
+            updateSubArrows();
+        }
+
+        const anchorRect = anchorBtn.getBoundingClientRect();
+        const subRect = sub.getBoundingClientRect();
+        let top = anchorRect.top;
+        let left = anchorRect.left - subRect.width - 6;
+
+        if (left < 8) left = anchorRect.right + 6;
+        if (top + subRect.height > window.innerHeight - 8) {
+            top = window.innerHeight - subRect.height - 8;
+        }
+
+        sub.style.top = top + "px";
+        sub.style.left = left + "px";
+
+        sub.addEventListener("mouseleave", () => {
+            submenuHoverTimeout = setTimeout(closeSubmenu, 120);
+        });
+        sub.addEventListener("mouseenter", () => {
+            clearTimeout(submenuHoverTimeout);
+        });
     }
 
     function rebuildMenu() {
@@ -3929,7 +4887,9 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
         if (!list) return;
         list.innerHTML = "";
 
-        if (registeredItems.length === 0) {
+        const sorted = getSortedMainItems();
+
+        if (sorted.length === 0) {
             const empty = document.createElement("div");
             empty.textContent = "No buttons registered";
             Object.assign(empty.style, {
@@ -3946,9 +4906,8 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
             return;
         }
 
-        const sorted = getSortedItems();
-
         for (const item of sorted) {
+            const isParent = submenuParents.some(p => p.id === item.id);
             const pinned = isPinned(item.id);
 
             const btn = document.createElement("div");
@@ -4005,35 +4964,99 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
             });
             pinBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
-                if (isPinned(item.id)) {
-                    unpinItem(item.id);
-                } else {
-                    pinItem(item.id);
-                }
+                if (isPinned(item.id)) unpinItem(item.id);
+                else pinItem(item.id);
                 rebuildMenu();
             });
 
             btn.appendChild(pinBtn);
 
-            btn.addEventListener("mouseenter", () => {
-                btn.style.background = "rgba(255,255,255,0.07)";
-            });
-            btn.addEventListener("mouseleave", () => {
-                btn.style.background = "transparent";
-            });
-            btn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                closeMenu();
-                try { item.onClick(); } catch (err) { console.error("[AviaMenu]", err); }
-            });
+            if (isParent) {
+                const chevron = document.createElement("span");
+                chevron.className = "material-symbols-outlined";
+                chevron.textContent = "arrow_back_2";
+                chevron.style.cssText = "font-size:14px;display:block;transform:rotate(180deg);flex-shrink:0;opacity:0.5;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;";
+                btn.insertBefore(chevron, pinBtn);
+
+                btn.addEventListener("mouseenter", () => {
+                    btn.style.background = "rgba(255,255,255,0.07)";
+                    clearTimeout(submenuHoverTimeout);
+                    openSubmenu(item, btn);
+                });
+                btn.addEventListener("mouseleave", () => {
+                    btn.style.background = "transparent";
+                    submenuHoverTimeout = setTimeout(() => {
+                        if (activeSubmenuParentBtn === btn) closeSubmenu();
+                    }, 120);
+                });
+            } else {
+                btn.addEventListener("mouseenter", () => {
+                    btn.style.background = "rgba(255,255,255,0.07)";
+                    clearTimeout(submenuHoverTimeout);
+                    if (activeSubmenuEl) closeSubmenu();
+                });
+                btn.addEventListener("mouseleave", () => {
+                    btn.style.background = "transparent";
+                });
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    closeMenu();
+                    try { item.onClick(); } catch (err) { console.error("[AviaMenu]", err); }
+                });
+            }
 
             list.appendChild(btn);
         }
 
-        const total = getSortedItems().length;
-        list.style.maxHeight = (MAX_VISIBLE * ITEM_HEIGHT) + "px";
+        const total = sorted.length;
+        list.style.maxHeight = (MAX_VISIBLE * ITEM_HEIGHT + 16) + "px";
         list.style.overflowY = total > MAX_VISIBLE ? "auto" : "hidden";
         list.style.scrollbarWidth = "none";
+
+        const existingTop = menuEl.querySelector("#avia-scroll-top");
+        const existingBot = menuEl.querySelector("#avia-scroll-bot");
+        if (existingTop) existingTop.remove();
+        if (existingBot) existingBot.remove();
+
+        if (total > MAX_VISIBLE) {
+            function makeArrow(id, rotation) {
+                const el = document.createElement("div");
+                el.id = id;
+                Object.assign(el.style, {
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "20px",
+                    pointerEvents: "none",
+                    flexShrink: "0",
+                    visibility: "hidden"
+                });
+                const icon = document.createElement("span");
+                icon.className = "material-symbols-outlined";
+                icon.textContent = "arrow_back_2";
+                icon.style.cssText = `font-size:16px;display:block;transform:rotate(${rotation}deg);color:var(--md-sys-color-on-surface,#fff);opacity:0.5;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;`;
+                el.appendChild(icon);
+                return el;
+            }
+
+            const arrowTop = makeArrow("avia-scroll-top", 90);
+            const arrowBot = makeArrow("avia-scroll-bot", 270);
+            arrowBot.style.display = "none";
+            arrowBot.style.visibility = "visible";
+
+            menuEl.insertBefore(arrowTop, list);
+            menuEl.insertBefore(arrowBot, list.nextSibling);
+
+            function updateArrows() {
+                const canUp = list.scrollTop > 0;
+                const canDown = list.scrollTop + list.clientHeight < list.scrollHeight - 1;
+                arrowTop.style.visibility = canUp ? "visible" : "hidden";
+                arrowBot.style.display = canDown ? "flex" : "none";
+            }
+
+            list.addEventListener("scroll", updateArrows);
+            updateArrows();
+        }
     }
 
     function openMenu(anchorEl) {
@@ -4091,7 +5114,7 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
     }
 
     function onOutsideClick(e) {
-        if (menuEl && !menuEl.contains(e.target)) {
+        if (menuEl && !menuEl.contains(e.target) && (!activeSubmenuEl || !activeSubmenuEl.contains(e.target))) {
             closeMenu();
         }
     }
@@ -4142,7 +5165,7 @@ if(window.__US_BUILDER_MESSAGECONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_M
   window.__MESSAGE_CONTEXT_MENU_FIX__ = true;
 
   function messageContextMenuFix() {
-    const messages = document.querySelectorAll(`div[id][class*='group']`)
+    const messages = [...document.querySelectorAll(`div[id][class*='group']`)].filter(e=>e.parentElement?.tagName=='DIV')
     for(const message of messages){
         const originalbar = message.querySelector(`div[class='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar']`)
         const bar = document.createElement('div')
@@ -4904,6 +5927,63 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
             const footer = document.createElement('div');
             Object.assign(footer.style, { display: 'flex', gap: '6px', marginTop: 'auto', paddingTop: '2px' });
 
+            const LOCAL_KEY = "avia_local_plugins";
+            const getLocals = () => JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]");
+
+            const toLocalBtn = document.createElement('button');
+            styleBtn(toLocalBtn, 'rgba(80,200,120,0.15)');
+            toLocalBtn.style.flex = '1';
+            const alreadyLocal = getLocals().some(p => p.name === plugin.name);
+            if (alreadyLocal) {
+                toLocalBtn.textContent = 'In Local';
+                toLocalBtn.disabled = true;
+                toLocalBtn.style.opacity = '0.45';
+                toLocalBtn.onmouseenter = null;
+                toLocalBtn.onmouseleave = null;
+            } else {
+                toLocalBtn.textContent = 'To Local';
+            }
+
+            toLocalBtn.onclick = async () => {
+                if (toLocalBtn.disabled) return;
+                toLocalBtn.textContent = '…';
+                toLocalBtn.disabled = true;
+
+                let code = null;
+                const scriptEl = runningPlugins[plugin.url];
+                if (scriptEl && scriptEl.textContent) code = scriptEl.textContent;
+
+                if (!code) {
+                    try {
+                        const res = await fetch(normalizePluginUrl(plugin.url));
+                        if (!res.ok) throw new Error("HTTP " + res.status);
+                        code = await res.text();
+                    } catch {
+                        toLocalBtn.textContent = 'Failed';
+                        setTimeout(() => { toLocalBtn.textContent = 'Local'; toLocalBtn.disabled = false; }, 2000);
+                        return;
+                    }
+                }
+
+                const locals = getLocals();
+                if (locals.some(p => p.name === plugin.name)) {
+                    toLocalBtn.textContent = 'In Local';
+                    return;
+                }
+                locals.push({
+                    id: "local_" + Date.now() + "_" + Math.random().toString(36).slice(2),
+                    name: plugin.name,
+                    code,
+                    enabled: plugin.enabled
+                });
+                localStorage.setItem(LOCAL_KEY, JSON.stringify(locals));
+                window.dispatchEvent(new Event("avia-local-plugin-list-changed"));
+                stopPlugin(plugin);
+                plugins.splice(realIndex, 1);
+                setPlugins(plugins);
+                renderPanel(filter);
+            };
+
             const viewBtn = document.createElement('button');
             viewBtn.textContent = 'View';
             styleBtn(viewBtn, 'rgba(100,160,255,0.15)');
@@ -4920,6 +6000,7 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
                 renderPanel(filter);
             };
 
+            footer.appendChild(toLocalBtn);
             footer.appendChild(viewBtn);
             footer.appendChild(removeBtn);
 
@@ -5092,792 +6173,821 @@ if(window.__US_BUILDER_REPOFRONTEND_JS__){return;}window.__US_BUILDER_REPOFRONTE
 
 (function () {
 
-    if (window.__AVIA_OFFICIAL_REPO_LOADED__) return;
-    window.__AVIA_OFFICIAL_REPO_LOADED__ = true;
+if (window.__AVIA_OFFICIAL_REPO_LOADED__) return;
+window.__AVIA_OFFICIAL_REPO_LOADED__ = true;
 
-    const STORAGE_KEY = "avia_plugins";
-    const OFFICIAL_REPO_URL = "https://raw.githubusercontent.com/0simp/MobilePluginRepo/refs/heads/main/pluginrepobackend.js";
-    const THEMES_REGISTRY_URL = "https://raw.githubusercontent.com/0simp/MobilePluginRepo/refs/heads/main/themebackend/themerepobackend.js";
+const STORAGE_KEY = "avia_plugins";
+const OFFICIAL_REPO_URL = "https://raw.githubusercontent.com/0simp/MobilePluginRepo/refs/heads/main/pluginrepobackend.js";
+const THEMES_REGISTRY_URL = "https://raw.githubusercontent.com/0simp/MobilePluginRepo/refs/heads/main/themebackend/themerepobackend.js";
 
-    const getPlugins = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    const setPlugins = (data) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+const getPlugins = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+const setPlugins = (data) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 
-    let repoContent;
-    let currentRepoData = [];
-    let currentThemeData = [];
-    let searchInput;
-    let activeTab = "plugins";
+let repoContent;
+let currentRepoData = [];
+let currentThemeData = [];
+let searchInput;
+let activeTab = "plugins"; // "plugins" | "themes"
 
-    document.getElementById("avia-official-repo-btn")?.remove();
+document.getElementById("avia-official-repo-btn")?.remove();
 
-    function injectStyles() {
-        if (document.getElementById("avia-repo-styles")) return;
-        const style = document.createElement("style");
-        style.id = "avia-repo-styles";
-        style.textContent = `
-            #avia-official-repo-window * { box-sizing: border-box; }
+ function injectStyles() {
+    if (document.getElementById("avia-repo-styles")) return;
+    const style = document.createElement("style");
+    style.id = "avia-repo-styles";
+    style.textContent = `
+        #avia-official-repo-window * { box-sizing: border-box; }
 
-            #avia-repo-content::-webkit-scrollbar { width: 4px; }
-            #avia-repo-content::-webkit-scrollbar-track { background: transparent; }
-            #avia-repo-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+        #avia-repo-content::-webkit-scrollbar { width: 4px; }
+        #avia-repo-content::-webkit-scrollbar-track { background: transparent; }
+        #avia-repo-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
 
-            .avia-repo-plugin-card {
-                display: flex;
-                flex-direction: column;
-                gap: 6px;
-                padding: 10px 12px;
-                border-radius: 10px;
-                background: rgba(255,255,255,0.04);
-                border: 1px solid rgba(255,255,255,0.06);
-                margin-bottom: 8px;
-            }
+        .avia-repo-plugin-card {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            margin-bottom: 8px;
+        }
 
-            .avia-repo-card-top {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
+        .avia-repo-card-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-            .avia-repo-meta { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
-            .avia-repo-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.92); word-break: break-word; }
-            .avia-repo-author-row { display: flex; align-items: center; gap: 6px; }
-            .avia-repo-author-badge {
-                font-size: 10px;
-                font-weight: 500;
-                color: rgba(255,255,255,0.5);
-                background: rgba(255,255,255,0.07);
-                border: 1px solid rgba(255,255,255,0.08);
-                border-radius: 4px;
-                padding: 1px 6px;
-                white-space: nowrap;
-                max-width: 200px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            .avia-repo-desc { font-size: 11px; color: #fff; word-break: break-word; white-space: normal; line-height: 1.5; }
+        .avia-repo-meta { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+        .avia-repo-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.92); word-break: break-word; }
+        .avia-repo-author-row { display: flex; align-items: center; gap: 6px; }
+        .avia-repo-author-badge {
+            font-size: 10px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 4px;
+            padding: 1px 6px;
+            white-space: nowrap;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .avia-repo-desc { font-size: 11px; color: #fff; word-break: break-word; white-space: normal; line-height: 1.5; }
 
-            .avia-repo-install-btn {
-                padding: 5px 13px;
-                border-radius: 7px;
-                border: 1px solid rgba(255,255,255,0.12);
-                background: rgba(255,255,255,0.07);
-                color: rgba(255,255,255,0.85);
-                font-size: 12px;
-                font-weight: 500;
-                cursor: pointer;
-                flex-shrink: 0;
-                transition: background 0.15s, opacity 0.15s;
-                font-family: inherit;
-                white-space: nowrap;
-            }
-            .avia-repo-install-btn:hover:not(:disabled) { background: rgba(255,255,255,0.13); }
-            .avia-repo-install-btn:disabled { opacity: 0.4; cursor: default; }
+        .avia-repo-install-btn {
+            padding: 5px 13px;
+            border-radius: 7px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.07);
+            color: rgba(255,255,255,0.85);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background 0.15s, opacity 0.15s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .avia-repo-install-btn:hover:not(:disabled) { background: rgba(255,255,255,0.13); }
+        .avia-repo-install-btn:disabled { opacity: 0.4; cursor: default; }
 
-            .avia-repo-theme-card {
-                border-radius: 10px;
-                background: rgba(255,255,255,0.04);
-                border: 1px solid rgba(255,255,255,0.06);
-                overflow: hidden;
-                margin-bottom: 8px;
-                transition: background 0.15s, border-color 0.15s;
-            }
-            .avia-repo-theme-card:hover {
-                background: rgba(255,255,255,0.06);
-                border-color: rgba(255,255,255,0.10);
-            }
-            .avia-repo-theme-preview {
-                width: 100%;
-                display: block;
-                object-fit: cover;
-            }
-            .avia-repo-theme-info {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 9px 12px;
-                gap: 8px;
-            }
-            .avia-repo-theme-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.92); }
-            .avia-repo-theme-author { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+        .avia-repo-theme-card {
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            overflow: hidden;
+            margin-bottom: 8px;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .avia-repo-theme-card:hover {
+            background: rgba(255,255,255,0.06);
+            order-color: rgba(255,255,255,0.10);
+        }
+        .avia-repo-theme-preview {
+            width: 100%;
+            display: block;
+            object-fit: cover;
+        }
+        .avia-repo-theme-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 12px;
+            gap: 8px;
+        }
+        .avia-repo-theme-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.92); }
+        .avia-repo-theme-author { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
 
-            .avia-repo-tab {
-                padding: 8px 14px;
-                border: none;
-                background: transparent;
-                color: rgba(255,255,255,0.4);
-                font-size: 13px;
-                font-weight: 500;
-                cursor: pointer;
-                font-family: inherit;
-                position: relative;
-                transition: color 0.15s;
-                border-bottom: 2px solid transparent;
-                margin-bottom: -1px;
-            }
-            .avia-repo-tab:hover { color: rgba(255,255,255,0.75); }
-            .avia-repo-tab.active {
-                color: rgba(255,255,255,0.95);
-                border-bottom-color: rgba(255,255,255,0.55);
-            }
+        .avia-repo-tab {
+            padding: 8px 14px;
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.4);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            position: relative;
+            transition: color 0.15s;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+        }
+        .avia-repo-tab:hover { color: rgba(255,255,255,0.75); }
+        .avia-repo-tab.active {
+            color: rgba(255,255,255,0.95);
+            border-bottom-color: rgba(255,255,255,0.55);
+        }
 
-            .avia-repo-search {
-                width: 100%;
-                padding: 7px 10px;
-                border-radius: 8px;
-                border: 1px solid rgba(255,255,255,0.1);
-                outline: none;
-                background: rgba(255,255,255,0.05);
-                color: #fff;
-                font-size: 12px;
-                font-family: inherit;
-                transition: border-color 0.15s, background 0.15s;
-            }
-            .avia-repo-search::placeholder { color: rgba(255,255,255,0.3); }
-            .avia-repo-search:focus {
-                border-color: rgba(255,255,255,0.2);
-                background: rgba(255,255,255,0.07);
-            }
-            .avia-repo-count {
-                font-size: 10px;
-                font-weight: 500;
-                color: rgba(255,255,255,0.35);
-                background: rgba(255,255,255,0.06);
-                border-radius: 4px;
-                padding: 1px 6px;
-                margin-left: 4px;
-                vertical-align: middle;
-            }
+        .avia-repo-search {
+            width: 100%;
+            padding: 7px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            outline: none;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            font-size: 12px;
+            font-family: inherit;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .avia-repo-search::placeholder { color: rgba(255,255,255,0.3); }
+        .avia-repo-search:focus {
+            border-color: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.07);
+        }
 
-            .avia-repo-btn-group { display: flex; flex-direction: row; gap: 6px; flex-shrink: 0; align-items: flex-start; }
+        .avia-repo-count {
+            font-size: 10px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.35);
+            background: rgba(255,255,255,0.06);
+            border-radius: 4px;
+            padding: 1px 6px;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
 
-            .avia-repo-empty {
-                opacity: 0.35;
-                text-align: center;
-                margin-top: 40px;
-                font-size: 13px;
-                color: rgba(255,255,255,0.8);
-            }
-        `;
-        document.head.appendChild(style);
-    }
+        .avia-repo-btn-group { display: flex; flex-direction: row; gap: 6px; flex-shrink: 0; align-items: flex-start; }
 
-    function triggerManagerRefresh() {
-        const panel = document.getElementById("avia-plugins-panel");
-        if (!panel) return;
-        const refreshBtn = Array.from(panel.querySelectorAll("button"))
-            .find(b => b.textContent.trim() === "Refresh");
-        if (refreshBtn) refreshBtn.click();
-    }
+        .avia-repo-empty {
+            opacity: 0.35;
+            text-align: center;
+            margin-top: 40px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.8);
+        }
+    `;
+    document.head.appendChild(style);
+}
 
-    const LOCAL_STORAGE_KEY = "avia_local_plugins";
-    const getLocalPlugins = () => JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || "[]");
-    const setLocalPlugins = (data) => localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
 
-    function isInstalledLocally(name) {
-        return getLocalPlugins().some(p => p.name === name);
-    }
 
-    function rawUrlFromLink(link) {
-        try {
-            const u = new URL(link);
+function triggerManagerRefresh() {
+    const panel = document.getElementById("avia-plugins-panel");
+    if (!panel) return;
+    const refreshBtn = Array.from(panel.querySelectorAll("button"))
+        .find(b => b.textContent.trim() === "Refresh");
+    if (refreshBtn) refreshBtn.click();
+}
 
-            if (u.hostname === "github.com") {
-                const m = u.pathname.match(/^\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/);
-                if (m) {
-                    return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
-                }
-                return link;
-            }
-
-            if (u.hostname === "raw.githubusercontent.com") return link;
-
-            if (u.hostname === "raw.codeberg.page") return link;
-
-            if (u.hostname === "codeberg.org") {
-
-                if (u.pathname.startsWith("/api/v1/repos/")) return link;
-
-                const parts = u.pathname.split("/").filter(Boolean);
-
-                if (parts.length >= 5 && (parts[2] === "raw" || parts[2] === "src")) {
-                    const user       = parts[0];
-                    const repo       = parts[1];
-                    const branchName = parts[3] === "branch" || parts[3] === "commit" || parts[3] === "tag"
-                        ? parts[4]
-                        : parts[3];
-                    const fileStart  = parts[3] === "branch" || parts[3] === "commit" || parts[3] === "tag"
-                        ? 5
-                        : 4;
-                    const filePath   = parts.slice(fileStart).join("/");
-
-                    return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branchName}`;
-                }
-
-                if (parts.length >= 4 && parts[2] === "raw") {
-                    const user       = parts[0];
-                    const repo       = parts[1];
-                    const branchName = parts[3];
-                    const filePath   = parts.slice(4).join("/");
-
-                    return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branchName}`;
-                }
-
-                if (parts.length >= 5 && parts[2] === "src" && parts[3] === "branch") {
-                    const user     = parts[0];
-                    const repo     = parts[1];
-                    const branch   = parts[4];
-                    const filePath = parts.slice(5).join("/");
-                    return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branch}`;
-                }
-            }
-        } catch (_) {}
-        return link;
-    }
-
-    async function installToLocal(plugin, btn) {
-        btn.disabled = true;
-        btn.textContent = "Fetching…";
-
-        const rawUrl = rawUrlFromLink(plugin.link);
-
-        try {
-            const res = await fetch(rawUrl);
-            if (!res.ok) throw new Error("HTTP " + res.status);
-            const code = await res.text();
-
-            const locals = getLocalPlugins();
-            if (locals.some(p => p.name === plugin.name)) {
-                btn.textContent = "In Local";
-                return;
-            }
-
-            locals.push({
-                id: "local_" + Date.now() + "_" + Math.random().toString(36).slice(2),
-                name: plugin.name,
-                code,
-                enabled: false
-            });
-            setLocalPlugins(locals);
-
-            window.dispatchEvent(new Event("avia-local-plugin-list-changed"));
-
-            btn.textContent = "In Local";
-        } catch (e) {
+function updateInstallStates() {
+    if (!repoContent) return;
+    const installed = getPlugins().map(p => p.url);
+    repoContent.querySelectorAll("[data-link]").forEach(row => {
+        const link = row.getAttribute("data-link");
+        const btn = row.querySelector("button.install-btn");
+        if (!btn) return;
+        if (installed.includes(link)) {
+            btn.textContent = "Installed";
+            btn.disabled = true;
+        } else {
+            btn.textContent = "Install";
             btn.disabled = false;
-            btn.textContent = "Local ✕";
-            setTimeout(() => {
-                btn.textContent = "Install to local";
-                btn.disabled = false;
-            }, 2000);
         }
-    }
+    });
+}
 
-    function updateInstallStates() {
-        if (!repoContent) return;
-        const installed = getPlugins().map(p => p.url);
-        repoContent.querySelectorAll("[data-link]").forEach(card => {
-            const link = card.getAttribute("data-link");
-            const name = card.getAttribute("data-name");
-            const btn = card.querySelector("button.install-btn");
-            const localBtn = card.querySelector("button.local-install-btn");
-            if (btn) {
-                if (installed.includes(link)) {
-                    btn.textContent = "Installed";
-                    btn.disabled = true;
-                } else {
-                    btn.textContent = "Install";
-                    btn.disabled = false;
-                }
+const LOCAL_STORAGE_KEY = "avia_local_plugins";
+const getLocalPlugins = () => JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || "[]");
+const setLocalPlugins = (data) => localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+
+function isInstalledLocally(name) {
+    return getLocalPlugins().some(p => p.name === name);
+}   
+
+function rawUrlFromLink(link) {
+    try {
+        const u = new URL(link);
+
+        if (u.hostname === "github.com") {
+            const m = u.pathname.match(/^\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/);
+            if (m) {
+                return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
             }
-            if (localBtn) {
-                if (isInstalledLocally(name)) {
-                    localBtn.textContent = "In Local";
-                    localBtn.disabled = true;
-                } else {
-                    localBtn.textContent = "Install to local";
-                    localBtn.disabled = false;
-                }
+            return link;
+        }
+
+        if (u.hostname === "raw.githubusercontent.com") return link;
+
+        if (u.hostname === "raw.codeberg.page") return link;
+
+        if (u.hostname === "codeberg.org") {
+
+            if (u.pathname.startsWith("/api/v1/repos/")) return link;
+
+            const parts = u.pathname.split("/").filter(Boolean);
+
+            if (parts.length >= 5 && (parts[2] === "raw" || parts[2] === "src")) {
+                const user       = parts[0];
+                const repo       = parts[1];
+                const branchName = parts[3] === "branch" || parts[3] === "commit" || parts[3] === "tag"
+                    ? parts[4]
+                    : parts[3];
+                const fileStart  = parts[3] === "branch" || parts[3] === "commit" || parts[3] === "tag"
+                    ? 5
+                    : 4;
+                const filePath   = parts.slice(fileStart).join("/");
+
+                return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branchName}`;
             }
-        });
-    }
 
-    function renderRepo(data, filter = "") {
-        if (!repoContent) return;
-        currentRepoData = data.plugins;
-        repoContent.innerHTML = "";
+            if (parts.length >= 4 && parts[2] === "raw") {
+                const user       = parts[0];
+                const repo       = parts[1];
+                const branchName = parts[3];
+                const filePath   = parts.slice(4).join("/");
 
-        const filtered = currentRepoData.filter(p =>
-            (p.name + " " + (p.author || "") + " " + (p.description || ""))
-                .toLowerCase().includes(filter.toLowerCase())
-        );
+                return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branchName}`;
+            }
 
-        if (filtered.length === 0) {
-            repoContent.innerHTML = `<div class="avia-repo-empty">No plugins found.</div>`;
+            if (parts.length >= 5 && parts[2] === "src" && parts[3] === "branch") {
+                const user     = parts[0];
+                const repo     = parts[1];
+                const branch   = parts[4];
+                const filePath = parts.slice(5).join("/");
+                return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branch}`;
+            }
+        }
+    } catch (_) {}
+    return link;
+}
+
+async function installToLocal(plugin, btn) {
+    btn.disabled = true;
+    btn.textContent = "Fetching…";
+
+    const rawUrl = rawUrlFromLink(plugin.link);
+
+    try {
+        const res = await fetch(rawUrl);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const code = await res.text();
+
+        const locals = getLocalPlugins();
+        if (locals.some(p => p.name === plugin.name)) {
+            btn.textContent = "In Local";
             return;
         }
 
-        filtered.forEach(repoPlugin => {
-            const card = document.createElement("div");
-            card.className = "avia-repo-plugin-card";
-            card.setAttribute("data-link", repoPlugin.link);
-            card.setAttribute("data-name", repoPlugin.name);
-
-            const topRow = document.createElement("div");
-            topRow.style.cssText = "display:flex;align-items:flex-start;gap:10px;";
-
-            const nameMeta = document.createElement("div");
-            nameMeta.style.cssText = "display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;";
-
-            const name = document.createElement("div");
-            name.className = "avia-repo-name";
-            name.textContent = repoPlugin.name;
-
-            const authorRow = document.createElement("div");
-            authorRow.className = "avia-repo-author-row";
-
-            const authorBadge = document.createElement("span");
-            authorBadge.className = "avia-repo-author-badge";
-            authorBadge.textContent = repoPlugin.author || "Unknown";
-            authorRow.appendChild(authorBadge);
-
-            nameMeta.appendChild(name);
-            nameMeta.appendChild(authorRow);
-
-            const btnGroup = document.createElement("div");
-            btnGroup.className = "avia-repo-btn-group";
-
-            const localBtn = document.createElement("button");
-            localBtn.className = "avia-repo-install-btn local-install-btn";
-            localBtn.textContent = "Install to local";
-            localBtn.onclick = () => installToLocal(repoPlugin, localBtn);
-
-            const installBtn = document.createElement("button");
-            installBtn.className = "avia-repo-install-btn install-btn";
-            installBtn.onclick = () => {
-                const plugins = getPlugins();
-                if (!plugins.some(p => p.url === repoPlugin.link)) {
-                    plugins.push({ name: repoPlugin.name, url: repoPlugin.link, enabled: false });
-                    setPlugins(plugins);
-                    window.dispatchEvent(new Event("avia-plugin-list-changed"));
-                    triggerManagerRefresh();
-                    renderRepo({ plugins: currentRepoData }, searchInput.value);
-                }
-            };
-
-            btnGroup.appendChild(localBtn);
-            btnGroup.appendChild(installBtn);
-
-            topRow.appendChild(nameMeta);
-            topRow.appendChild(btnGroup);
-            card.appendChild(topRow);
-
-            if (repoPlugin.description) {
-                const desc = document.createElement("div");
-                desc.className = "avia-repo-desc";
-                desc.textContent = repoPlugin.description;
-                card.appendChild(desc);
-            }
-
-            repoContent.appendChild(card);
+        locals.push({
+            id: "local_" + Date.now() + "_" + Math.random().toString(36).slice(2),
+            name: plugin.name,
+            code,
+            enabled: false
         });
+        setLocalPlugins(locals);
 
-        updateInstallStates();
+        window.dispatchEvent(new Event("avia-local-plugin-list-changed"));
+
+        btn.textContent = "In Local";
+    } catch (e) {
+        btn.disabled = false;
+        btn.textContent = "Local ✕";
+        setTimeout(() => {
+            btn.textContent = "Install to local";
+            btn.disabled = false;
+        }, 2000);
     }
+}
 
-    function refetchPlugins() {
-        if (!repoContent) return;
-        repoContent.innerHTML = `<div class="avia-repo-empty">Loading plugins…</div>`;
-
-        function electronFetch() {
-            try {
-                const https = require("https");
-                https.get(OFFICIAL_REPO_URL, res => {
-                    let data = "";
-                    res.on("data", chunk => data += chunk);
-                    res.on("end", () => renderRepo(JSON.parse(data)));
-                }).on("error", () => {
-                    repoContent.innerHTML = `<div class="avia-repo-empty">Failed to fetch plugins.</div>`;
-                });
-            } catch {
-                repoContent.innerHTML = `<div class="avia-repo-empty">Failed to fetch plugins.</div>`;
-            }
-        }
-
-        try {
-            fetch(OFFICIAL_REPO_URL)
-                .then(res => res.json())
-                .then(data => renderRepo(data))
-                .catch(() => electronFetch());
-        } catch {
-            electronFetch();
-        }
-    }
-
-    const THEMES_STORAGE_KEY = "avia_themes";
-    const getStoredThemes = () => JSON.parse(localStorage.getItem(THEMES_STORAGE_KEY) || "[]");
-    const setStoredThemes = (data) => localStorage.setItem(THEMES_STORAGE_KEY, JSON.stringify(data));
-
-    function installThemeCSS(theme, btn) {
-        btn.disabled = true;
-        btn.textContent = "Installing…";
-
-        fetch(theme.download)
-            .then(r => r.text())
-            .then(rawCSS => {
-                const themes = getStoredThemes();
-
-                const alreadyInstalled = themes.some(t => {
-                    const match = t.css.match(/@name\s+(.+)/);
-                    return match && match[1].trim() === theme.name;
-                });
-
-                if (alreadyInstalled) {
-                    btn.textContent = "Installed";
-                    return;
-                }
-
-                themes.push({ id: crypto.randomUUID(), css: rawCSS, enabled: true });
-                setStoredThemes(themes);
-
-                document.querySelectorAll(".avia-theme-style").forEach(e => e.remove());
-                getStoredThemes().forEach(t => {
-                    if (!t.enabled) return;
-                    const s = document.createElement("style");
-                    s.className = "avia-theme-style";
-                    s.textContent = t.css;
-                    document.head.appendChild(s);
-                });
-
-                if (typeof window.__avia_refresh_themes_panel === "function") {
-                    window.__avia_refresh_themes_panel();
-                }
-
+function updateInstallStates() {
+    if (!repoContent) return;
+    const installed = getPlugins().map(p => p.url);
+    repoContent.querySelectorAll("[data-link]").forEach(card => {
+        const link = card.getAttribute("data-link");
+        const name = card.getAttribute("data-name");
+        const btn = card.querySelector("button.install-btn");
+        const localBtn = card.querySelector("button.local-install-btn");
+        if (btn) {
+            if (installed.includes(link)) {
                 btn.textContent = "Installed";
-            })
-            .catch(() => {
-                btn.textContent = "Install CSS";
+                btn.disabled = true;
+            } else {
+                btn.textContent = "Install";
                 btn.disabled = false;
-                alert("Failed to fetch theme CSS.");
-            });
+            }
+        }
+        if (localBtn) {
+            if (isInstalledLocally(name)) {
+                localBtn.textContent = "In Local";
+                localBtn.disabled = true;
+            } else {
+                localBtn.textContent = "Install to local";
+                localBtn.disabled = false;
+            }
+        }
+    });
+}
+
+function renderRepo(data, filter = "") {
+    if (!repoContent) return;
+
+    currentRepoData = data.plugins;
+    repoContent.innerHTML = "";
+
+    const filtered = currentRepoData.filter(p =>
+        (p.name + " " + (p.author || "") + " " + (p.description || ""))
+            .toLowerCase()
+            .includes(filter.toLowerCase())
+    );
+
+    if (filtered.length === 0) {
+        repoContent.innerHTML = `<div style="opacity:0.5;text-align:center;margin-top:30px;">No plugins found.</div>`;
+        return;
     }
 
-    function renderThemes(filter = "") {
-        if (!repoContent) return;
-        repoContent.innerHTML = "";
+    filtered.forEach(repoPlugin => {
+        const card = document.createElement("div");
+        card.className = "avia-repo-plugin-card";
+        card.setAttribute("data-link", repoPlugin.link);
+        card.setAttribute("data-name", repoPlugin.name);
 
-        const filtered = currentThemeData.filter(t =>
-            (t.name + " " + (t.author || ""))
-                .toLowerCase().includes(filter.toLowerCase())
-        );
+        const topRow = document.createElement("div");
+        topRow.style.cssText = "display:flex;align-items:flex-start;gap:10px;";
 
-        if (filtered.length === 0) {
-            repoContent.innerHTML = `<div class="avia-repo-empty">No themes found.</div>`;
-            return;
+        const nameMeta = document.createElement("div");
+        nameMeta.style.cssText = "display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;";
+
+        const name = document.createElement("div");
+        name.className = "avia-repo-name";
+        name.textContent = repoPlugin.name;
+
+        const authorRow = document.createElement("div");
+        authorRow.className = "avia-repo-author-row";
+
+        const authorBadge = document.createElement("span");
+        authorBadge.className = "avia-repo-author-badge";
+        authorBadge.textContent = repoPlugin.author || "Unknown";
+        authorRow.appendChild(authorBadge);
+
+        nameMeta.appendChild(name);
+        nameMeta.appendChild(authorRow);
+
+        const btnGroup = document.createElement("div");
+        btnGroup.className = "avia-repo-btn-group";
+
+        const localBtn = document.createElement("button");
+        localBtn.className = "avia-repo-install-btn local-install-btn";
+        localBtn.textContent = "Install to local";
+        localBtn.onclick = () => installToLocal(repoPlugin, localBtn);
+
+        const installBtn = document.createElement("button");
+        installBtn.className = "avia-repo-install-btn install-btn";
+        installBtn.onclick = () => {
+            const plugins = getPlugins();
+            if (!plugins.some(p => p.url === repoPlugin.link)) {
+                plugins.push({ name: repoPlugin.name, url: repoPlugin.link, enabled: false });
+                setPlugins(plugins);
+                window.dispatchEvent(new Event("avia-plugin-list-changed"));
+                triggerManagerRefresh();
+                renderRepo({ plugins: currentRepoData }, searchInput.value);
+            }
+        };
+
+        btnGroup.appendChild(localBtn);
+        btnGroup.appendChild(installBtn);
+
+        topRow.appendChild(nameMeta);
+        topRow.appendChild(btnGroup);
+        card.appendChild(topRow);
+
+        if (repoPlugin.description) {
+            const desc = document.createElement("div");
+            desc.className = "avia-repo-desc";
+            desc.textContent = repoPlugin.description;
+            card.appendChild(desc);
         }
 
-        filtered.forEach(theme => {
-            const card = document.createElement("div");
-            card.className = "avia-repo-theme-card";
+        repoContent.appendChild(card);
+    });
 
-            if (theme.preview) {
-                const img = document.createElement("img");
-                img.src = theme.preview;
-                img.alt = theme.name;
-                img.className = "avia-repo-theme-preview";
-                img.onerror = () => img.style.display = "none";
-                card.appendChild(img);
-            }
+    updateInstallStates();
+}
 
-            const info = document.createElement("div");
-            info.className = "avia-repo-theme-info";
+function refetchPlugins() {
+    if (!repoContent) return;
+    repoContent.innerHTML = "Loading...";
 
-            const metaDiv = document.createElement("div");
-            metaDiv.style.minWidth = "0";
-            metaDiv.style.flex = "1";
+    function electronFetch() {
+        try {
+            const https = require("https");
+            https.get(OFFICIAL_REPO_URL, res => {
+                let data = "";
+                res.on("data", chunk => data += chunk);
+                res.on("end", () => renderRepo(JSON.parse(data)));
+            }).on("error", () => {
+                repoContent.innerHTML = "Failed to fetch repo.";
+            });
+        } catch {
+            repoContent.innerHTML = "Failed to fetch repo.";
+        }
+    }
 
-            const nameDv = document.createElement("div");
-            nameDv.className = "avia-repo-theme-name";
-            nameDv.textContent = theme.name;
+    try {
+        fetch(OFFICIAL_REPO_URL)
+            .then(res => res.json())
+            .then(data => renderRepo(data))
+            .catch(() => electronFetch());
+    } catch {
+        electronFetch();
+    }
+}
 
-            const authorDv = document.createElement("div");
-            authorDv.className = "avia-repo-theme-author";
-            authorDv.textContent = theme.author || "Unknown";
+const THEMES_STORAGE_KEY = "avia_themes";
+const getStoredThemes = () => JSON.parse(localStorage.getItem(THEMES_STORAGE_KEY) || "[]");
+const setStoredThemes = (data) => localStorage.setItem(THEMES_STORAGE_KEY, JSON.stringify(data));
 
-            metaDiv.appendChild(nameDv);
-            metaDiv.appendChild(authorDv);
+function installThemeCSS(theme, btn) {
+    btn.disabled = true;
+    btn.textContent = "Installing…";
 
-            const alreadyInstalled = getStoredThemes().some(t => {
+    fetch(theme.download)
+        .then(r => r.text())
+        .then(rawCSS => {
+            const css = buildThemeCSS(theme, rawCSS);
+            const themes = getStoredThemes();
+
+            const alreadyInstalled = themes.some(t => {
                 const match = t.css.match(/@name\s+(.+)/);
                 return match && match[1].trim() === theme.name;
             });
 
-            const dlBtn = document.createElement("button");
-            dlBtn.className = "avia-repo-install-btn";
-            dlBtn.textContent = alreadyInstalled ? "Installed" : "Install CSS";
-            dlBtn.disabled = alreadyInstalled;
-            dlBtn.onclick = () => installThemeCSS(theme, dlBtn);
+            if (alreadyInstalled) {
+                btn.textContent = "Installed";
 
-            info.appendChild(metaDiv);
-            info.appendChild(dlBtn);
-            card.appendChild(info);
-            repoContent.appendChild(card);
-        });
-    }
+                return;
+            }
 
-    function refetchThemes() {
-        if (!repoContent) return;
-        repoContent.innerHTML = `<div class="avia-repo-empty">Loading themes…</div>`;
-        currentThemeData = [];
+            themes.push({ id: crypto.randomUUID(), css, enabled: true });
+            setStoredThemes(themes);
 
-        fetch(THEMES_REGISTRY_URL)
-            .then(r => r.json())
-            .then(async registry => {
-                const sources = registry.sources || [];
-                const results = await Promise.allSettled(
-                    sources.map(s => fetch(s.url).then(r => r.json()))
-                );
-                results.forEach(r => {
-                    if (r.status === "fulfilled") currentThemeData.push(...(r.value.themes || []));
-                });
-                renderThemes(searchInput.value);
-            })
-            .catch(() => {
-                if (repoContent) repoContent.innerHTML = `<div class="avia-repo-empty">Failed to fetch themes.</div>`;
+            document.querySelectorAll(".avia-theme-style").forEach(e => e.remove());
+            getStoredThemes().forEach(t => {
+                if (!t.enabled) return;
+                const style = document.createElement("style");
+                style.className = "avia-theme-style";
+                style.textContent = t.css;
+                document.head.appendChild(style);
             });
+
+            if (typeof window.__avia_refresh_themes_panel === "function") {
+                window.__avia_refresh_themes_panel();
+            }
+
+            btn.textContent = "Installed";
+
+        })
+        .catch(() => {
+            btn.textContent = "Install CSS";
+            btn.disabled = false;
+            alert("Failed to fetch theme CSS.");
+        });
+}
+
+function renderThemes(filter = "") {
+    if (!repoContent) return;
+    repoContent.innerHTML = "";
+
+    const filtered = currentThemeData.filter(t =>
+        (t.name + " " + (t.author || ""))
+            .toLowerCase().includes(filter.toLowerCase())
+    );
+
+    if (filtered.length === 0) {
+        repoContent.innerHTML = `<div class="avia-repo-empty">No themes found.</div>`;
+        return;
     }
 
-    function switchTab(tab, tabPluginsBtn, tabThemesBtn) {
-        activeTab = tab;
-        tabPluginsBtn.classList.toggle("active", tab === "plugins");
-        tabThemesBtn.classList.toggle("active", tab === "themes");
+    filtered.forEach(theme => {
+        const card = document.createElement("div");
+        card.className = "avia-repo-theme-card";
 
-        searchInput.placeholder = tab === "plugins"
-            ? "Search plugins or authors…"
-            : "Search themes or authors…";
-        searchInput.value = "";
-
-        if (tab === "plugins") {
-            if (currentRepoData.length > 0) renderRepo({ plugins: currentRepoData });
-            else refetchPlugins();
-        } else {
-            if (currentThemeData.length > 0) renderThemes();
-            else refetchThemes();
-        }
-    }
-
-    function openWindow() {
-        let panel = document.getElementById("avia-official-repo-window");
-        if (panel) {
-            panel.style.display = panel.style.display === "none" ? "flex" : "none";
-            return;
+        if (theme.preview) {
+            const img = document.createElement("img");
+            img.src = theme.preview;
+            img.alt = theme.name;
+            img.className = "avia-repo-theme-preview";
+            img.onerror = () => img.style.display = "none";
+            card.appendChild(img);
         }
 
-        injectStyles();
+        const info = document.createElement("div");
+        info.className = "avia-repo-theme-info";
 
-        panel = document.createElement("div");
-        panel.id = "avia-official-repo-window";
-        if(window.outerWidth<486){
-            const width = window.outerWidth-66
-            Object.assign(panel.style, {
-                position: "fixed",
-                bottom: "24px",
-                right: "40px",
-                width: `${width}px`,
-                height: `${width+100}px`,
-                background: "var(--md-sys-color-surface, #1e1e1e)",
-                color: "var(--md-sys-color-on-surface, #fff)",
-                borderRadius: "16px",
-                boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
-                zIndex: "999999",
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-                border: "1px solid rgba(255,255,255,0.08)",
-                backdropFilter: "blur(12px)"
-            });
-        }else{
-            Object.assign(panel.style, {
-                position: "fixed",
-                bottom: "24px",
-                right: "40px",
-                width: "420px",
-                height: "520px",
-                background: "var(--md-sys-color-surface, #1e1e1e)",
-                color: "var(--md-sys-color-on-surface, #fff)",
-                borderRadius: "16px",
-                boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
-                zIndex: "999999",
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-                border: "1px solid rgba(255,255,255,0.08)",
-                backdropFilter: "blur(12px)"
-            });
-        }
+        const metaDiv = document.createElement("div");
+        metaDiv.style.minWidth = "0";
+        metaDiv.style.flex = "1";
 
-        const header = document.createElement("div");
-        Object.assign(header.style, {
-            padding: "13px 16px",
-            fontWeight: "600",
-            fontSize: "14px",
-            background: "var(--md-sys-color-surface-container, rgba(255,255,255,0.04))",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            cursor: "move",
-            position: "relative",
-            textAlign: "center",
-            userSelect: "none",
-            flexShrink: "0"
-        });
-        header.textContent = "Plugins & Themes Repo";
+        const nameDv = document.createElement("div");
+        nameDv.className = "avia-repo-theme-name";
+        nameDv.textContent = theme.name;
 
-        const close = document.createElement("div");
-        close.textContent = "✕";
-        Object.assign(close.style, {
-            position: "absolute",
-            right: "14px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            cursor: "pointer",
-            opacity: "0.5",
-            fontSize: "13px",
-            lineHeight: "1"
-        });
-        close.onmouseenter = () => close.style.opacity = "1";
-        close.onmouseleave = () => close.style.opacity = "0.5";
-        close.onclick = () => panel.style.display = "none";
-        header.appendChild(close);
+        const authorDv = document.createElement("div");
+        authorDv.className = "avia-repo-theme-author";
+        authorDv.textContent = theme.author || "Unknown";
 
-        let isDragging = false, offsetX = 0, offsetY = 0;
-        header.addEventListener("mousedown", e => {
-            isDragging = true;
-            const rect = panel.getBoundingClientRect();
-            offsetX = e.clientX - rect.left;
-            offsetY = e.clientY - rect.top;
-            panel.style.bottom = "auto";
-            panel.style.right = "auto";
-            panel.style.left = rect.left + "px";
-            panel.style.top = rect.top + "px";
-            document.body.style.userSelect = "none";
-        });
-        document.addEventListener("mousemove", e => {
-            if (!isDragging) return;
-            panel.style.left = e.clientX - offsetX + "px";
-            panel.style.top = e.clientY - offsetY + "px";
-        });
-        document.addEventListener("mouseup", () => {
-            isDragging = false;
-            document.body.style.userSelect = "";
+        metaDiv.appendChild(nameDv);
+        metaDiv.appendChild(authorDv);
+
+        const alreadyInstalled = getStoredThemes().some(t => {
+            const match = t.css.match(/@name\s+(.+)/);
+            return match && match[1].trim() === theme.name;
         });
 
-        const tabBar = document.createElement("div");
-        Object.assign(tabBar.style, {
-            display: "flex",
-            padding: "0 12px",
-            background: "rgba(255,255,255,0.02)",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            flexShrink: "0"
-        });
+        const dlBtn = document.createElement("button");
+        dlBtn.className = "avia-repo-install-btn";
+        dlBtn.textContent = alreadyInstalled ? "Installed" : "Install CSS";
+        dlBtn.disabled = alreadyInstalled;
+        dlBtn.onclick = () => installThemeCSS(theme, dlBtn);
 
-        const tabPluginsBtn = document.createElement("button");
-        tabPluginsBtn.className = "avia-repo-tab";
-        tabPluginsBtn.textContent = "Plugins";
+        info.appendChild(metaDiv);
+        info.appendChild(dlBtn);
+        card.appendChild(info);
+        repoContent.appendChild(card);
+    });
+}
 
-        const tabThemesBtn = document.createElement("button");
-        tabThemesBtn.className = "avia-repo-tab";
-        tabThemesBtn.textContent = "Themes";
+function refetchThemes() {
+    if (!repoContent) return;
+    repoContent.innerHTML = "Loading themes...";
+    currentThemeData = [];
 
-        tabPluginsBtn.onclick = () => switchTab("plugins", tabPluginsBtn, tabThemesBtn);
-        tabThemesBtn.onclick = () => switchTab("themes", tabPluginsBtn, tabThemesBtn);
-
-        tabBar.appendChild(tabPluginsBtn);
-        tabBar.appendChild(tabThemesBtn);
-
-        const searchWrap = document.createElement("div");
-        Object.assign(searchWrap.style, {
-            padding: "10px 12px",
-            flexShrink: "0",
-            borderBottom: "1px solid rgba(255,255,255,0.06)"
-        });
-
-        searchInput = document.createElement("input");
-        searchInput.className = "avia-repo-search";
-        searchInput.placeholder = "Search plugins or authors…";
-        searchInput.addEventListener("input", () => {
-            if (activeTab === "plugins") renderRepo({ plugins: currentRepoData }, searchInput.value);
-            else renderThemes(searchInput.value);
-        });
-
-        searchWrap.appendChild(searchInput);
-
-        repoContent = document.createElement("div");
-        repoContent.id = "avia-repo-content";
-        Object.assign(repoContent.style, {
-            flex: "1",
-            overflowY: "auto",
-            overflowX: "hidden",
-            padding: "10px 12px 12px"
-        });
-
-        panel.appendChild(header);
-        panel.appendChild(tabBar);
-        panel.appendChild(searchWrap);
-        panel.appendChild(repoContent);
-        document.body.appendChild(panel);
-
-        switchTab("plugins", tabPluginsBtn, tabThemesBtn);
-        refetchPlugins();
-    }
-
-    function injectSettingsButton() {
-        if (document.getElementById("avia-official-repo-btn-settings")) return;
-
-        const appearanceBtn = [...document.querySelectorAll("a")]
-            .find(a => a.textContent.trim() === "Appearance");
-        const referenceNode = document.getElementById("stoat-fake-quickcss");
-        if (!appearanceBtn || !referenceNode) return;
-
-        const clone = appearanceBtn.cloneNode(true);
-        clone.id = "avia-official-repo-btn-settings";
-
-        const label = [...clone.querySelectorAll("div")].find(d => d.children.length === 0);
-        if (label) label.textContent = "(Avia)  Plugins/Themes Repo";
-
-        const iconSpan = clone.querySelector("span.material-symbols-outlined");
-        if (iconSpan) {
-            iconSpan.textContent = "extension";
-            iconSpan.style.fontVariationSettings = "'FILL' 0,'wght' 400,'GRAD' 0";
-        }
-
-        clone.onclick = openWindow;
-        referenceNode.parentElement.insertBefore(clone, referenceNode.nextSibling);
-    }
-
-    function registerWithAviaMenu() {
-        if (window.AviaMenu) {
-            window.AviaMenu.register({ id: "avia_official_repo", name: "Plugins & Themes Repo", icon: "palette", onClick: openWindow });
-        } else {
-            const interval = setInterval(() => {
-                if (window.AviaMenu) {
-                    clearInterval(interval);
-                    window.AviaMenu.register({ id: "avia_official_repo", name: "Plugins & Themes Repo", icon: "palette", onClick: openWindow });
+    fetch(THEMES_REGISTRY_URL)
+        .then(r => r.json())
+        .then(async registry => {
+            const sources = registry.sources || [];
+            const results = await Promise.allSettled(
+                sources.map(s => fetch(s.url).then(r => r.json()))
+            );
+            results.forEach(r => {
+                if (r.status === "fulfilled") {
+                    currentThemeData.push(...(r.value.themes || []));
                 }
-            }, 100);
-        }
+            });
+            renderThemes(searchInput.value);
+        })
+        .catch(() => {
+            if (repoContent) repoContent.innerHTML = "Failed to fetch themes.";
+        });
+}
+
+function switchTab(tab, tabPluginsBtn, tabThemesBtn) {
+    activeTab = tab;
+    const isPlugins = tab === "plugins";
+
+    tabPluginsBtn.style.background = isPlugins ? "rgba(255,255,255,0.12)" : "transparent";
+    tabPluginsBtn.style.color = isPlugins ? "#fff" : "rgba(255,255,255,0.45)";
+    tabThemesBtn.style.background = !isPlugins ? "rgba(255,255,255,0.12)" : "transparent";
+    tabThemesBtn.style.color = !isPlugins ? "#fff" : "rgba(255,255,255,0.45)";
+
+    searchInput.placeholder = isPlugins
+        ? "Search plugins, authors, or descriptions"
+        : "Search themes or authors";
+    searchInput.value = "";
+
+    if (isPlugins) {
+        if (currentRepoData.length > 0) renderRepo({ plugins: currentRepoData });
+        else refetchPlugins();
+    } else {
+        if (currentThemeData.length > 0) renderThemes();
+        else refetchThemes();
+    }
+}
+
+function openWindow() {
+    let panel = document.getElementById("avia-official-repo-window");
+    if (panel) {
+        panel.style.display = panel.style.display === "none" ? "flex" : "none";
+        return;
     }
 
-    window.addEventListener("avia-plugin-list-changed", () => {
-        if (document.getElementById("avia-official-repo-window")) updateInstallStates();
+    injectStyles()
+
+    panel = document.createElement("div");
+    panel.id = "avia-official-repo-window";
+    if(window.outerWidth<486){
+        const width = window.outerWidth-66
+        Object.assign(panel.style, {
+            position: "fixed",
+            bottom: "24px",
+            right: "40px",
+            width: `${width}px`,
+            height: `${width+100}px`,
+            background: "var(--md-sys-color-surface, #1e1e1e)",
+            color: "var(--md-sys-color-on-surface, #fff)",
+            borderRadius: "16px",
+            boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
+            zIndex: "999999",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(12px)"
+        });
+    }else{
+        Object.assign(panel.style, {
+            position: "fixed",
+            bottom: "24px",
+            right: "40px",
+            width: "420px",
+            height: "520px",
+            background: "var(--md-sys-color-surface, #1e1e1e)",
+            color: "var(--md-sys-color-on-surface, #fff)",
+            borderRadius: "16px",
+            boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
+            zIndex: "999999",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(12px)"
+        });
+    }
+
+    const header = document.createElement("div");
+   Object.assign(header.style, {
+        padding: "13px 16px",
+        fontWeight: "600",
+        fontSize: "14px",
+        background: "var(--md-sys-color-surface-container, rgba(255,255,255,0.04))",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        cursor: "move",
+        position: "relative",
+        textAlign: "center",
+        userSelect: "none",
+        flexShrink: "0"
+    });
+    header.textContent = "Plugins & Themes Repo";
+
+    const close = document.createElement("div");
+    close.textContent = "✕";
+    Object.assign(close.style, {
+        position: "absolute",
+        right: "14px",
+        top: "50%",
+        transform: "translateY(-50%)",
+        cursor: "pointer",
+        opacity: "0.5",
+        fontSize: "13px",
+        lineHeight: "1"
+    });
+    close.onmouseenter = () => close.style.opacity = "1";
+    close.onmouseleave = () => close.style.opacity = "0.5";
+    close.onclick = () => panel.style.display = "none";
+    header.appendChild(close);
+
+    let isDragging = false, offsetX = 0, offsetY = 0;
+    header.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        const rect = panel.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        panel.style.bottom = "auto";
+        panel.style.right = "auto";
+        panel.style.left = rect.left + "px";
+        panel.style.top = rect.top + "px";
+        document.body.style.userSelect = "none";
+    });
+    document.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+        panel.style.left = e.clientX - offsetX + "px";
+        panel.style.top = e.clientY - offsetY + "px";
+    });
+    document.addEventListener("mouseup", () => {
+        isDragging = false;
+        document.body.style.userSelect = "";
     });
 
-    window.addEventListener("avia-local-plugin-list-changed", () => {
-        if (document.getElementById("avia-official-repo-window")) updateInstallStates();
+    const tabBar = document.createElement("div");
+    Object.assign(tabBar.style, {
+        display: "flex",
+        padding: "0 12px",
+        background: "rgba(255,255,255,0.02)",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        flexShrink: "0"
     });
 
-    new MutationObserver(() => injectSettingsButton())
-        .observe(document.body, { childList: true, subtree: true });
+    const tabPluginsBtn = document.createElement("button");
+    tabPluginsBtn.className = "avia-repo-tab";
+    tabPluginsBtn.textContent = "Plugins";
 
-    injectSettingsButton();
-    registerWithAviaMenu();
+    const tabThemesBtn = document.createElement("button");
+    tabThemesBtn.className = "avia-repo-tab";
+    tabThemesBtn.textContent = "Themes";
+
+    tabPluginsBtn.onclick = () => switchTab("plugins", tabPluginsBtn, tabThemesBtn);
+    tabThemesBtn.onclick = () => switchTab("themes", tabPluginsBtn, tabThemesBtn);
+
+    tabBar.appendChild(tabPluginsBtn);
+    tabBar.appendChild(tabThemesBtn);
+
+    const searchWrap = document.createElement("div");
+    Object.assign(searchWrap.style, {
+        padding: "10px 12px",
+        flexShrink: "0",
+        borderBottom: "1px solid rgba(255,255,255,0.06)"
+    });
+
+    searchInput = document.createElement("input");
+    searchInput.className = "avia-repo-search";
+    searchInput.placeholder = "Search plugins or authors…";
+    searchInput.addEventListener("input", () => {
+        if (activeTab === "plugins") renderRepo({ plugins: currentRepoData }, searchInput.value);
+        else renderThemes(searchInput.value);
+    });
+
+    searchWrap.appendChild(searchInput);
+
+    repoContent = document.createElement("div");
+    repoContent.id = "avia-repo-content";
+    Object.assign(repoContent.style, {
+        flex: "1",
+        overflowY: "auto",
+        overflowX: "hidden",
+        padding: "10px 12px 12px"
+    });
+
+    panel.appendChild(header);
+    panel.appendChild(tabBar);
+    panel.appendChild(searchWrap);
+    panel.appendChild(repoContent);
+    document.body.appendChild(panel);
+
+    switchTab("plugins", tabPluginsBtn, tabThemesBtn);
+    refetchPlugins();
+}
+
+function injectSettingsButton() {
+    if (document.getElementById("avia-official-repo-btn-settings")) return;
+
+    const appearanceBtn = [...document.querySelectorAll("a")]
+        .find(a => a.textContent.trim() === "Appearance");
+    const referenceNode = document.getElementById("stoat-fake-quickcss");
+    if (!appearanceBtn || !referenceNode) return;
+
+    const clone = appearanceBtn.cloneNode(true);
+    clone.id = "avia-official-repo-btn-settings";
+
+    const label = [...clone.querySelectorAll("div")].find(d => d.children.length === 0);
+    if (label) label.textContent = "(Avia)  Plugins/Themes Repo";
+
+    const iconSpan = clone.querySelector("span.material-symbols-outlined");
+    if (iconSpan) {
+        iconSpan.textContent = "extension";
+        iconSpan.style.fontVariationSettings = "'FILL' 0,'wght' 400,'GRAD' 0";
+    }
+
+    clone.onclick = openWindow;
+    referenceNode.parentElement.insertBefore(clone, referenceNode.nextSibling);
+}
+
+function registerWithAviaMenu() {
+    if (window.AviaMenu) {
+        window.AviaMenu.register({ id: "avia_official_repo", name: "Plugins & Themes Repo", icon: "palette", onClick: openWindow });
+    } else {
+        const interval = setInterval(() => {
+            if (window.AviaMenu) {
+                clearInterval(interval);
+                window.AviaMenu.register({ id: "avia_official_repo", name: "Plugins & Themes Repo", icon: "palette", onClick: openWindow });
+            }
+        }, 100);
+    }
+}
+
+window.addEventListener("avia-plugin-list-changed", () => {
+    if (document.getElementById("avia-official-repo-window")) {
+        updateInstallStates();
+    }
+});
+
+new MutationObserver(() => injectSettingsButton())
+    .observe(document.body, { childList: true, subtree: true });
+
+injectSettingsButton();
+registerWithAviaMenu();
 
 })();
 
@@ -5936,10 +7046,6 @@ if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SE
         server.addEventListener('touchcancel',()=>{
             stop()
         })
-
-        server.addEventListener('touchmove',(e)=>{
-          stop()
-        });
 
         server.dataset.patched=true
       }
@@ -6151,6 +7257,51 @@ if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SE
 
   // Also try immediately in case page already loaded
   inject();
+
+})();
+
+
+/* --- ShiftNewLine.js --- */
+if(window.__US_BUILDER_SHIFTNEWLINE_JS__){return;}window.__US_BUILDER_SHIFTNEWLINE_JS__=true;
+
+(function () {
+
+  function hookEditor(editor) {
+    if (editor.__shiftNewLineHooked) return;
+    editor.__shiftNewLineHooked = true;
+
+    editor.addEventListener("keydown", (e) => {
+
+      if (e.key == "Enter"){
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        const button = editor.parentElement.parentElement.parentElement.parentElement.nextSibling
+
+        if(e.shiftKey){
+            const line = document.createElement('div')
+            line.className='cm-line'
+
+            const br = document.createElement('br')
+            line.appendChild(br)
+            editor.appendChild(line)
+        }else if(button&&!button.disabled){
+            button.click()
+        }
+      }
+    }, true);
+
+  }
+
+  const observer = new MutationObserver(() => {
+    const editor = document.querySelector(".cm-content[contenteditable='true']");
+    if (editor) hookEditor(editor);
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
 
 })();
 
@@ -7673,7 +8824,7 @@ if(window.__US_BUILDER_WHATSNEW_JS__){return;}window.__US_BUILDER_WHATSNEW_JS__=
 
 /* --- Embedded Themes --- */
 const __BUILDER_THEMES__ = [
-  {id:"CSS_CSS",name:"css.css",css:"/*Fixs Attachment files with text showing inside to only show half way*/\n.d_grid[style*=\"width: 420px\"]:has(pre code) {\n  width: 100% !important;\n  max-width: 100% !important;\n  height: auto !important;\n}\n\n/* Fix bio overflow, showing the full bio */\n#floating div.will-change_transform > div > div.ov_hidden:last-child {\n    aspect-ratio: unset;\n}\n\n/* Makes scrolling server and channel lists without accidentally reordering them possible */\n.scr-bar-w_none {\n    scrollbar-width: thin;\n    overflow-x:hidden;\n}\n\n/* Align Voice Call button to top right */\n[class=\"top_var(--gap-md) p_var(--gap-md) w_100% pos_absolute z_2 us_none d_flex ai_center flex-d_column\"] {\n    align-items: end;\n}\n\n/*Make Voice Call button smaller*/\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px {\n\n  width: 240px !important;   /* was 360px */ /*Now 240*/\n  height: 80px !important;   /* was 120px */ /*Now 80*/\n\n  border-radius: 12px;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px span {\n  \n  font-size: 0.85rem !important;\n  line-height: 1.1 !important;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px .material-symbols-outlined {\n  \n  font-size: 18px !important;\n}\n/*Normal Version*/\n\n/* Shrink placeholder text */\n.cm-placeholder {\n    font-size: 10px !important;\n}\n\n/*Shrink text in chat bar */\n[class='cm-line']{\n    font-size : 10px;\n}\n\n/*Shrink search bar placeholder text*/\n[class='h_40px w_240px px_16px bdr_var(--borderRadius-full) bg_var(--md-sys-color-surface-container-high)']{\n    font-size:10px;\n}\n\n/*Shrink channel names*/\n[class='white-space_nowrap [&_*]:white-space_nowrap lh_1.5rem fs_1rem ls_0.009375rem fw_550']{\n    font-size:10px;\n}\n[class='gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0']{\n    font-size:10px;\n}\n\nimg[class='cursor_pointer']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\na[href]{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\nvideo{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\npre[class='d_flex ov_auto scr-bar-w_thin flex-d_column']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\n/* Remove Rounded Edges*/\nmain.bdr_var\\(--borderRadius-xl\\) {\n    border-radius: 0 !important;\n    margin: 0 !important;\n}\n\n/*Make The Status Card Not Clip When User Has Long Status*/\ndiv.asp_1\\/1:has(> span.us_text) {\n    aspect-ratio: auto !important;\n    height: fit-content !important;\n    overflow: visible !important;\n}\n\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)']{\n    overflow-y :auto;\n}\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg) ov-y_scroll! ov-x_hidden!']{\n    overflow-y :auto;\n}\n",enabled:true},
+  {id:"CSS_CSS",name:"css.css",css:"/*Fixs Attachment files with text showing inside to only show half way*/\n.d_grid[style*=\"width: 420px\"]:has(pre code) {\n  width: 100% !important;\n  max-width: 100% !important;\n  height: auto !important;\n}\n\n/* Fix bio overflow, showing the full bio */\n#floating div.will-change_transform > div > div.ov_hidden:last-child {\n    aspect-ratio: unset;\n}\n\n/* Makes scrolling server and channel lists without accidentally reordering them possible */\n.scr-bar-w_none {\n    scrollbar-width: thin;\n    overflow-x:hidden;\n}\n\n/* Align Voice Call button to top right */\n[class=\"top_var(--gap-md) p_var(--gap-md) w_100% pos_absolute z_2 us_none d_flex ai_center flex-d_column\"] {\n    align-items: end;\n}\n\n/*Make Voice Call button smaller*/\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px {\n\n  width: 240px !important;   /* was 360px */ /*Now 240*/\n  height: 80px !important;   /* was 120px */ /*Now 80*/\n\n  border-radius: 12px;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px span {\n  \n  font-size: 0.85rem !important;\n  line-height: 1.1 !important;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px .material-symbols-outlined {\n  \n  font-size: 18px !important;\n}\n/*Normal Version*/\n\n/* Shrink placeholder text */\n.cm-placeholder {\n    font-size: 10px !important;\n}\n\n/*Shrink text in chat bar */\n[class='cm-line']{\n    font-size : 10px;\n}\n\n/*Shrink search bar placeholder text*/\n[class='h_40px w_240px px_16px bdr_var(--borderRadius-full) bg_var(--md-sys-color-surface-container-high)']{\n    font-size:10px;\n}\n\n/*Shrink channel names*/\n[class='white-space_nowrap [&_*]:white-space_nowrap lh_1.5rem fs_1rem ls_0.009375rem fw_550']{\n    font-size:10px;\n}\n[class='gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0']{\n    font-size:10px;\n}\n\nimg[class='cursor_pointer']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\na[href]{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\nvideo{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\npre[class='d_flex ov_auto scr-bar-w_thin flex-d_column']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\n/* Remove Rounded Edges*/\nmain.bdr_var\\(--borderRadius-xl\\) {\n    border-radius: 0 !important;\n    margin: 0 !important;\n}\n\n/* Make The Status Card Not Clip When User Has Long Status */\ndiv.asp_1\\/1:has(> span.us_text),\ndiv.asp_1\\/1:has(> div > span.us_text) {\n    aspect-ratio: auto !important;\n    height: fit-content !important;\n    overflow: visible !important;\n}\n\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)']{\n    overflow-y :auto;\n}\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg) ov-y_scroll! ov-x_hidden!']{\n    overflow-y :auto;\n}\n\n/*Make emoji picker scrollable horizontally*/\ndiv[class='will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll flex-g_1']:has(div[class*='virtual-container']){\n    overflow-x:scroll;\n}",enabled:true},
 ];
 ;(function(){
   try{
