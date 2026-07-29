@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name        Avia Client Mobile DEV
 // @namespace   userscript.builder
-// @version     1.8.2
-// @description Avia Client Mobile by 0simp. Based on Avia Client 1.7.1 by AvaLilac
+// @version     1.9
+// @description Avia Client Mobile by 0simp. Based on Avia Client 1.8.1 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-07-15T21:59:53.060Z';
-window.__USERSCRIPT_VERSION__ = "1.8";
+'@preserve - Built on 2026-07-29T21:25:33.082Z';
+window.__USERSCRIPT_VERSION__ = "1.9";
 
 /* --- 3TapRely.js --- */
 if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=true;
@@ -79,6 +79,540 @@ if(window.__US_BUILDER_3TAPRELY_JS__){return;}window.__US_BUILDER_3TAPRELY_JS__=
     requestAnimationFrame(init);
   }
 })();
+
+
+/* --- AccountSwitcher.js --- */
+if(window.__US_BUILDER_ACCOUNTSWITCHER_JS__){return;}window.__US_BUILDER_ACCOUNTSWITCHER_JS__=true;
+
+(function () {
+    if (window.__ACCOUNT_SWITCHER__) return;
+    window.__ACCOUNT_SWITCHER__ = true;
+
+    const LS_KEY = "accountswitcher";
+    const CDN = "https://cdn.stoatusercontent.com";
+    const API = "https://api.stoat.chat";
+
+    function openDB() {
+        return new Promise((resolve, reject) => {
+            const r = indexedDB.open("localforage");
+            r.onsuccess = () => resolve(r.result);
+            r.onerror = () => reject(r.error);
+        });
+    }
+
+    async function getTokens() {
+        try {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const r = db.transaction("keyvaluepairs", "readonly")
+                            .objectStore("keyvaluepairs").get(LS_KEY);
+                r.onsuccess = () => resolve(Array.isArray(r.result) ? r.result : []);
+                r.onerror = () => reject(r.error);
+            });
+        } catch { return []; }
+    }
+
+    async function saveTokens(arr) {
+        try {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const r = db.transaction("keyvaluepairs", "readwrite")
+                            .objectStore("keyvaluepairs").put(arr, LS_KEY);
+                r.onsuccess = () => resolve();
+                r.onerror = () => reject(r.error);
+            });
+        } catch {}
+    }
+
+    async function addToken(token) {
+        const tokens = (await getTokens()).filter(t => t !== token);
+        tokens.push(token);
+        await saveTokens(tokens);
+    }
+
+    async function removeToken(token) {
+        await saveTokens((await getTokens()).filter(t => t !== token));
+    }
+
+    async function getCurrentToken() {
+        try {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const r = db.transaction("keyvaluepairs", "readonly")
+                            .objectStore("keyvaluepairs").get("auth");
+                r.onsuccess = () => resolve(r.result?.session?.token || null);
+                r.onerror = () => reject(r.error);
+            });
+        } catch { return null; }
+    }
+
+    async function loginWithToken(token) {
+        const db = await openDB();
+        const res = await fetch(`${API}/users/@me`, {
+            headers: { "x-session-token": token }
+        });
+        if (!res.ok) throw new Error("Token is invalid or expired");
+        const user = await res.json();
+        await new Promise((resolve, reject) => {
+            const r = db.transaction("keyvaluepairs", "readwrite")
+                        .objectStore("keyvaluepairs")
+                        .put({ session: { _id: user._id, token, userId: user._id, valid: true } }, "auth");
+            r.onsuccess = () => resolve();
+            r.onerror = () => reject(r.error);
+        });
+        location.href = "https://stoat.chat/app";
+    }
+
+    async function fetchProfile(token) {
+        try {
+            const res = await fetch(`${API}/users/@me`, {
+                headers: { "x-session-token": token }
+            });
+            if (!res.ok) return null;
+            const u = await res.json();
+            return {
+                displayName: u.display_name || u.username || "Unknown",
+                username: u.username || "",
+                avatarUrl: u.avatar ? `${CDN}/avatars/${u.avatar._id}` : null
+            };
+        } catch { return null; }
+    }
+
+    async function loginWithCredentials(email, password) {
+        const res = await fetch("https://api.stoat.chat/auth/session/login", {
+            method: "POST",
+            headers: { "accept": "application/json", "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password, friendly_name: "AviaAccountSwitcher" })
+        });
+        const data = await res.json();
+        if (!res.ok || data.result !== "Success") {
+            throw new Error(data.type || data.result || "Login failed");
+        }
+        await addToken(data.token);
+        return data.token;
+    }
+
+    function ensureStyles() {
+        if (document.getElementById("avia-accsw-styles")) return;
+        const s = document.createElement("style");
+        s.id = "avia-accsw-styles";
+        s.textContent = `
+            @keyframes accsw-scrim-in { from{opacity:0}to{opacity:1} }
+            @keyframes accsw-modal-in { from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)} }
+            #accsw-modal { animation: accsw-modal-in 0.15s forwards; }
+            .accsw-btn {
+                height:40px; border-radius:999px; border:none; padding:0 16px;
+                font-size:0.875rem; font-weight:500; cursor:pointer;
+                display:flex; align-items:center; justify-content:center;
+                transition:opacity 0.15s; font-family:inherit;
+            }
+            .accsw-btn:hover{opacity:0.8}
+            .accsw-btn:disabled{cursor:not-allowed;opacity:0.38}
+            .accsw-field {
+                width:100%; box-sizing:border-box; padding:13px 14px;
+                border-radius:12px; border:1px solid rgba(255,255,255,0.12);
+                background:rgba(255,255,255,0.06); color:var(--md-sys-color-on-surface,#fff);
+                font-size:0.875rem; outline:none; font-family:inherit;
+                transition:border-color 0.15s;
+            }
+            .accsw-field:focus{border-color:var(--md-sys-color-primary,rgba(103,80,164,0.9))}
+            .accsw-field::placeholder{color:rgba(255,255,255,0.35)}
+            .accsw-list{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;scrollbar-width:thin;}
+            .accsw-list::-webkit-scrollbar{width:3px}
+            .accsw-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:3px}
+            .accsw-item {
+                display:flex; align-items:center; gap:12px; padding:10px 14px;
+                border-radius:12px; background:rgba(255,255,255,0.04);
+                border:1px solid rgba(255,255,255,0.07);
+                cursor:pointer; transition:background 0.12s; user-select:none;
+            }
+            .accsw-item:hover{background:rgba(255,255,255,0.09)}
+            .accsw-item.loading{opacity:0.5;pointer-events:none}
+            .accsw-avatar {
+                width:40px; height:40px; border-radius:50%; flex-shrink:0;
+                background:var(--md-sys-color-primary,rgba(103,80,164,0.9));
+                display:flex; align-items:center; justify-content:center;
+                font-size:16px; font-weight:700; color:#fff; overflow:hidden;
+                text-transform:uppercase;
+            }
+            .accsw-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+            .accsw-info{flex:1;min-width:0}
+            .accsw-name{font-size:14px;font-weight:600;color:var(--md-sys-color-on-surface,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            .accsw-sub{font-size:11px;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            .accsw-del{background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.2);font-size:13px;padding:4px 6px;border-radius:6px;flex-shrink:0;transition:color 0.12s;line-height:1}
+            .accsw-del:hover{color:rgba(255,80,80,0.8)}
+            .accsw-empty{text-align:center;color:rgba(255,255,255,0.3);font-size:13px;padding:24px 0;font-style:italic}
+            .accsw-warning{background:rgba(255,180,0,0.1);border:1px solid rgba(255,180,0,0.25);border-radius:10px;padding:10px 14px;font-size:12px;color:rgba(255,200,80,0.9);line-height:1.5}
+            .accsw-hr{border:none;border-top:1px solid rgba(255,255,255,0.07);margin:18px 0}
+            .accsw-feedback{font-size:12px;min-height:16px;margin-top:4px;transition:color 0.15s}
+            .accsw-icon-btn {
+                width:36px;height:36px;border-radius:50%;border:none;
+                background:rgba(255,255,255,0.08); cursor:pointer;
+                display:flex;align-items:center;justify-content:center;
+                color:var(--md-sys-color-on-surface,#fff);
+                transition:background 0.15s; flex-shrink:0;
+            }
+            .accsw-icon-btn:hover{background:rgba(255,255,255,0.15)}
+            .accsw-icon-btn .material-symbols-outlined{font-size:20px;display:block;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0}
+        `;
+        document.head.appendChild(s);
+    }
+
+    function buildLoginForm(onSuccess) {
+        const wrap = document.createElement("div");
+        Object.assign(wrap.style, { display:"flex", flexDirection:"column", gap:"10px" });
+
+        const emailInput = document.createElement("input");
+        emailInput.className = "accsw-field";
+        emailInput.type = "email";
+        emailInput.placeholder = "Email";
+
+        const passInput = document.createElement("input");
+        passInput.className = "accsw-field";
+        passInput.type = "password";
+        passInput.placeholder = "Password";
+
+        const feedback = document.createElement("div");
+        feedback.className = "accsw-feedback";
+
+        const row = document.createElement("div");
+        Object.assign(row.style, { display:"flex", justifyContent:"flex-end", gap:"8px" });
+
+        const cancelBtn = document.createElement("button");
+        cancelBtn.textContent = "Cancel";
+        cancelBtn.className = "accsw-btn";
+        Object.assign(cancelBtn.style, { color:"var(--md-sys-color-primary,#cfbcff)", background:"transparent" });
+
+        const submitBtn = document.createElement("button");
+        submitBtn.textContent = "Add Account";
+        submitBtn.className = "accsw-btn";
+        Object.assign(submitBtn.style, { background:"var(--md-sys-color-primary,rgba(103,80,164,0.9))", color:"#fff" });
+
+        submitBtn.onclick = async () => {
+            const email = emailInput.value.trim();
+            const pass = passInput.value;
+            if (!email || !pass) {
+                feedback.textContent = "Please enter both email and password.";
+                feedback.style.color = "rgba(255,100,100,0.9)";
+                return;
+            }
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Adding...";
+            feedback.textContent = "";
+            try {
+                await loginWithCredentials(email, pass);
+                feedback.textContent = "Account added!";
+                feedback.style.color = "rgba(100,220,100,0.9)";
+                emailInput.value = "";
+                passInput.value = "";
+                onSuccess();
+            } catch (err) {
+                feedback.textContent = "Error: " + (err.message || "Unknown error");
+                feedback.style.color = "rgba(255,100,100,0.9)";
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Add Account";
+            }
+        };
+
+        row.appendChild(cancelBtn);
+        row.appendChild(submitBtn);
+        wrap.appendChild(emailInput);
+        wrap.appendChild(passInput);
+        wrap.appendChild(feedback);
+        wrap.appendChild(row);
+
+        return { wrap, cancelBtn };
+    }
+
+    async function renderList(listEl, statusEl) {
+        listEl.innerHTML = "";
+        statusEl.textContent = "Loading accounts...";
+        statusEl.style.color = "rgba(255,255,255,0.35)";
+
+        const tokens = await getTokens();
+        if (!tokens.length) {
+            listEl.innerHTML = `<div class="accsw-empty">No accounts saved. Click + to add one.</div>`;
+            statusEl.textContent = "";
+            return;
+        }
+
+        statusEl.textContent = `Fetching ${tokens.length} account(s)...`;
+        const profiles = await Promise.all(tokens.map(t => fetchProfile(t).then(p => ({ token: t, profile: p }))));
+        statusEl.textContent = "";
+        listEl.innerHTML = "";
+
+        [...profiles].reverse().forEach(({ token, profile }) => {
+            const item = document.createElement("div");
+            item.className = "accsw-item";
+            item.title = "Click to switch to this account";
+
+            const avatar = document.createElement("div");
+            avatar.className = "accsw-avatar";
+            if (profile && profile.avatarUrl) {
+                const img = document.createElement("img");
+                img.src = profile.avatarUrl;
+                img.onerror = () => { img.remove(); avatar.textContent = (profile.displayName || "?")[0]; };
+                avatar.appendChild(img);
+            } else {
+                avatar.textContent = profile ? (profile.displayName || "?")[0] : "?";
+            }
+
+            const info = document.createElement("div");
+            info.className = "accsw-info";
+            const nameEl = document.createElement("div");
+            nameEl.className = "accsw-name";
+            nameEl.textContent = profile ? profile.displayName : "Unable to fetch";
+            const subEl = document.createElement("div");
+            subEl.className = "accsw-sub";
+            subEl.textContent = profile ? (profile.username ? `@${profile.username}` : "") : "Token may be expired";
+            info.appendChild(nameEl);
+            info.appendChild(subEl);
+
+            const delBtn = document.createElement("button");
+            delBtn.className = "accsw-del";
+            delBtn.textContent = "✕";
+            delBtn.title = "Remove account";
+            delBtn.onclick = async (e) => {
+                e.stopPropagation();
+                await removeToken(token);
+                await renderList(listEl, statusEl);
+            };
+
+            item.onclick = async () => {
+                item.classList.add("loading");
+                try {
+                    await loginWithToken(token);
+                } catch (err) {
+                    item.classList.remove("loading");
+                    subEl.textContent = "Switch failed: " + (err.message || "error");
+                    subEl.style.color = "rgba(255,100,100,0.8)";
+                    nameEl.textContent = "Unable to switch";
+                }
+            };
+
+            item.appendChild(avatar);
+            item.appendChild(info);
+            item.appendChild(delBtn);
+            listEl.appendChild(item);
+        });
+    }
+
+    async function openModal() {
+        if (document.getElementById("accsw-scrim")) return;
+        ensureStyles();
+
+        const scrim = document.createElement("div");
+        scrim.id = "accsw-scrim";
+        Object.assign(scrim.style, {
+            position:"fixed", top:"0", left:"0", right:"0", bottom:"0",
+            zIndex:"9999999", display:"grid", placeItems:"center",
+            background:"rgba(0,0,0,0.65)", padding:"60px",
+            overflowY:"auto", animation:"accsw-scrim-in 0.1s forwards",
+            boxSizing:"border-box"
+        });
+        scrim.addEventListener("click", e => { if (e.target === scrim) scrim.remove(); });
+
+        const modal = document.createElement("div");
+        modal.id = "accsw-modal";
+        Object.assign(modal.style, {
+            padding:"28px", minWidth:"340px", maxWidth:"420px", width:"100%",
+            borderRadius:"28px", display:"flex", flexDirection:"column",
+            color:"var(--md-sys-color-on-surface,#fff)",
+            background:"var(--md-sys-color-surface-container-high,#2b2b2f)",
+            boxSizing:"border-box", gap:"0"
+        });
+
+        const headerRow = document.createElement("div");
+        Object.assign(headerRow.style, {
+            display:"flex", alignItems:"center", justifyContent:"space-between",
+            marginBottom:"14px"
+        });
+
+        const title = document.createElement("span");
+        title.textContent = "Account Switcher";
+        Object.assign(title.style, { fontSize:"1.5rem", fontWeight:"400", lineHeight:"2rem" });
+
+        const headerBtns = document.createElement("div");
+        Object.assign(headerBtns.style, { display:"flex", gap:"8px", alignItems:"center" });
+
+        const addCurrentBtn = document.createElement("button");
+        addCurrentBtn.className = "accsw-icon-btn";
+        addCurrentBtn.title = "Save currently logged-in account";
+        const saveIcon = document.createElement("span");
+        saveIcon.className = "material-symbols-outlined";
+        saveIcon.textContent = "bookmark_add";
+        addCurrentBtn.appendChild(saveIcon);
+        addCurrentBtn.onclick = async () => {
+            addCurrentBtn.disabled = true;
+            try {
+                const tok = await getCurrentToken();
+                if (!tok) { alert("Could not find a session token. Are you logged in?"); return; }
+                const tokens = await getTokens();
+                if (tokens.includes(tok)) { alert("This account is already saved."); return; }
+                await addToken(tok);
+                await renderList(listEl, statusEl);
+            } finally { addCurrentBtn.disabled = false; }
+        };
+
+        const plusBtn = document.createElement("button");
+        plusBtn.className = "accsw-icon-btn";
+        plusBtn.title = "Add account with email and password";
+        const plusIcon = document.createElement("span");
+        plusIcon.className = "material-symbols-outlined";
+        plusIcon.textContent = "add";
+        plusBtn.appendChild(plusIcon);
+
+        headerBtns.appendChild(addCurrentBtn);
+        headerBtns.appendChild(plusBtn);
+        headerRow.appendChild(title);
+        headerRow.appendChild(headerBtns);
+        modal.appendChild(headerRow);
+
+        const warning = document.createElement("div");
+        warning.className = "accsw-warning";
+        warning.textContent = "Accounts with two-factor authentication are not supported.";
+        Object.assign(warning.style, { marginBottom:"16px" });
+        modal.appendChild(warning);
+
+        const statusEl = document.createElement("div");
+        Object.assign(statusEl.style, { fontSize:"12px", color:"rgba(255,255,255,0.35)", marginBottom:"8px", minHeight:"16px" });
+        modal.appendChild(statusEl);
+
+        const listEl = document.createElement("div");
+        listEl.className = "accsw-list";
+        Object.assign(listEl.style, { marginBottom:"8px" });
+        modal.appendChild(listEl);
+
+        const formHr = document.createElement("hr");
+        formHr.className = "accsw-hr";
+        formHr.style.display = "none";
+        modal.appendChild(formHr);
+
+        const formContainer = document.createElement("div");
+        formContainer.style.display = "none";
+        modal.appendChild(formContainer);
+
+        const bottomRow = document.createElement("div");
+        Object.assign(bottomRow.style, { display:"flex", justifyContent:"flex-end", marginTop:"16px" });
+        const closeBtn = document.createElement("button");
+        closeBtn.textContent = "Close";
+        closeBtn.className = "accsw-btn";
+        Object.assign(closeBtn.style, { color:"var(--md-sys-color-primary,#cfbcff)", background:"transparent" });
+        closeBtn.onclick = () => scrim.remove();
+        bottomRow.appendChild(closeBtn);
+        modal.appendChild(bottomRow);
+
+        let formVisible = false;
+        plusBtn.onclick = () => {
+            formVisible = !formVisible;
+            if (formVisible) {
+                formHr.style.display = "block";
+                formContainer.style.display = "block";
+                const { wrap, cancelBtn } = buildLoginForm(async () => {
+                    await renderList(listEl, statusEl);
+                });
+                formContainer.innerHTML = "";
+                formContainer.appendChild(wrap);
+                cancelBtn.onclick = () => {
+                    formVisible = false;
+                    formHr.style.display = "none";
+                    formContainer.style.display = "none";
+                };
+            } else {
+                formHr.style.display = "none";
+                formContainer.style.display = "none";
+            }
+        };
+
+        scrim.appendChild(modal);
+        document.body.appendChild(scrim);
+        await renderList(listEl, statusEl);
+    }
+
+    const CTX_BTN_ID = "avia-accsw-ctx-btn";
+
+    function findProfileAnchorInMenu() {
+
+        const anchors = document.querySelectorAll("a");
+        for (const a of anchors) {
+            const svg = a.querySelector('svg[viewBox="0 0 32 32"]');
+            if (!svg || !svg.querySelector("foreignObject")) continue;
+
+            const textDiv = a.querySelector("div > span, div span");
+            if (!textDiv) continue;
+            const spans = a.querySelectorAll("span");
+            if (spans.length < 2) continue;
+
+            const hasTag = Array.from(spans).some(s => s.textContent.includes("#"));
+            if (!hasTag) continue;
+            return a;
+        }
+        return null;
+    }
+
+    function injectContextMenuButton() {
+        const existing = document.getElementById(CTX_BTN_ID);
+        if (existing && !document.body.contains(existing)) existing.remove();
+        if (document.getElementById(CTX_BTN_ID)) return;
+
+        const profileAnchor = findProfileAnchorInMenu();
+        if (!profileAnchor) return;
+        const container = profileAnchor.parentElement;
+        if (!container) return;
+
+        const btn = document.createElement("a");
+        btn.id = CTX_BTN_ID;
+        btn.className = "d_flex gap_var(--gap-md) ai_center p_var(--gap-md)_var(--gap-lg) [&:hover]:bg_color-mix(in_srgb,_var(--md-sys-color-on-surface)_8%,_transparent) [&_span]:flex-g_1 [&_span]:mt_1px cursor_pointer";
+        btn.style.cssText = "cursor:pointer;user-select:none;";
+
+        const iconWrap = document.createElement("div");
+        iconWrap.style.cssText = "width:16px;display:flex;justify-content:center;align-items:center;flex-shrink:0;";
+        iconWrap.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M287-527q-47-47-47-113t47-113q47-47 113-47t113 47q47 47 47 113t-47 113q-47 47-113 47t-113-47ZM80-160v-112q0-33 17-62t47-44q51-26 115-44t141-18h14q6 0 12 2-8 18-13.5 37.5T404-360h-4q-71 0-127.5 18T180-306q-9 5-14.5 14t-5.5 20v32h252q6 21 16 41.5t22 38.5H80Zm560 40-12-60q-12-5-22.5-10.5T584-204l-58 18-40-68 46-40q-2-14-2-26t2-26l-46-40 40-68 58 18q11-8 21.5-13.5T628-460l12-60h80l12 60q12 5 22.5 11t21.5 15l58-20 40 70-46 40q2 12 2 25t-2 25l46 40-40 68-58-18q-11 8-21.5 13.5T732-180l-12 60h-80Zm96.5-143.5Q760-287 760-320t-23.5-56.5Q713-400 680-400t-56.5 23.5Q600-353 600-320t23.5 56.5Q647-240 680-240t56.5-23.5Zm-280-320Q480-607 480-640t-23.5-56.5Q433-720 400-720t-56.5 23.5Q320-673 320-640t23.5 56.5Q367-560 400-560t56.5-23.5ZM400-640Zm12 400Z"/></svg>`;
+
+        const label = document.createElement("span");
+        label.className = "ov-wrap_anywhere lh_1.25rem fs_0.875rem ls_0.015625rem fw_400";
+        label.textContent = "Switch Accounts";
+
+        btn.appendChild(iconWrap);
+        btn.appendChild(label);
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openModal();
+        });
+
+        profileAnchor.insertAdjacentElement("afterend", btn);
+    }
+
+    function registerWithAviaMenu() {
+        const reg = () => window.AviaMenu && window.AviaMenu.register({
+            id: "avia_account_switcher",
+            name: "Account Switcher",
+            icon: "manage_accounts",
+            onClick: openModal
+        });
+        if (window.AviaMenu) reg();
+        else {
+            const iv = setInterval(() => { if (window.AviaMenu) { clearInterval(iv); reg(); } }, 100);
+        }
+    }
+
+    let rafPending = false;
+    const observer = new MutationObserver(() => {
+        if (rafPending) return;
+        rafPending = true;
+        requestAnimationFrame(() => {
+            rafPending = false;
+            injectContextMenuButton();
+        });
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+    registerWithAviaMenu();
+
+})();
+
 
 
 /* --- AttachmentContextMenuFix.js --- */
@@ -255,51 +789,41 @@ if(window.__US_BUILDER_ATTACHMENTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDE
 })();
 
 
-/* --- aviaclientcategory.user.js --- */
-if(window.__US_BUILDER_AVIACLIENTCATEGORY_USER_JS__){return;}window.__US_BUILDER_AVIACLIENTCATEGORY_USER_JS__=true;
-
-// ==UserScript==
-// @name         Avia Client Settings Category
-// @description  Adds avia client settings category.
-// @author       AvaLilac
-// @version      1.4
-// @match        *://*.stoat.chat/*
-// @grant        none
-// @inject-into  content
-// ==/UserScript==
+/* --- aviaclientcategory.js --- */
+if(window.__US_BUILDER_AVIACLIENTCATEGORY_JS__){return;}window.__US_BUILDER_AVIACLIENTCATEGORY_JS__=true;
 
 (function(){
-if(window.__AVIA_CATEGORY_SETTINGS__) return;
-window.__AVIA_CATEGORY_SETTINGS__ = true;
+    if(window.__AVIA_CATEGORY_SETTINGS__) return;
+    window.__AVIA_CATEGORY_SETTINGS__ = true;
 
-function inject(){
+    function inject(){
 
-  if(document.getElementById('avia-cloned-settings')) return;
+        if(document.getElementById('avia-cloned-settings')) return;
 
-  const spans = [...document.querySelectorAll('span')];
-  const target = spans.find(s => s.textContent.trim() === "User Settings");
-  if(!target) return;
+        const spans = [...document.querySelectorAll('span')];
+        const target = spans.find(s => s.textContent.trim() === "User Settings");
+        if(!target) return;
 
-  const container = target.closest('.d_flex.flex-d_column');
-  if(!container) return;
+        const container = target.parentElement;
+        if(!container) return;
 
-  const clone = container.cloneNode(true);
-  clone.id = "avia-cloned-settings";
+        const clone = container.cloneNode(true);
+        clone.id = "avia-cloned-settings";
 
-  const header = clone.querySelector('span');
-  if(header) header.textContent = "AVIA CLIENT SETTINGS";
+        const header = clone.querySelector('span');
+        if(header) header.textContent = "AVIA CLIENT SETTINGS";
 
-  const list = clone.querySelector('.d_flex.flex-d_column.gap_var\\(--gap-s\\)');
-  if(list) list.innerHTML = "";
+        const list = clone.querySelector('div:last-child');
+        if(list) list.innerHTML = "";
 
-  container.parentNode.insertBefore(clone, container.nextSibling);
-}
+        container.parentNode.insertBefore(clone, container.nextSibling);
+        }
 
-new MutationObserver(() => {
-  inject();
-}).observe(document.body, { childList: true, subtree: true });
+        new MutationObserver(() => {
+            inject();
+        }).observe(document.body, { childList: true, subtree: true });
 
-inject();
+    inject();
 
 })();
 
@@ -307,539 +831,509 @@ inject();
 /* --- aviafavsystem.user.js --- */
 if(window.__US_BUILDER_AVIAFAVSYSTEM_USER_JS__){return;}window.__US_BUILDER_AVIAFAVSYSTEM_USER_JS__=true;
 
-// ==UserScript==
-// @name         Avia Client favourite system
-// @description  Adds favourite system
-// @author       AvaLilac
-// @version      1.4
-// @match        *://*.stoat.chat/*
-// @grant        none
-// @inject-into  content
-// ==/UserScript==
-
 (function () {
+    if (window.__AVIA_FAVORITES_LOADED__) return;
+    window.__AVIA_FAVORITES_LOADED__ = true;
 
-if (window.__AVIA_FAVORITES_LOADED__) return;
-window.__AVIA_FAVORITES_LOADED__ = true;
+    const STORAGE_KEY = "avia_favorites";
 
-const STORAGE_KEY = "avia_favorites";
+    const getFavorites = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    const setFavorites = (data) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 
-const getFavorites = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-const setFavorites = (data) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    function extractYouTubeID(url) {
+        const reg = /(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([^&?/]+)/;
+        const match = url.match(reg);
+        return match ? match[1] : null;
+    }
 
-function extractYouTubeID(url) {
-    const reg = /(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([^&?/]+)/;
-    const match = url.match(reg);
-    return match ? match[1] : null;
-}
+    function fallbackCopy(text) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.cssText = "position:fixed;opacity:0;";
+        document.body.appendChild(ta);
+        ta.focus(); ta.select();
+        try { document.execCommand("copy"); } catch {}
+        document.body.removeChild(ta);
+    }
 
-function fallbackCopy(text) {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.style.cssText = "position:fixed;opacity:0;";
-    document.body.appendChild(ta);
-    ta.focus(); ta.select();
-    try { document.execCommand("copy"); } catch {}
-    document.body.removeChild(ta);
-}
+    function updateBadge() {
+        const badge = document.getElementById("avia-favorites-badge");
+        if (!badge) return;
+        const count = getFavorites().length;
+        badge.textContent = count;
+        badge.style.display = count > 0 ? "flex" : "none";
+    }
 
-function updateBadge() {
-    const badge = document.getElementById("avia-favorites-badge");
-    if (!badge) return;
-    const count = getFavorites().length;
-    badge.textContent = count;
-    badge.style.display = count > 0 ? "flex" : "none";
-}
+    function showToast(card, msg) {
+        const old = card.querySelector(".fav-toast");
+        if (old) old.remove();
+        const toast = document.createElement("div");
+        toast.className = "fav-toast";
+        toast.textContent = msg || "Copied!";
+        Object.assign(toast.style, {
+            position: "absolute",
+            bottom: "6px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "rgba(0,0,0,0.85)",
+            padding: "3px 8px",
+            borderRadius: "6px",
+            fontSize: "10px",
+            color: "#fff",
+            opacity: "0",
+            transition: "opacity 0.15s",
+            pointerEvents: "none",
+            whiteSpace: "nowrap",
+            zIndex: "3"
+        });
+        card.appendChild(toast);
+        requestAnimationFrame(() => toast.style.opacity = "1");
+        setTimeout(() => {
+            toast.style.opacity = "0";
+            setTimeout(() => toast.remove(), 150);
+        }, 1500);
+    }
 
-function showToast(card, msg) {
-    const old = card.querySelector(".fav-toast");
-    if (old) old.remove();
-    const toast = document.createElement("div");
-    toast.className = "fav-toast";
-    toast.textContent = msg || "Copied!";
-    Object.assign(toast.style, {
-        position: "absolute",
-        bottom: "6px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        background: "rgba(0,0,0,0.85)",
-        padding: "3px 8px",
-        borderRadius: "6px",
-        fontSize: "10px",
-        color: "#fff",
-        opacity: "0",
-        transition: "opacity 0.15s",
-        pointerEvents: "none",
-        whiteSpace: "nowrap",
-        zIndex: "3"
-    });
-    card.appendChild(toast);
-    requestAnimationFrame(() => toast.style.opacity = "1");
-    setTimeout(() => {
-        toast.style.opacity = "0";
-        setTimeout(() => toast.remove(), 150);
-    }, 1500);
-}
+    function flashDupe(url) {
+        const card = document.querySelector(`[data-fav-url="${CSS.escape(url)}"]`);
+        if (!card) return;
+        card.style.outline = "2px solid rgba(255,80,80,0.9)";
+        setTimeout(() => { card.style.outline = ""; }, 700);
+        card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
 
-function flashDupe(url) {
-    const card = document.querySelector(`[data-fav-url="${CSS.escape(url)}"]`);
-    if (!card) return;
-    card.style.outline = "2px solid rgba(255,80,80,0.9)";
-    setTimeout(() => { card.style.outline = ""; }, 700);
-    card.scrollIntoView({ behavior: "smooth", block: "nearest" });
-}
+    function buildCard(item, onRemove) {
+        const card = document.createElement("div");
+        card.dataset.favUrl = item.url;
+        Object.assign(card.style, {
+            position: "relative",
+            width: "90px",
+            height: "90px",
+            borderRadius: "12px",
+            overflow: "hidden",
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            cursor: "pointer",
+            flexShrink: "0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "border-color 0.2s, transform 0.15s"
+        });
 
-function buildCard(item, onRemove) {
-    const card = document.createElement("div");
-    card.dataset.favUrl = item.url;
-    Object.assign(card.style, {
-        position: "relative",
-        width: "90px",
-        height: "90px",
-        borderRadius: "12px",
-        overflow: "hidden",
-        background: "rgba(255,255,255,0.05)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        cursor: "pointer",
-        flexShrink: "0",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        transition: "border-color 0.2s, transform 0.15s"
-    });
+        const removeBtn = document.createElement("div");
+        removeBtn.textContent = "✕";
+        Object.assign(removeBtn.style, {
+            position: "absolute",
+            top: "4px",
+            right: "5px",
+            fontSize: "10px",
+            cursor: "pointer",
+            background: "rgba(0,0,0,0.7)",
+            color: "#fff",
+            padding: "1px 4px",
+            borderRadius: "4px",
+            zIndex: "2",
+            opacity: "0",
+            transition: "opacity 0.15s"
+        });
+        removeBtn.onclick = e => {
+            e.stopPropagation();
+            onRemove(item.url);
+        };
+        card.appendChild(removeBtn);
 
-    const removeBtn = document.createElement("div");
-    removeBtn.textContent = "✕";
-    Object.assign(removeBtn.style, {
-        position: "absolute",
-        top: "4px",
-        right: "5px",
-        fontSize: "10px",
-        cursor: "pointer",
-        background: "rgba(0,0,0,0.7)",
-        color: "#fff",
-        padding: "1px 4px",
-        borderRadius: "4px",
-        zIndex: "2",
-        opacity: "0",
-        transition: "opacity 0.15s"
-    });
-    removeBtn.onclick = e => {
-        e.stopPropagation();
-        onRemove(item.url);
-    };
-    card.appendChild(removeBtn);
+        card.addEventListener("mouseenter", () => {
+            card.style.borderColor = "rgba(255,255,255,0.25)";
+            card.style.transform = "scale(1.04)";
+            removeBtn.style.opacity = "1";
+        });
+        card.addEventListener("mouseleave", () => {
+            card.style.borderColor = "rgba(255,255,255,0.08)";
+            card.style.transform = "scale(1)";
+            removeBtn.style.opacity = "0";
+        });
 
-    card.addEventListener("mouseenter", () => {
-        card.style.borderColor = "rgba(255,255,255,0.25)";
-        card.style.transform = "scale(1.04)";
-        removeBtn.style.opacity = "1";
-    });
-    card.addEventListener("mouseleave", () => {
-        card.style.borderColor = "rgba(255,255,255,0.08)";
-        card.style.transform = "scale(1)";
-        removeBtn.style.opacity = "0";
-    });
-
-    const ytID = extractYouTubeID(item.url);
-    if (ytID) {
-        const img = new Image();
-        img.draggable = false;
-        img.src = `https://img.youtube.com/vi/${ytID}/hqdefault.jpg`;
-        Object.assign(img.style, { width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" });
-        img.onerror = () => fallback();
-        card.appendChild(img);
-    } else {
-        const ext = item.url.split(".").pop().split("?")[0].toLowerCase();
-        const isVideo = ["mp4", "webm", "mov", "gifv"].includes(ext);
-
-        if (isVideo) {
-            const video = document.createElement("video");
-            video.src = item.url.replace(".gifv", ".mp4");
-            video.autoplay = true; video.loop = true;
-            video.muted = true; video.playsInline = true;
-            video.draggable = false;
-            Object.assign(video.style, { width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" });
-            video.onerror = () => fallback();
-            card.appendChild(video);
-        } else {
+        const ytID = extractYouTubeID(item.url);
+        if (ytID) {
             const img = new Image();
             img.draggable = false;
-            img.src = item.url;
+            img.src = `https://img.youtube.com/vi/${ytID}/hqdefault.jpg`;
             Object.assign(img.style, { width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" });
             img.onerror = () => fallback();
             card.appendChild(img);
-        }
-    }
+        } else {
+            const ext = item.url.split(".").pop().split("?")[0].toLowerCase();
+            const isVideo = ["mp4", "webm", "mov", "gifv"].includes(ext);
 
-    function fallback() {
-        [...card.children].forEach(c => { if (c !== removeBtn) c.remove(); });
-        const inner = document.createElement("div");
-        Object.assign(inner.style, {
-            display: "flex", flexDirection: "column", alignItems: "center",
-            justifyContent: "center", gap: "4px", padding: "6px",
-            width: "100%", height: "100%", boxSizing: "border-box", pointerEvents: "none"
-        });
-        const icon = document.createElement("span");
-        icon.className = "material-symbols-outlined";
-        icon.textContent = "link";
-        icon.style.cssText = "font-size:20px;opacity:0.35;color:#fff;display:block;";
-        inner.appendChild(icon);
-        const label = document.createElement("div");
+            if (isVideo) {
+                const video = document.createElement("video");
+                video.src = item.url.replace(".gifv", ".mp4");
+                video.autoplay = true; video.loop = true;
+                video.muted = true; video.playsInline = true;
+                video.draggable = false;
+                Object.assign(video.style, { width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" });
+                video.onerror = () => fallback();
+                card.appendChild(video);
+            } else {
+                const img = new Image();
+                img.draggable = false;
+                img.src = item.url;
+                Object.assign(img.style, { width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" });
+                img.onerror = () => fallback();
+                card.appendChild(img);
+            }
+        }
+
+        function fallback() {
+            [...card.children].forEach(c => { if (c !== removeBtn) c.remove(); });
+            const inner = document.createElement("div");
+            Object.assign(inner.style, {
+                display: "flex", flexDirection: "column", alignItems: "center",
+                justifyContent: "center", gap: "4px", padding: "6px",
+                width: "100%", height: "100%", boxSizing: "border-box", pointerEvents: "none"
+            });
+            const icon = document.createElement("span");
+            icon.className = "material-symbols-outlined";
+            icon.textContent = "link";
+            icon.style.cssText = "font-size:20px;opacity:0.35;color:#fff;display:block;";
+            inner.appendChild(icon);
+            const label = document.createElement("div");
+            if (item.title) {
+                label.textContent = item.title;
+            } else {
+                try { label.textContent = new URL(item.url).hostname.replace("www.", ""); } catch { label.textContent = "link"; }
+            }
+            Object.assign(label.style, {
+                fontSize: "9px", color: "#fff", opacity: "0.55",
+                textAlign: "center", wordBreak: "break-word", overflow: "hidden",
+                maxHeight: "36px", lineHeight: "1.3", padding: "0 4px"
+            });
+            inner.appendChild(label);
+            card.appendChild(inner);
+        }
+
         if (item.title) {
-            label.textContent = item.title;
-        } else {
-            try { label.textContent = new URL(item.url).hostname.replace("www.", ""); } catch { label.textContent = "link"; }
+            const titleOverlay = document.createElement("div");
+            titleOverlay.textContent = item.title;
+            Object.assign(titleOverlay.style, {
+                position: "absolute",
+                bottom: "0",
+                width: "100%",
+                background: "rgba(0,0,0,0.6)",
+                fontSize: "11px",
+                padding: "4px",
+                textAlign: "center",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                zIndex: "1",
+                pointerEvents: "none"
+            });
+            card.appendChild(titleOverlay);
         }
-        Object.assign(label.style, {
-            fontSize: "9px", color: "#fff", opacity: "0.55",
-            textAlign: "center", wordBreak: "break-word", overflow: "hidden",
-            maxHeight: "36px", lineHeight: "1.3", padding: "0 4px"
+
+        card.addEventListener("click", () => {
+            const done = () => showToast(card, "Copied!");
+            if (navigator.clipboard?.writeText) {
+                navigator.clipboard.writeText(item.url).then(done).catch(() => { fallbackCopy(item.url); done(); });
+            } else {
+                fallbackCopy(item.url); done();
+            }
         });
-        inner.appendChild(label);
-        card.appendChild(inner);
+
+        return card;
     }
 
-    if (item.title) {
-        const titleOverlay = document.createElement("div");
-        titleOverlay.textContent = item.title;
-        Object.assign(titleOverlay.style, {
-            position: "absolute",
-            bottom: "0",
-            width: "100%",
-            background: "rgba(0,0,0,0.6)",
-            fontSize: "11px",
-            padding: "4px",
-            textAlign: "center",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            zIndex: "1",
-            pointerEvents: "none"
-        });
-        card.appendChild(titleOverlay);
-    }
-
-    card.addEventListener("click", () => {
-        const done = () => showToast(card, "Copied!");
-        if (navigator.clipboard?.writeText) {
-            navigator.clipboard.writeText(item.url).then(done).catch(() => { fallbackCopy(item.url); done(); });
-        } else {
-            fallbackCopy(item.url); done();
+    function toggleFavoritesPanel() {
+        let panel = document.getElementById("avia-favorites-panel");
+        if (panel) {
+            const isHidden = panel.style.display === "none";
+            panel.style.display = isHidden ? "flex" : "none";
+            if (isHidden) renderGrid();
+            return;
         }
-    });
 
-    return card;
-}
+        panel = document.createElement("div");
+        panel.id = "avia-favorites-panel";
+        
+        if(window.outerWidth<512){
+            Object.assign(panel.style, {
+                position: "fixed",
+                bottom: "12px",
+                right: "0px",
+                width: `${window.outerWidth-52}px`,
+                height: `${window.outerWidth-72}px`,
+                background: "#1e1e1e",
+                color: "#fff",
+                borderRadius: "20px",
+                boxShadow: "0 12px 35px rgba(0,0,0,0.45)",
+                zIndex: 999999,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                border: "1px solid rgba(255,255,255,0.08)"
+            });
+        }else{
+            Object.assign(panel.style, {
+                position: "fixed",
+                bottom: "12px",
+                right: "0px",
+                width: "460px",
+                height: "400px",
+                background: "#1e1e1e",
+                color: "#fff",
+                borderRadius: "20px",
+                boxShadow: "0 12px 35px rgba(0,0,0,0.45)",
+                zIndex: 999999,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                border: "1px solid rgba(255,255,255,0.08)"
+            });
+        }
 
-function toggleFavoritesPanel() {
-
-    let panel = document.getElementById("avia-favorites-panel");
-    if (panel) {
-        const isHidden = panel.style.display === "none";
-        panel.style.display = isHidden ? "flex" : "none";
-        if (isHidden) renderGrid();
-        return;
-    }
-
-    panel = document.createElement("div");
-    panel.id = "avia-favorites-panel";
-
-    if(window.outerWidth<512){
-        Object.assign(panel.style, {
-            position: "fixed",
-            bottom: "12px",
-            right: "0px",
-            width: `${window.outerWidth-52}px`,
-            height: `${window.outerWidth-72}px`,
-            background: "#1e1e1e",
-            color: "#fff",
-            borderRadius: "20px",
-            boxShadow: "0 12px 35px rgba(0,0,0,0.45)",
-            zIndex: 999999,
+        const header = document.createElement("div");
+        Object.assign(header.style, {
+            padding: "13px 16px",
+            fontWeight: "600",
+            fontSize: "14px",
+            background: "var(--md-sys-color-surface-container, rgba(255,255,255,0.04))",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            cursor: "move",
+            userSelect: "none",
             display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-            border: "1px solid rgba(255,255,255,0.08)"
+            alignItems: "center",
+            gap: "8px",
+            flexShrink: "0"
         });
-    }else{
-        Object.assign(panel.style, {
-            position: "fixed",
-            bottom: "12px",
-            right: "0px",
-            width: "460px",
-            height: "400px",
-            background: "#1e1e1e",
-            color: "#fff",
-            borderRadius: "20px",
-            boxShadow: "0 12px 35px rgba(0,0,0,0.45)",
-            zIndex: 999999,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-            border: "1px solid rgba(255,255,255,0.08)"
+
+        const headerIcon = document.createElement("span");
+        headerIcon.className = "material-symbols-outlined";
+        headerIcon.textContent = "star";
+        headerIcon.style.cssText = "font-size:18px;opacity:0.7;display:block;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0;";
+        header.appendChild(headerIcon);
+
+        const headerTitle = document.createElement("span");
+        headerTitle.textContent = "Favorites";
+        header.appendChild(headerTitle);
+
+        const closeBtn = document.createElement("div");
+        closeBtn.textContent = "✕";
+        Object.assign(closeBtn.style, {
+            marginLeft: "auto", cursor: "pointer", opacity: "0.5",
+            fontSize: "13px", lineHeight: "1"
         });
-    }
+        closeBtn.onmouseenter = () => closeBtn.style.opacity = "1";
+        closeBtn.onmouseleave = () => closeBtn.style.opacity = "0.5";
+        closeBtn.onclick = () => panel.style.display = "none";
+        header.appendChild(closeBtn);
 
-    const header = document.createElement("div");
-    Object.assign(header.style, {
-        padding: "13px 16px",
-        fontWeight: "600",
-        fontSize: "14px",
-        background: "var(--md-sys-color-surface-container, rgba(255,255,255,0.04))",
-        borderBottom: "1px solid rgba(255,255,255,0.08)",
-        cursor: "move",
-        userSelect: "none",
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        flexShrink: "0"
-    });
-
-    const headerIcon = document.createElement("span");
-    headerIcon.className = "material-symbols-outlined";
-    headerIcon.textContent = "star";
-    headerIcon.style.cssText = "font-size:18px;opacity:0.7;display:block;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0;";
-    header.appendChild(headerIcon);
-
-    const headerTitle = document.createElement("span");
-    headerTitle.textContent = "Favorites";
-    header.appendChild(headerTitle);
-
-    const close = document.createElement("div");
-    close.textContent = "✕";
-    Object.assign(close.style, {
-        marginLeft: "auto", cursor: "pointer", opacity: "0.5",
-        fontSize: "13px", lineHeight: "1"
-    });
-    close.onmouseenter = () => close.style.opacity = "1";
-    close.onmouseleave = () => close.style.opacity = "0.5";
-    close.onclick = () => panel.style.display = "none";
-    header.appendChild(close);
-
-    const inputRow = document.createElement("div");
-    Object.assign(inputRow.style, {
-        display: "flex",
-        gap: "8px",
-        padding: "14px 18px"
-    });
-
-    const urlInput = document.createElement("input");
-    urlInput.placeholder = "Paste link...";
-    if(window.outerWidth<512){
-        Object.assign(urlInput.style, {
-            flex: "1", padding: "7px 10px", borderRadius: "8px",
-            border: "1px solid rgba(255,255,255,0.1)",
-            background: "rgba(255,255,255,0.05)",
-            color: "var(--md-sys-color-on-surface, #fff)",
-            fontSize: "12px", outline: "none", minWidth: "0",
-            width:`${((window.outerWidth-72)/10)+30}px`
+        const inputRow = document.createElement("div");
+        Object.assign(inputRow.style, {
+            padding: "10px 14px", display: "flex", gap: "6px",
+            alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.06)",
+            flexShrink: "0"
         });
-    }else{
-        Object.assign(urlInput.style, {
-            flex: "1", padding: "7px 10px", borderRadius: "8px",
-            border: "1px solid rgba(255,255,255,0.1)",
-            background: "rgba(255,255,255,0.05)",
-            color: "var(--md-sys-color-on-surface, #fff)",
-            fontSize: "12px", outline: "none", minWidth: "0"
-        });
-    }
 
-    const titleInput = document.createElement("input");
-    titleInput.placeholder = "Opt title";
-    if(window.outerWidth<512){
-        Object.assign(titleInput.style, {
-            flexShrink: "0", padding: "7px 10px",
-            borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)",
-            background: "rgba(255,255,255,0.05)",
-            color: "var(--md-sys-color-on-surface, #fff)",
-            fontSize: "12px", outline: "none",
-            width:`${((window.outerWidth-72)/10)+40}px`
-        });
-    }else{
-        Object.assign(titleInput.style, {
-            width: "110px", flexShrink: "0", padding: "7px 10px",
-            borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)",
-            background: "rgba(255,255,255,0.05)",
-            color: "var(--md-sys-color-on-surface, #fff)",
-            fontSize: "12px", outline: "none"
-        });
-    }
-
-    const addBtn = document.createElement("button");
-    addBtn.textContent = "Add";
-    Object.assign(addBtn.style, {
-        padding: "7px 14px", borderRadius: "8px", border: "none",
-        background: "var(--md-sys-color-primary, rgba(255,255,255,0.15))",
-        color: "var(--md-sys-color-on-primary, #fff)",
-        fontSize: "12px", fontWeight: "600", cursor: "pointer",
-        flexShrink: "0", transition: "opacity 0.15s"
-    });
-
-    inputRow.appendChild(urlInput);
-    inputRow.appendChild(titleInput);
-    inputRow.appendChild(addBtn);
-
-    const gridWrapper = document.createElement("div");
-    Object.assign(gridWrapper.style, {
-        flex: "1", minHeight: "0", overflowY: "auto",
-        padding: "14px", boxSizing: "border-box"
-    });
-
-    const grid = document.createElement("div");
-    grid.id = "avia-favorites-grid";
-    Object.assign(grid.style, {
-        display: "flex", flexWrap: "wrap", gap: "10px", alignContent: "start"
-    });
-
-    gridWrapper.appendChild(grid);
-    panel.appendChild(header);
-    panel.appendChild(inputRow);
-    panel.appendChild(gridWrapper);
-    document.body.appendChild(panel);
-
-    /*let isDragging = false, offsetX, offsetY;
-
-    header.addEventListener("touchstart", e => {
-        isDragging = true;
-        const touch = e.touches[0]
-        offsetX = touch.clientX - panel.offsetLeft;
-        offsetY = touch.clientY - panel.offsetTop;
-    },false);
-
-    document.addEventListener("touchend", () => isDragging = false);
-    document.addEventListener("touchcancel", () => isDragging = false);
-
-    document.addEventListener("touchmove", e => {
-        if (!isDragging) return;
-        const touch = e.touches[0]
-        panel.style.left = (touch.clientX - offsetX) + "px";
-        panel.style.top = (touch.clientY - offsetY) + "px";
-        panel.style.right = "auto";
-        panel.style.bottom = "auto";
-    },false);*/
-
-    function tryAdd() {
-        const url = urlInput.value.trim();
-        const title = titleInput.value.trim();
-        if (!url) return;
-         const favs = getFavorites();
-        if (favs.some(f => f.url === url)) { flashDupe(url); return; }
-        favs.push({ url, title, addedAt: Date.now() });
-        setFavorites(favs);
-        urlInput.value = ""; titleInput.value = "";
-        updateBadge(); renderGrid();
-    
-    
-    }
-
-    addBtn.onclick = tryAdd;
-    urlInput.addEventListener("keydown", e => { if (e.key === "Enter") tryAdd(); });
-    titleInput.addEventListener("keydown", e => { if (e.key === "Enter") tryAdd(); });
-
-    renderGrid();
-
-}
-
-function renderGrid() {
-    const grid = document.getElementById("avia-favorites-grid");
-    if (!grid) return;
-    grid.innerHTML = "";
-    const favorites = getFavorites();
-
-    if(favorites.length==0){
-        const empty = document.createElement("div");
-        Object.assign(empty.style, {
-            width: "100%", padding: "24px 0", textAlign: "center",
-            opacity: "0.35", fontSize: "13px",
-            color: "var(--md-sys-color-on-surface, #fff)"
-        });
-        const emptyIcon = document.createElement("span");
-        emptyIcon.className = "material-symbols-outlined";
-        emptyIcon.textContent = "star_border";
-        emptyIcon.style.cssText = "display:block;font-size:32px;margin-bottom:6px;";
-        empty.appendChild(emptyIcon);
-        const emptyText = document.createElement("div");
-        emptyText.textContent = "No favorites yet";
-        empty.appendChild(emptyText);
-        grid.appendChild(empty);
-        return;
+        const urlInput = document.createElement("input");
+        urlInput.placeholder = "Paste link...";
+        if(window.outerWidth<512){
+            Object.assign(urlInput.style, {
+                flex: "1", padding: "7px 10px", borderRadius: "8px",
+                border: "1px solid rgba(255,255,255,0.1)",
+                background: "rgba(255,255,255,0.05)",
+                color: "var(--md-sys-color-on-surface, #fff)",
+                fontSize: "12px", outline: "none", minWidth: "0",
+                width:`${((window.outerWidth-72)/10)+30}px`
+            });
+        }else{
+            Object.assign(urlInput.style, {
+                flex: "1", padding: "7px 10px", borderRadius: "8px",
+                border: "1px solid rgba(255,255,255,0.1)",
+                background: "rgba(255,255,255,0.05)",
+                color: "var(--md-sys-color-on-surface, #fff)",
+                fontSize: "12px", outline: "none", minWidth: "0"
+            });
         }
 
-    const onRemove = (url) => {
-        setFavorites(getFavorites().filter(f => f.url !== url));
-        updateBadge();
+        const titleInput = document.createElement("input");
+        titleInput.placeholder = "Opt title";
+        if(window.outerWidth<512){
+            Object.assign(titleInput.style, {
+                flexShrink: "0", padding: "7px 10px",
+                borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)",
+                background: "rgba(255,255,255,0.05)",
+                color: "var(--md-sys-color-on-surface, #fff)",
+                fontSize: "12px", outline: "none",
+                width:`${((window.outerWidth-72)/10)+40}px`
+            });
+        }else{
+            Object.assign(titleInput.style, {
+                width: "110px", flexShrink: "0", padding: "7px 10px",
+                borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)",
+                background: "rgba(255,255,255,0.05)",
+                color: "var(--md-sys-color-on-surface, #fff)",
+                fontSize: "12px", outline: "none"
+            });
+        }
+
+        const addBtn = document.createElement("button");
+        addBtn.textContent = "Add";
+        Object.assign(addBtn.style, {
+            padding: "7px 14px", borderRadius: "8px", border: "none",
+            background: "var(--md-sys-color-primary, rgba(255,255,255,0.15))",
+            color: "var(--md-sys-color-on-primary, #fff)",
+            fontSize: "12px", fontWeight: "600", cursor: "pointer",
+            flexShrink: "0", transition: "opacity 0.15s"
+        });
+        addBtn.onmouseenter = () => addBtn.style.opacity = "0.8";
+        addBtn.onmouseleave = () => addBtn.style.opacity = "1";
+
+        inputRow.appendChild(urlInput);
+        inputRow.appendChild(titleInput);
+        inputRow.appendChild(addBtn);
+
+        const gridWrapper = document.createElement("div");
+        Object.assign(gridWrapper.style, {
+            flex: "1", minHeight: "0", overflowY: "auto",
+            padding: "14px", boxSizing: "border-box"
+        });
+
+        const grid = document.createElement("div");
+        grid.id = "avia-favorites-grid";
+        Object.assign(grid.style, {
+            display: "flex", flexWrap: "wrap", gap: "10px", alignContent: "start"
+        });
+
+        gridWrapper.appendChild(grid);
+        panel.appendChild(header);
+        panel.appendChild(inputRow);
+        panel.appendChild(gridWrapper);
+        document.body.appendChild(panel);
+
+        let isPanelDragging = false, pOffsetX, pOffsetY;
+        header.addEventListener("mousedown", e => {
+            isPanelDragging = true;
+            const rect = panel.getBoundingClientRect();
+            pOffsetX = e.clientX - rect.left;
+            pOffsetY = e.clientY - rect.top;
+            panel.style.bottom = "auto"; panel.style.right = "auto";
+            panel.style.left = rect.left + "px"; panel.style.top = rect.top + "px";
+            document.body.style.userSelect = "none";
+        });
+        document.addEventListener("mouseup", () => {
+            isPanelDragging = false;
+            document.body.style.userSelect = "";
+        });
+        document.addEventListener("mousemove", e => {
+            if (!isPanelDragging) return;
+            panel.style.left = (e.clientX - pOffsetX) + "px";
+            panel.style.top = (e.clientY - pOffsetY) + "px";
+        });
+
+        function tryAdd() {
+            const url = urlInput.value.trim();
+            const title = titleInput.value.trim();
+            if (!url) return;
+            const favs = getFavorites();
+            if (favs.some(f => f.url === url)) { flashDupe(url); return; }
+            favs.push({ url, title, addedAt: Date.now() });
+            setFavorites(favs);
+            urlInput.value = ""; titleInput.value = "";
+            updateBadge(); renderGrid();
+        }
+
+        addBtn.onclick = tryAdd;
+        urlInput.addEventListener("keydown", e => { if (e.key === "Enter") tryAdd(); });
+        titleInput.addEventListener("keydown", e => { if (e.key === "Enter") tryAdd(); });
+
         renderGrid();
-    };
-
-    favorites.forEach(item => grid.insertBefore(buildCard(item, onRemove), grid.firstChild));
-
-}
-
-function injectButton() {
-
-    if (document.getElementById("avia-favorites-btn")) return;
-
-    const gifSpan = [...document.querySelectorAll("span.material-symbols-outlined")]
-        .find(s => s.textContent.trim() === "gif");
-
-    if (!gifSpan) return;
-
-    const wrapper = gifSpan.closest("div.flex-sh_0");
-    if (!wrapper) return;
-
-    const clone = wrapper.cloneNode(true);
-    clone.id = "avia-favorites-btn";
-    clone.querySelector("span.material-symbols-outlined").textContent = "star";
-    clone.querySelector("button").onclick = toggleFavoritesPanel;
-
-    const badge = document.createElement("div");
-    badge.id = "avia-favorites-badge";
-    Object.assign(badge.style, {
-        position: "absolute",
-        top: "2px",
-        right: "2px",
-        background: "var(--md-sys-color-primary, #6750a4)",
-        color: "var(--md-sys-color-on-primary, #fff)",
-        borderRadius: "99px",
-        fontSize: "9px",
-        fontWeight: "700",
-        minWidth: "14px",
-        height: "14px",
-        display: "none",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0 3px",
-        pointerEvents: "none",
-        zIndex: "1"
-    });
-
-    clone.querySelector("button").appendChild(badge);
-
-    wrapper.parentElement.insertBefore(clone, wrapper.nextSibling);
-    updateBadge()
-}
-
-function uninjectButton(){
-    const button = document.getElementById('avia-favorites-btn')
-    if(button){
-        button.parentElement.removeChild(button)
     }
-}
 
-new MutationObserver(()=>{
-    const gifSpan = [...document.querySelectorAll("span.material-symbols-outlined")]
-    .find(s => s.textContent.trim() === "gif");
-    if(!gifSpan){
-        uninjectButton()
-        return;
+    function renderGrid() {
+        const grid = document.getElementById("avia-favorites-grid");
+        if (!grid) return;
+        grid.innerHTML = "";
+
+        const favs = getFavorites();
+
+        if (favs.length === 0) {
+            const empty = document.createElement("div");
+            Object.assign(empty.style, {
+                width: "100%", padding: "24px 0", textAlign: "center",
+                opacity: "0.35", fontSize: "13px",
+                color: "var(--md-sys-color-on-surface, #fff)"
+            });
+            const emptyIcon = document.createElement("span");
+            emptyIcon.className = "material-symbols-outlined";
+            emptyIcon.textContent = "star_border";
+            emptyIcon.style.cssText = "display:block;font-size:32px;margin-bottom:6px;";
+            empty.appendChild(emptyIcon);
+            const emptyText = document.createElement("div");
+            emptyText.textContent = "No favorites yet";
+            empty.appendChild(emptyText);
+            grid.appendChild(empty);
+            return;
+        }
+
+        const onRemove = (url) => {
+            setFavorites(getFavorites().filter(f => f.url !== url));
+            updateBadge();
+            renderGrid();
+        };
+
+        favs.forEach(item => grid.insertBefore(buildCard(item, onRemove), grid.firstChild));
     }
-    injectButton()
-})
-.observe(document.body, { childList: true, subtree: true });
 
-injectButton();
+    function injectButton() {
+        if (document.getElementById("avia-favorites-btn")) return;
+        const gifSpan = [...document.querySelectorAll("span.material-symbols-outlined")]
+            .find(s => s.textContent.trim() === "gif");
+        if (!gifSpan) return;
+        const gifBtn = gifSpan.closest("button");
+        if (!gifBtn) return;
+        const wrapper = gifBtn.parentElement;
+        if (!wrapper) return;
+        const clone = wrapper.cloneNode(true);
+        clone.id = "avia-favorites-btn";
+        clone.style.position = "relative";
 
+        const btn = clone.querySelector("button");
+        btn.onclick = toggleFavoritesPanel;
+        btn.style.position = "relative";
+
+        clone.querySelector("span.material-symbols-outlined").textContent = "star";
+
+        const badge = document.createElement("div");
+        badge.id = "avia-favorites-badge";
+        Object.assign(badge.style, {
+            position: "absolute",
+            top: "2px",
+            right: "2px",
+            background: "var(--md-sys-color-primary, #6750a4)",
+            color: "var(--md-sys-color-on-primary, #fff)",
+            borderRadius: "99px",
+            fontSize: "9px",
+            fontWeight: "700",
+            minWidth: "14px",
+            height: "14px",
+            display: "none",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 3px",
+            pointerEvents: "none",
+            zIndex: "1"
+        });
+
+        btn.appendChild(badge);
+
+        wrapper.parentElement.insertBefore(clone, wrapper.nextSibling);
+        updateBadge();
+    }
+
+    new MutationObserver(injectButton).observe(document.body, { childList: true, subtree: true });
+    injectButton();
 })();
 
 
@@ -943,7 +1437,6 @@ if(window.__US_BUILDER_BADGES_JS__){return;}window.__US_BUILDER_BADGES_JS__=true
     function loadBadges() {
         if (badgeData) return Promise.resolve();
         if (loadingPromise) return loadingPromise;
-
         loadingPromise = fetch(BADGE_URL + "?t=" + Date.now())
             .then(r => r.text())
             .then(code => {
@@ -951,31 +1444,74 @@ if(window.__US_BUILDER_BADGES_JS__){return;}window.__US_BUILDER_BADGES_JS__=true
                 badgeData = window.AVIA_USER_BADGES || [];
             })
             .catch(() => { badgeData = []; });
-
         return loadingPromise;
     }
 
     function getUsername(root) {
-        const tag = root.querySelector("span.fw_200");
-        if (!tag) return null;
-        const span = tag.parentElement;
-        return span ? span.textContent.trim() : null;
+        const el = root.querySelector('[aria-label="Click to copy username"]');
+        if (!el) return null;
+
+        return el.textContent.trim();
     }
 
     function getUserBadges(username) {
         if (!badgeData) return [];
         const clean = username.trim().toLowerCase();
-        return badgeData.filter(b =>
-            b.users.some(u => u.toLowerCase() === clean)
-        );
+        return badgeData.filter(b => b.users.some(u => u.toLowerCase() === clean));
     }
 
     function findCardByTitle(root, title) {
-        return [...root.querySelectorAll("div.pos_relative")]
-            .find(c => {
-                const heading = c.querySelector("span.fw_550");
-                return heading && heading.textContent.trim() === title;
-            });
+        const allEls = root.querySelectorAll("*");
+        for (const el of allEls) {
+            if (el.children.length > 0) continue;
+            if (el.textContent.trim() !== title) continue;
+
+            let candidate = el.parentElement;
+            while (candidate && candidate !== root) {
+                if (candidate.children.length >= 2) return candidate;
+                candidate = candidate.parentElement;
+            }
+        }
+        return null;
+    }
+
+    function findJoinedCard(root) {
+        const allEls = root.querySelectorAll("*");
+        for (const el of allEls) {
+            if (el.children.length > 0) continue;
+            if (el.textContent.trim() !== "Joined") continue;
+            let candidate = el.parentElement;
+            while (candidate && candidate !== root) {
+                if (candidate.children.length >= 2) {
+
+                    const hasStorat = [...candidate.querySelectorAll("*")]
+                        .some(e => e.children.length === 0 && e.textContent.trim() === "Stoat");
+                    if (hasStorat) return candidate;
+                    break;
+                }
+                candidate = candidate.parentElement;
+            }
+        }
+        return null;
+    }
+
+    function findOfficialBadgesCard(root) {
+        const allEls = root.querySelectorAll("*");
+        for (const el of allEls) {
+            if (el.children.length > 0) continue;
+            if (el.textContent.trim() !== "Badges") continue;
+            let candidate = el.parentElement;
+            while (candidate && candidate !== root) {
+                if (candidate.children.length >= 2) {
+                    if (candidate.querySelector("img[aria-label], span[aria-label]")) {
+                        return candidate;
+                    }
+                    break;
+                }
+                candidate = candidate.parentElement;
+            }
+        }
+        return null;
     }
 
     function makeBadgeSpan(b) {
@@ -985,15 +1521,11 @@ if(window.__US_BUILDER_BADGES_JS__){return;}window.__US_BUILDER_BADGES_JS__=true
         wrapper.textContent = b.icon;
 
         let tip = null;
-
         wrapper.addEventListener("mouseenter", () => {
             tip = document.createElement("div");
             tip.style.cssText = "position:fixed;z-index:99999;pointer-events:none;white-space:nowrap;";
-
             const inner = document.createElement("div");
-            inner.className = "c_white bg_black p_var(--gap-md) bdr_var(--borderRadius-md) lh_0.875rem fs_0.6875rem ls_0.03125rem fw_500";
-            inner.style.cssText = "";
-
+            inner.style.cssText = "background:black;color:white;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:500;letter-spacing:0.03em;line-height:1;";
             const color = b.color || "";
             if (color.includes("gradient")) {
                 const textSpan = document.createElement("span");
@@ -1004,10 +1536,8 @@ if(window.__US_BUILDER_BADGES_JS__){return;}window.__US_BUILDER_BADGES_JS__=true
                 inner.textContent = b.name;
                 inner.style.color = color || "white";
             }
-
             tip.appendChild(inner);
             document.body.appendChild(tip);
-
             requestAnimationFrame(() => {
                 const badgeRect = wrapper.getBoundingClientRect();
                 const tipRect = tip.getBoundingClientRect();
@@ -1017,11 +1547,9 @@ if(window.__US_BUILDER_BADGES_JS__){return;}window.__US_BUILDER_BADGES_JS__=true
                 tip.style.top = Math.max(4, y) + "px";
             });
         });
-
         wrapper.addEventListener("mouseleave", () => {
             if (tip) { tip.remove(); tip = null; }
         });
-
         return wrapper;
     }
 
@@ -1031,85 +1559,92 @@ if(window.__US_BUILDER_BADGES_JS__){return;}window.__US_BUILDER_BADGES_JS__=true
         const badges = getUserBadges(username);
         if (!badges.length) return;
 
-        const nativeBadgesCard = findCardByTitle(root, "Badges");
-        if (nativeBadgesCard) {
-            const grid = nativeBadgesCard.querySelector("div.d_flex.flex-wrap_wrap");
+        const officialCard = findOfficialBadgesCard(root);
+        if (officialCard) {
+
+            const grid = officialCard.querySelector("img[aria-label], span[aria-label]")?.parentElement;
             if (!grid) return;
             badges.forEach(b => grid.appendChild(makeBadgeSpan(b)));
-            nativeBadgesCard.dataset.aviaBadgeInjected = "true";
+            officialCard.dataset.aviaBadgeInjected = "true";
             return;
         }
 
-        const joinedCard = findCardByTitle(root, "Joined");
+        const joinedCard = findJoinedCard(root);
         if (!joinedCard) return;
 
         const card = joinedCard.cloneNode(false);
-        card.removeAttribute("data-avia-badge-injected");
         card.dataset.aviaBadgeInjected = "true";
-        card.style.cssText = "overflow:hidden;";
-        if (!card.classList.contains("asp_1/1")) card.classList.add("asp_1/1");
+        card.style.overflow = "hidden";
 
-        const titleSpan = joinedCard.querySelector("span.fw_550");
-        const title = titleSpan ? titleSpan.cloneNode(false) : document.createElement("span");
+        const joinedHeading = [...joinedCard.querySelectorAll("*")]
+            .find(e => e.children.length === 0 && e.textContent.trim() === "Joined");
+        const title = joinedHeading ? joinedHeading.cloneNode(false) : document.createElement("span");
         title.textContent = "Badges";
         card.appendChild(title);
 
         const grid = document.createElement("div");
-        grid.className = "gap_var(--gap-md) d_flex flex-wrap_wrap [&_img,_&_svg]:w_24px [&_img,_&_svg]:h_24px [&_img,_&_svg]:asp_1/1";
-        grid.style.overflow = "hidden";
+        grid.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;overflow:hidden;";
         badges.forEach(b => grid.appendChild(makeBadgeSpan(b)));
         card.appendChild(grid);
 
         joinedCard.insertAdjacentElement("afterend", card);
     }
 
+    function isProfileRoot(el) {
+        if (!el || !el.querySelector) return false;
+        const hasSvgAvatar = !!el.querySelector('svg[viewBox="0 0 32 32"] foreignObject');
+        const hasUsername = !!el.querySelector('[aria-label="Click to copy username"]');
+        return hasSvgAvatar && hasUsername;
+    }
+
     async function processProfile(root) {
         await loadBadges();
-
         const username = getUsername(root);
         if (!username) return;
 
-        if (findCardByTitle(root, "Badges")) {
+        if (findOfficialBadgesCard(root)) {
+            injectBadges(root, username);
+            return;
+        }
+
+        if (findJoinedCard(root)) {
             injectBadges(root, username);
             return;
         }
 
         const obs = new MutationObserver(() => {
-            if (!findCardByTitle(root, "Joined")) return;
-            if (!findCardByTitle(root, "Bio")) return;
+            if (!findJoinedCard(root)) return;
             obs.disconnect();
             injectBadges(root, username);
         });
-
         obs.observe(root, { childList: true, subtree: true });
-
-        if (findCardByTitle(root, "Joined") && findCardByTitle(root, "Bio")) {
-            obs.disconnect();
-            injectBadges(root, username);
-        }
-
         setTimeout(() => obs.disconnect(), 10000);
     }
 
+    const seen = new WeakSet();
     const observer = new MutationObserver(muts => {
         for (const m of muts) {
             for (const n of m.addedNodes) {
                 if (!(n instanceof HTMLElement)) continue;
 
-                if (n.matches?.("div.will-change_transform")) processProfile(n);
-                if (n.matches?.("div.p_24px.min-w_280px.max-w_560px")) processProfile(n);
+                if (isProfileRoot(n) && !seen.has(n)) {
+                    seen.add(n);
+                    processProfile(n);
+                }
 
-                const small    = n.querySelector?.("div.will-change_transform");
-                const expanded = n.querySelector?.("div.p_24px.min-w_280px.max-w_560px");
-                if (small)    processProfile(small);
-                if (expanded) processProfile(expanded);
+                const children = n.querySelectorAll("*");
+                for (const child of children) {
+                    if (isProfileRoot(child) && !seen.has(child)) {
+                        seen.add(child);
+                        processProfile(child);
+                    }
+                }
             }
         }
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
 })();
-
 
 
 /* --- BettersSwiping.js --- */
@@ -1140,33 +1675,45 @@ if(window.__US_BUILDER_BETTERSSWIPING_JS__){return;}window.__US_BUILDER_BETTERSS
 if(window.__US_BUILDER_BUTTONFIX_JS__){return;}window.__US_BUILDER_BUTTONFIX_JS__=true;
 
 (function () {
-    if (window.__BUTTON_FIX__) return;
-    window.__BUTTON_FIX__ = true;
+  if (window.__BUTTON_FIX__) return;
+  window.__BUTTON_FIX__ = true;
 
-    function uninjectButton(button){
-        if(button){
-            button.parentElement.removeChild(button)
-        }
+  function getChatBarButtons(append) {
+    return document.querySelectorAll(
+      `.app_body main > div:last-child > div > div:last-child > div > div ${append ?? ""}`,
+    );
+  }
+
+  function uninjectButton(button) {
+    if (button?.parentElement) {
+      button.parentElement.removeChild(button);
     }
-    
-    const observer = new MutationObserver(()=>{
-        let balls = [];
-        document.querySelectorAll('div[class=\'flex-sh_0 d_flex ai_end jc_center w_42px\']').forEach(element=>{
-        if(element.id?.includes('avia')){
-            balls.push(element)
-        }
-        })
-        
-        const gifSpan = [...document.querySelectorAll("span.material-symbols-outlined")]
-        .find(s => s.textContent.trim() === "gif");
+  }
 
-        if(!gifSpan){
-            balls.forEach(element=>{
-                uninjectButton(element)
-            })
-        }
+  function hasGifButton() {
+    return [
+      ...getChatBarButtons("button > span.material-symbols-outlined"),
+    ].some((button) => button?.textContent.trim() === "gif");
+  }
+
+  const observer = new MutationObserver(() => {
+    const injectedButtons = [];
+
+    getChatBarButtons().forEach((element) => {
+      if (element.id?.startsWith("avia-")) {
+        injectedButtons.push(element);
+      }
     });
-    observer.observe(document.documentElement, {childList: true, subtree: true })
+
+    if (!hasGifButton()) {
+      injectedButtons.forEach(uninjectButton);
+    }
+  });
+
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
 })();
 
 
@@ -1601,14 +2148,15 @@ if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE
 (function () {
   if (window.__CUSTOM_TITLE__) return;
   window.__CUSTOM_TITLE__ = true;
+  const version = window.__USERSCRIPT_VERSION__
 
   function customTitle() {
     const icon = document.querySelector('link[rel=\'shortcut icon\']')
     if(!icon) return;
     icon.href='https://cdn.stoatusercontent.com/icons/vnGRb1M_UiP4-oj1qfqQODDCsyYOWa3f92ib3ac-K_/original'
 
-    if(document.title!='Stoat (Avia Client Mobile 1.8)'){
-        document.title='Stoat (Avia Client Mobile 1.8)'
+    if(document.title!=`Stoat (Avia Client Mobile ${version})`){
+        document.title=`Stoat (Avia Client Mobile ${version})`
     }
   }
 
@@ -1845,6 +2393,83 @@ if(window.__US_BUILDER_FIXCOLOURPICKER_JS__){return;}window.__US_BUILDER_FIXCOLO
 })();
 
 
+/* --- ForceEnglish.js --- */
+if(window.__US_BUILDER_FORCEENGLISH_JS__){return;}window.__US_BUILDER_FORCEENGLISH_JS__=true;
+
+(function () {
+  "use strict";
+
+  if (window.__AVIA_FORCE_ENGLISH__) return;
+  window.__AVIA_FORCE_ENGLISH__ = true;
+
+  function setAppearanceLabel() {
+    const label = document.querySelector(
+      `.settings_sidebar .content a.button:not([id^='avia-']):not([id^='stoat-fake-'])
+          > div> svg:has(> path[d^='M12 22C6.49 22']) + div > div`,
+    );
+    if (label && label.textContent !== "Appearance") {
+      label.textContent = "Appearance";
+    }
+  }
+
+  function setUserSettingsLabel() {
+    const label = document.querySelector(
+      `.settings_sidebar .content > div
+          > div:nth-child(2):not(#avia-cloned-settings):has(svg > path[d^='M12 2C6.48 2'])
+          > span:first-child`,
+    );
+    if (label && label.textContent !== "User Settings") {
+      label.textContent = "User Settings";
+    }
+  }
+
+  function setUserCardJoinedLabel() {
+    const card = document.querySelector(
+      `#floating div:not(:has(> div)):has(
+          > span:nth-of-type(5),
+          > span:nth-of-type(3)
+      ):has(> span > div:only-child)`,
+    );
+    if (!card) return;
+
+    let header = card.firstElementChild;
+    let subheader = header?.nextElementSibling?.firstElementChild;
+
+    if (
+      header &&
+      subheader &&
+      header.tagName.toLowerCase() === "span" &&
+      header.textContent !== "Joined" &&
+      subheader.tagName.toLowerCase() === "div" &&
+      subheader.textContent === "Stoat"
+    ) {
+      header.textContent = "Joined";
+    }
+  }
+
+  function setUserCardBadgesLabel() {
+    const label = document.querySelector(
+      `#floating div:has(
+          > span:only-of-type + div:only-of-type > img[aria-label],
+          > span:only-of-type + div:only-of-type > span[aria-label] > img) > span:only-of-type`,
+    );
+    if (label && label.textContent !== "Badges") {
+      label.textContent = "Badges";
+    }
+  }
+
+  new MutationObserver(() => {
+    setAppearanceLabel();
+    setUserSettingsLabel();
+    setUserCardJoinedLabel();
+    setUserCardBadgesLabel();
+  }).observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+})();
+
+
 /* --- HideSearchbarButton.js --- */
 if(window.__US_BUILDER_HIDESEARCHBARBUTTON_JS__){return;}window.__US_BUILDER_HIDESEARCHBARBUTTON_JS__=true;
 
@@ -2076,6 +2701,7 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
 
     if (window.__AVIA_WEB_LOADED__) return;
     window.__AVIA_WEB_LOADED__ = true;
+    const version = window.__USERSCRIPT_VERSION__
 
     const LINKTREE_URL = "https://linktr.ee/GermanAvaLilac";
     const STOAT_SERVER_URL = "https://stt.gg/GvBhcejB";
@@ -2626,9 +3252,9 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
                     el.appendChild(element)
                     element.outerHTML = `
                     <span class="lh_1rem fs_0.75rem ls_0.03125rem fw_500" data-avia-patched="true">
-                                Avia Client Mobile 1.8<br>
+                                Avia Client Mobile ${version}<br>
                                 <span style="font-size:10px;opacity:0.7;">
-                                    Based on Avia Client 1.7.1
+                                    Based on Avia Client 1.8.1
                                 </span>
                             </span>
                     `
@@ -2744,795 +3370,894 @@ if(window.__US_BUILDER_LOCALPLUGINS_JS__){return;}window.__US_BUILDER_LOCALPLUGI
 
 (function () {
 
-    if (window.__LOCAL_PLUGINS__) return;
-    window.__LOCAL_PLUGINS__ = true;
+if (window.__LOCAL_PLUGINS__) return;
+window.__LOCAL_PLUGINS__ = true;
 
-    const STORAGE_KEY = "avia_local_plugins";
+const STORAGE_KEY = "avia_local_plugins";
+const runningLocalPlugins = {};
+const localPluginErrors = {};
 
-    const runningLocalPlugins = {};
-    const localPluginErrors = {};
+const getLocalPlugins = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+const setLocalPlugins = (data) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 
-    const getLocalPlugins = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    const setLocalPlugins = (data) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-
-    function preloadMonaco() {
-        return new Promise(resolve => {
-            if (window.monaco) return resolve();
-            const loader = document.createElement("script");
-            loader.src = "https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs/loader.js";
-            loader.onload = function () {
-                require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs" } });
-                require(["vs/editor/editor.main"], () => resolve());
-            };
-            document.head.appendChild(loader);
-        });
-    }
-
-    function runLocalPlugin(plugin) {
-        stopLocalPlugin(plugin);
-        try {
-            const script = document.createElement("script");
-            script.textContent = plugin.code || "";
-            script.dataset.localPluginId = plugin.id;
-            document.body.appendChild(script);
-            runningLocalPlugins[plugin.id] = script;
-            delete localPluginErrors[plugin.id];
-        } catch (e) {
-            localPluginErrors[plugin.id] = true;
+function rawUrlFromLink(link) {
+    try {
+        const u = new URL(link);
+        if (u.hostname === "github.com") {
+            const m = u.pathname.match(/^\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/);
+            if (m) return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
+            return link;
         }
-        renderLocalPanel();
+        if (u.hostname === "raw.githubusercontent.com") return link;
+        if (u.hostname === "raw.codeberg.page") return link;
+        if (u.hostname === "codeberg.org") {
+
+            if (u.pathname.startsWith("/api/v1/repos/")) return link;
+            const parts = u.pathname.split("/").filter(Boolean);
+            if (parts.length >= 5 && (parts[2] === "raw" || parts[2] === "src")) {
+                const user = parts[0], repo = parts[1];
+                const branchName = (parts[3] === "branch" || parts[3] === "commit" || parts[3] === "tag") ? parts[4] : parts[3];
+                const fileStart = (parts[3] === "branch" || parts[3] === "commit" || parts[3] === "tag") ? 5 : 4;
+                const filePath = parts.slice(fileStart).join("/");
+                return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branchName}`;
+            }
+            if (parts.length >= 5 && parts[2] === "src" && parts[3] === "branch") {
+                const user = parts[0], repo = parts[1], branch = parts[4];
+                const filePath = parts.slice(5).join("/");
+                return `https://codeberg.org/api/v1/repos/${user}/${repo}/raw/${filePath}?ref=${branch}`;
+            }
+        }
+    } catch (_) {}
+    return link;
+}
+
+function parseUpdateUrl(code) {
+    const m = code.match(/@UPDATEURL:\s*\(?["']?([^"'\)\s]+)["']?\)?/);
+    return m ? m[1].trim() : null;
+}
+
+function parseVersion(code) {
+    const m = code.match(/@VERSION:\s*([\d.a-zA-Z-]+)/);
+    return m ? m[1].trim() : null;
+}
+
+function showInfoModal(title, message) {
+    const existing = document.getElementById("avia-lp-update-modal");
+    if (existing) existing.remove();
+
+    const backdrop = document.createElement("div");
+    backdrop.id = "avia-lp-update-modal";
+    Object.assign(backdrop.style, {
+        position: "fixed", inset: "0", zIndex: "99999999",
+        background: "rgba(0,0,0,0.6)", display: "grid",
+        placeItems: "center", padding: "80px"
+    });
+    backdrop.onclick = (e) => { if (e.target === backdrop) backdrop.remove(); };
+
+    const card = document.createElement("div");
+    Object.assign(card.style, {
+        minWidth: "320px", maxWidth: "480px", padding: "24px", borderRadius: "28px",
+        display: "flex", flexDirection: "column",
+        color: "var(--md-sys-color-on-surface)",
+        background: "var(--md-sys-color-surface-container-high, #2a2a2a)"
+    });
+
+    const titleEl = document.createElement("span");
+    titleEl.textContent = title;
+    Object.assign(titleEl.style, {
+        lineHeight: "2rem", fontSize: "1.5rem", fontWeight: "400", marginBottom: "16px"
+    });
+
+    const msgEl = document.createElement("div");
+    msgEl.textContent = message;
+    Object.assign(msgEl.style, {
+        color: "var(--md-sys-color-on-surface-variant)",
+        fontSize: "0.875rem", lineHeight: "1.5", marginBottom: "8px"
+    });
+
+    const btnRow = document.createElement("div");
+    Object.assign(btnRow.style, { display: "flex", justifyContent: "flex-end", marginTop: "24px" });
+
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.innerHTML = "<md-ripple aria-hidden='true'></md-ripple>Close";
+    Object.assign(closeBtn.style, {
+        fontSize: "0.875rem", fontWeight: "400", position: "relative",
+        padding: "0 16px", display: "flex", alignItems: "center", justifyContent: "center",
+        fontFamily: "inherit", cursor: "pointer", border: "none",
+        color: "var(--md-sys-color-primary)", height: "40px",
+        borderRadius: "var(--borderRadius-full, 9999px)", background: "none"
+    });
+    closeBtn.onclick = () => backdrop.remove();
+
+    btnRow.appendChild(closeBtn);
+    card.appendChild(titleEl);
+    card.appendChild(msgEl);
+    card.appendChild(btnRow);
+    backdrop.appendChild(card);
+    document.body.appendChild(backdrop);
+}
+
+function showUpdateModal(pluginName, localVersion, remoteVersion, wasRunning, onAccept) {
+    const existing = document.getElementById("avia-lp-update-modal");
+    if (existing) existing.remove();
+
+    const backdrop = document.createElement("div");
+    backdrop.id = "avia-lp-update-modal";
+    Object.assign(backdrop.style, {
+        position: "fixed", inset: "0", zIndex: "99999999",
+        background: "rgba(0,0,0,0.6)", display: "grid",
+        placeItems: "center", padding: "80px"
+    });
+    backdrop.onclick = (e) => { if (e.target === backdrop) backdrop.remove(); };
+
+    const card = document.createElement("div");
+    Object.assign(card.style, {
+        minWidth: "320px", maxWidth: "480px", padding: "24px", borderRadius: "28px",
+        display: "flex", flexDirection: "column",
+        color: "var(--md-sys-color-on-surface)",
+        background: "var(--md-sys-color-surface-container-high, #2a2a2a)"
+    });
+
+    const titleEl = document.createElement("span");
+    titleEl.textContent = "Update Available";
+    Object.assign(titleEl.style, {
+        lineHeight: "2rem", fontSize: "1.5rem", fontWeight: "400", marginBottom: "16px"
+    });
+
+    const body = document.createElement("div");
+    Object.assign(body.style, {
+        color: "var(--md-sys-color-on-surface-variant)",
+        fontSize: "0.875rem", display: "flex", flexDirection: "column", gap: "12px"
+    });
+
+    const pluginRow = document.createElement("div");
+    pluginRow.style.cssText = "display:flex;flex-direction:column;gap:2px;";
+    const pluginLabel = document.createElement("span");
+    pluginLabel.textContent = "Plugin";
+    pluginLabel.style.cssText = "font-size:11px;opacity:0.5;letter-spacing:0.03em;";
+    const pluginNameEl = document.createElement("span");
+    pluginNameEl.textContent = pluginName;
+    pluginNameEl.style.cssText = "font-size:14px;font-weight:500;color:var(--md-sys-color-on-surface);";
+    pluginRow.appendChild(pluginLabel);
+    pluginRow.appendChild(pluginNameEl);
+
+    const currentRow = document.createElement("div");
+    currentRow.style.cssText = "display:flex;flex-direction:column;gap:2px;";
+    const currentLabel = document.createElement("span");
+    currentLabel.textContent = "Current version";
+    currentLabel.style.cssText = "font-size:11px;opacity:0.5;letter-spacing:0.03em;";
+    const currentVersionEl = document.createElement("span");
+    currentVersionEl.textContent = localVersion;
+    currentVersionEl.style.cssText = "font-size:14px;font-weight:500;color:var(--md-sys-color-on-surface);";
+    currentRow.appendChild(currentLabel);
+    currentRow.appendChild(currentVersionEl);
+
+    const latestRow = document.createElement("div");
+    latestRow.style.cssText = "display:flex;flex-direction:column;gap:2px;";
+    const latestLabel = document.createElement("span");
+    latestLabel.textContent = "Latest version";
+    latestLabel.style.cssText = "font-size:11px;opacity:0.5;letter-spacing:0.03em;";
+    const latestVersionEl = document.createElement("span");
+    latestVersionEl.textContent = remoteVersion;
+    latestVersionEl.style.cssText = "font-size:14px;font-weight:600;color:var(--md-sys-color-primary);";
+    latestRow.appendChild(latestLabel);
+    latestRow.appendChild(latestVersionEl);
+
+    const warningEl = document.createElement("span");
+    warningEl.textContent = wasRunning
+        ? "Any local changes you made to this plugin will be overwritten. Since this plugin is currently running, you will need to restart your client for the update to take effect."
+        : "Any local changes you made to this plugin will be overwritten.";
+    warningEl.style.cssText = "font-size:12px;opacity:0.55;margin-top:4px;";
+
+    body.appendChild(pluginRow);
+    body.appendChild(currentRow);
+    body.appendChild(latestRow);
+    body.appendChild(warningEl);
+
+    const btnRow = document.createElement("div");
+    Object.assign(btnRow.style, { display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "24px" });
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.type = "button";
+    cancelBtn.innerHTML = "<md-ripple aria-hidden='true'></md-ripple>Cancel";
+    Object.assign(cancelBtn.style, {
+        fontSize: "0.875rem", fontWeight: "400", position: "relative",
+        padding: "0 16px", display: "flex", alignItems: "center", justifyContent: "center",
+        fontFamily: "inherit", cursor: "pointer", border: "none",
+        color: "var(--md-sys-color-primary)", height: "40px",
+        borderRadius: "var(--borderRadius-full, 9999px)", background: "none"
+    });
+    cancelBtn.onclick = () => backdrop.remove();
+
+    const updateBtn = document.createElement("button");
+    updateBtn.type = "button";
+    updateBtn.innerHTML = "<md-ripple aria-hidden='true'></md-ripple>Update";
+    Object.assign(updateBtn.style, {
+        fontSize: "0.875rem", fontWeight: "400", position: "relative",
+        padding: "0 16px", display: "flex", alignItems: "center", justifyContent: "center",
+        fontFamily: "inherit", cursor: "pointer", border: "none",
+        color: "var(--md-sys-color-on-primary)", height: "40px",
+        borderRadius: "var(--borderRadius-full, 9999px)",
+        background: "var(--md-sys-color-primary)"
+    });
+    updateBtn.onclick = () => {
+        backdrop.remove();
+        onAccept();
+    };
+
+    btnRow.appendChild(cancelBtn);
+    btnRow.appendChild(updateBtn);
+    card.appendChild(titleEl);
+    card.appendChild(body);
+    card.appendChild(btnRow);
+    backdrop.appendChild(card);
+    document.body.appendChild(backdrop);
+}
+
+async function checkPluginUpdate(plugin, updateBtn) {
+    const updateUrl = parseUpdateUrl(plugin.code || "");
+    const localVersion = parseVersion(plugin.code || "");
+
+    if (!updateUrl || !localVersion) {
+        showInfoModal(
+            "Cannot Update",
+            `"${plugin.name}" does not have @UPDATEURL and @VERSION defined in its header. The plugin author must add these for update checking to work.`
+        );
+        return;
     }
 
-    function stopLocalPlugin(plugin) {
-        const script = runningLocalPlugins[plugin.id];
-        if (!script) return;
-        script.remove();
-        delete runningLocalPlugins[plugin.id];
+    updateBtn.style.opacity = "0.5";
+    updateBtn.style.pointerEvents = "none";
+    updateBtn.title = "Checking...";
+
+    try {
+        const rawUrl = rawUrlFromLink(updateUrl);
+        const bustChar = rawUrl.includes("?") ? "&" : "?";
+        const res = await fetch(rawUrl + bustChar + "_t=" + Date.now());
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const remoteCode = await res.text();
+        const remoteVersion = parseVersion(remoteCode);
+
+        if (!remoteVersion) {
+            showInfoModal("Cannot Update", `The remote plugin at the update URL does not have a @VERSION defined. Cannot compare versions.`);
+            return;
+        }
+
+        if (localVersion === remoteVersion) {
+            showInfoModal("Up to Date", `"${plugin.name}" is already on the latest version (${localVersion}).`);
+            return;
+        }
+
+        const wasRunning = !!runningLocalPlugins[plugin.id];
+        showUpdateModal(plugin.name, localVersion, remoteVersion, wasRunning, () => {
+            const all = getLocalPlugins();
+            const target = all.find(p => p.id === plugin.id);
+            if (target) {
+                target.code = remoteCode;
+                plugin.code = remoteCode;
+                setLocalPlugins(all);
+            }
+            renderLocalPanel();
+            showInfoModal("Updated", `"${plugin.name}" has been updated to version ${remoteVersion}.`);
+        });
+
+    } catch (e) {
+        showInfoModal("Update Failed", `Could not fetch the update for "${plugin.name}". Check that the @UPDATEURL is correct and accessible.\n\n${e.message}`);
+    } finally {
+        updateBtn.style.opacity = "";
+        updateBtn.style.pointerEvents = "";
+        updateBtn.title = "Check for update";
+    }
+}
+
+function preloadMonaco() {
+    return new Promise(resolve => {
+        if (window.monaco) return resolve();
+        const loader = document.createElement("script");
+        loader.src = "https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs/loader.js";
+        loader.onload = function () {
+            require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs" } });
+            require(["vs/editor/editor.main"], () => resolve());
+        };
+        document.head.appendChild(loader);
+    });
+}
+
+function exportPlugin(plugin) {
+    const filename = plugin.name.endsWith(".js") ? plugin.name : plugin.name + ".js";
+    const blob = new Blob([plugin.code || ""], { type: "text/javascript" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function runLocalPlugin(plugin) {
+    stopLocalPlugin(plugin);
+    try {
+        const script = document.createElement("script");
+        script.textContent = plugin.code || "";
+        script.dataset.localPluginId = plugin.id;
+        document.body.appendChild(script);
+        runningLocalPlugins[plugin.id] = script;
         delete localPluginErrors[plugin.id];
-        renderLocalPanel();
+    } catch (e) {
+        localPluginErrors[plugin.id] = true;
     }
+    renderLocalPanel();
+}
 
-    async function openEditorPanel(plugin, onSave) {
-        await preloadMonaco();
+function stopLocalPlugin(plugin) {
+    const script = runningLocalPlugins[plugin.id];
+    if (!script) return;
+    script.remove();
+    delete runningLocalPlugins[plugin.id];
+    delete localPluginErrors[plugin.id];
+    renderLocalPanel();
+}
 
-        const existing = document.getElementById("avia-local-editor-panel");
-        if (existing) existing.remove();
+async function openEditorPanel(plugin, onSave) {
+    await preloadMonaco();
+    const existing = document.getElementById("avia-local-editor-panel");
+    if (existing) existing.remove();
 
-        const panel = document.createElement("div");
-        panel.id = "avia-local-editor-panel";
-        if(window.outerWidth<612){
-            Object.assign(panel.style, {
-                position: "fixed",
-                bottom: "24px",
-                left: "24px",
-                width: `${window.outerWidth-52}px`,
-                height: `${window.outerWidth-72}px`,
-                background: "var(--md-sys-color-surface, #1e1e1e)",
-                borderRadius: "16px",
-                boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
-                zIndex: "9999999",
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-                border: "1px solid rgba(255,255,255,0.08)",
-                backdropFilter: "blur(12px)"
-            });
-        }else{
-            Object.assign(panel.style, {
-                position: "fixed",
-                bottom: "24px",
-                left: "24px",
-                width: "560px",
-                height: "520px",
-                background: "var(--md-sys-color-surface, #1e1e1e)",
-                borderRadius: "16px",
-                boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
-                zIndex: "9999999",
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-                border: "1px solid rgba(255,255,255,0.08)",
-                backdropFilter: "blur(12px)"
-            });
-        }
-
-        const header = document.createElement("div");
-        header.textContent = `Editing: ${plugin.name}`;
-        Object.assign(header.style, {
-            padding: "14px 16px",
-            fontWeight: "600",
-            fontSize: "14px",
-            background: "var(--md-sys-color-surface-container, rgba(255,255,255,0.04))",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            cursor: "move",
-            color: "#fff",
-            flex: "0 0 auto"
-        });
-
-        const closeBtn = document.createElement("div");
-        closeBtn.textContent = "✕";
-        Object.assign(closeBtn.style, {
-            position: "absolute",
-            top: "12px",
-            right: "16px",
-            cursor: "pointer",
-            opacity: "0.7",
-            color: "#fff",
-            zIndex: "1"
-        });
-        closeBtn.onmouseenter = () => closeBtn.style.opacity = "1";
-        closeBtn.onmouseleave = () => closeBtn.style.opacity = "0.7";
-        closeBtn.onclick = () => panel.remove();
-
-        const toolbar = document.createElement("div");
-        Object.assign(toolbar.style, {
-            padding: "8px 16px",
+    const panel = document.createElement("div");
+    panel.id = "avia-local-editor-panel";
+    if(window.outerWidth<612){
+        Object.assign(panel.style, {
+            position: "fixed",
+            bottom: "24px",
+            left: "24px",
+            width: `${window.outerWidth-52}px`,
+            height: `${window.outerWidth-72}px`,
+            background: "var(--md-sys-color-surface, #1e1e1e)",
+            borderRadius: "16px",
+            boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
+            zIndex: "9999999",
             display: "flex",
-            gap: "8px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            flex: "0 0 auto"
+            flexDirection: "column",
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(12px)"
         });
-
-        const saveBtn = document.createElement("button");
-        saveBtn.textContent = "💾 Save";
-        styleEditorBtn(saveBtn, "#2d6a4f");
-
-        const saveRunBtn = document.createElement("button");
-        saveRunBtn.textContent = "▶ Save & Run";
-        styleEditorBtn(saveRunBtn, "#1b4332");
-
-        toolbar.appendChild(saveBtn);
-        toolbar.appendChild(saveRunBtn);
-
-        const editorContainer = document.createElement("div");
-        editorContainer.style.flex = "1";
-
-        panel.appendChild(header);
-        panel.appendChild(closeBtn);
-        panel.appendChild(toolbar);
-        panel.appendChild(editorContainer);
-        document.body.appendChild(panel);
-
-        const editor = monaco.editor.create(editorContainer, {
-            value: plugin.code || "",
-            language: "javascript",
-            theme: "vs-dark",
-            automaticLayout: true,
-            minimap: { enabled: false },
-            fontSize: 13,
-            scrollBeyondLastLine: false,
-            wordWrap: "on"
-        });
-
-        saveBtn.onclick = () => {
-            onSave(editor.getValue(), false);
-            saveBtn.textContent = "✓ Saved";
-            setTimeout(() => saveBtn.textContent = "💾 Save", 1200);
-        };
-
-        saveRunBtn.onclick = () => {
-            onSave(editor.getValue(), true);
-            saveRunBtn.textContent = "✓ Ran!";
-            setTimeout(() => saveRunBtn.textContent = "▶ Save & Run", 1200);
-        };
-
-        enableEditorDrag(panel, header);
-    }
-
-    function styleEditorBtn(btn, bg) {
-        Object.assign(btn.style, {
-            padding: "5px 14px",
-            borderRadius: "8px",
-            border: "none",
-            background: bg || "rgba(255,255,255,0.1)",
-            color: "#fff",
-            cursor: "pointer",
-            fontSize: "12px",
-            fontWeight: "500"
-        });
-        btn.onmouseenter = () => btn.style.opacity = "0.8";
-        btn.onmouseleave = () => btn.style.opacity = "1";
-    }
-
-    function enableEditorDrag(panel, handle) {
-        let isDragging = false, offsetX, offsetY;
-        handle.addEventListener("mousedown", e => {
-            isDragging = true;
-            offsetX = e.clientX - panel.offsetLeft;
-            offsetY = e.clientY - panel.offsetTop;
-            document.body.style.userSelect = "none";
-        });
-        document.addEventListener("mouseup", () => {
-            isDragging = false;
-            document.body.style.userSelect = "";
-        });
-        document.addEventListener("mousemove", e => {
-            if (!isDragging) return;
-            panel.style.left = (e.clientX - offsetX) + "px";
-            panel.style.top = (e.clientY - offsetY) + "px";
-            panel.style.right = "auto";
-            panel.style.bottom = "auto";
-        });
-    }
-
-    function toggleLocalPanel() {
-        let panel = document.getElementById("avia-local-plugins-panel");
-        if (panel) {
-            if (panel.style.display === "none") {
-                panel.style.display = "flex";
-                renderLocalPanel();
-            } else {
-                panel.style.display = "none";
-            }
-            return;
-        }
-
-        panel = document.createElement("div");
-        panel.id = "avia-local-plugins-panel";
-        panel.id = "avia-local-plugins-panel";
-        if(window.outerWidth<508){
-            Object.assign(panel.style, {
-                position: "fixed",
-                bottom: "24px",
-                right: "24px", 
-                width: `${window.outerWidth-52}px`,
-                height: `${window.outerWidth-72}px`,
-                background: "var(--md-sys-color-surface, #1e1e1e)",
-                color: "var(--md-sys-color-on-surface, #fff)",
-                borderRadius: "16px",
-                boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
-                zIndex: "999999",
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-                border: "1px solid rgba(255,255,255,0.08)",
-                backdropFilter: "blur(12px)"
-            });
-        }else{
-            Object.assign(panel.style, {
-                position: "fixed",
-                bottom: "24px",
-                right: "560px", 
-                width: "520px",
-                height: "460px",
-                background: "var(--md-sys-color-surface, #1e1e1e)",
-                color: "var(--md-sys-color-on-surface, #fff)",
-                borderRadius: "16px",
-                boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
-                zIndex: "999999",
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-                border: "1px solid rgba(255,255,255,0.08)",
-                backdropFilter: "blur(12px)"
-            });
-        }
-
-        const header = document.createElement("div");
-        Object.assign(header.style, {
-            padding: "14px 16px",
-            fontWeight: "600",
-            fontSize: "14px",
-            background: "var(--md-sys-color-surface-container, rgba(255,255,255,0.04))",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            cursor: "move",
+    }else{
+        Object.assign(panel.style, {
+            position: "fixed",
+            bottom: "24px",
+            left: "24px",
+            width: "560px",
+            height: "520px",
+            background: "var(--md-sys-color-surface, #1e1e1e)",
+            borderRadius: "16px",
+            boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
+            zIndex: "9999999",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flex: "0 0 auto"
+            flexDirection: "column",
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(12px)"
         });
-
-        const headerTitle = document.createElement("span");
-        headerTitle.textContent = "Local Plugins";
-
-        const closeBtn = document.createElement("div");
-        closeBtn.textContent = "✕";
-        Object.assign(closeBtn.style, {
-            cursor: "pointer",
-            opacity: "0.7",
-            fontSize: "15px",
-            lineHeight: "1",
-            padding: "2px 4px"
-        });
-        closeBtn.onmouseenter = () => closeBtn.style.opacity = "1";
-        closeBtn.onmouseleave = () => closeBtn.style.opacity = "0.7";
-        closeBtn.onclick = () => panel.style.display = "none";
-
-        header.appendChild(headerTitle);
-        header.appendChild(closeBtn);
-
-        const controlsBar = document.createElement("div");
-        Object.assign(controlsBar.style, {
-            padding: "12px 16px",
-            display: "flex",
-            gap: "8px",
-            alignItems: "center",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            flex: "0 0 auto"
-        });
-
-        const nameInput = document.createElement("input");
-        nameInput.placeholder = "Plugin name";
-        styleLocalInput(nameInput);
-        nameInput.style.flex = "1";
-
-        const addBtn = document.createElement("button");
-        addBtn.textContent = "+ New";
-        styleLocalBtn(addBtn);
-        addBtn.onclick = () => {
-            const name = nameInput.value.trim();
-            if (!name) return;
-            const plugins = getLocalPlugins();
-            const newPlugin = {
-                id: "local_" + Date.now(),
-                name,
-                code: "",
-                enabled: false
-            };
-            plugins.push(newPlugin);
-            setLocalPlugins(plugins);
-            nameInput.value = "";
-            renderLocalPanel(searchInput.value.toLowerCase());
-        };
-
-        const importBtn = document.createElement("button");
-        importBtn.textContent = "Import";
-        styleLocalBtn(importBtn, "#2d6a4f");
-        importBtn.onmouseenter = () => importBtn.style.opacity = "0.75";
-        importBtn.onmouseleave = () => importBtn.style.opacity = "1";
-
-        const fileInput = document.createElement("input");
-        fileInput.type = "file";
-        fileInput.accept = ".js,text/javascript";
-        fileInput.multiple = true;
-        fileInput.style.display = "none";
-
-        importBtn.onclick = () => fileInput.click();
-
-        fileInput.onchange = async () => {
-            const files = [...fileInput.files];
-            if (!files.length) return;
-            const plugins = getLocalPlugins();
-            for (const file of files) {
-                const text = await file.text();
-                const name = file.name.replace(/\.js$/i, "");
-                plugins.push({
-                    id: "local_" + Date.now() + "_" + Math.random(),
-                    name,
-                    code: text,
-                    enabled: false
-                });
-            }
-            setLocalPlugins(plugins);
-            fileInput.value = "";
-            renderLocalPanel(searchInput.value.toLowerCase());
-        };
-
-        controlsBar.appendChild(nameInput);
-        controlsBar.appendChild(addBtn);
-        controlsBar.appendChild(importBtn);
-        controlsBar.appendChild(fileInput);
-
-        const searchBar = document.createElement("div");
-        Object.assign(searchBar.style, {
-            padding: "10px 16px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            flex: "0 0 auto"
-        });
-
-        const searchInput = document.createElement("input");
-        searchInput.placeholder = "Search plugins…";
-        styleLocalInput(searchInput);
-        searchInput.style.width = "100%";
-        searchInput.oninput = () => renderLocalPanel(searchInput.value.toLowerCase());
-        searchBar.appendChild(searchInput);
-
-        const content = document.createElement("div");
-        content.id = "avia-local-plugins-content";
-        Object.assign(content.style, {
-            flex: "1",
-            overflowY: "auto",
-            padding: "12px 16px 16px",
-            scrollbarWidth: "none",
-            msOverflowStyle: "none"
-        });
-
-        if (!document.getElementById("avia-local-scrollbar-hide")) {
-            const s = document.createElement("style");
-            s.id = "avia-local-scrollbar-hide";
-            s.textContent = "#avia-local-plugins-content::-webkit-scrollbar{display:none}";
-            document.head.appendChild(s);
-        }
-
-        panel.appendChild(header);
-        panel.appendChild(controlsBar);
-        panel.appendChild(searchBar);
-        panel.appendChild(content);
-
-        const dropOverlay = document.createElement("div");
-        dropOverlay.textContent = "Import JS files";
-        Object.assign(dropOverlay.style, {
-            position: "absolute",
-            inset: "0",
-            background: "rgba(0,0,0,0.6)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "18px",
-            fontWeight: "600",
-            color: "#fff",
-            opacity: "0",
-            pointerEvents: "none",
-            transition: "opacity 0.15s ease",
-            borderRadius: "16px"
-        });
-        panel.appendChild(dropOverlay);
-
-        document.body.appendChild(panel);
-
-        let dragDepth = 0;
-
-        panel.addEventListener("dragenter", e => {
-            e.preventDefault();
-            e.stopPropagation();
-            dragDepth++;
-            dropOverlay.style.opacity = "1";
-            panel.style.border = "1px dashed rgba(255,255,255,0.4)";
-        });
-
-        panel.addEventListener("dragover", e => {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-
-        panel.addEventListener("dragleave", e => {
-            e.preventDefault();
-            e.stopPropagation();
-            dragDepth--;
-            if (dragDepth <= 0) {
-                dropOverlay.style.opacity = "0";
-                panel.style.border = "1px solid rgba(255,255,255,0.08)";
-                dragDepth = 0;
-            }
-        });
-
-        panel.addEventListener("drop", async e => {
-            e.preventDefault();
-            e.stopPropagation();
-            dropOverlay.style.opacity = "0";
-            panel.style.border = "1px solid rgba(255,255,255,0.08)";
-            dragDepth = 0;
-            const files = [...e.dataTransfer.files].filter(f => f.name.endsWith(".js"));
-            if (!files.length) return;
-            const plugins = getLocalPlugins();
-            for (const file of files) {
-                const text = await file.text();
-                const name = file.name.replace(/\.js$/i, "");
-                plugins.push({
-                    id: "local_" + Date.now() + "_" + Math.random(),
-                    name,
-                    code: text,
-                    enabled: false
-                });
-            }
-            setLocalPlugins(plugins);
-            renderLocalPanel(searchInput.value.toLowerCase());
-        });
-
-        let isDragging = false, offsetX, offsetY;
-        header.addEventListener("mousedown", e => {
-            isDragging = true;
-            offsetX = e.clientX - panel.offsetLeft;
-            offsetY = e.clientY - panel.offsetTop;
-            document.body.style.userSelect = "none";
-        });
-        document.addEventListener("mouseup", () => {
-            isDragging = false;
-            document.body.style.userSelect = "";
-        });
-        document.addEventListener("mousemove", e => {
-            if (!isDragging) return;
-            panel.style.left = (e.clientX - offsetX) + "px";
-            panel.style.top = (e.clientY - offsetY) + "px";
-            panel.style.right = "auto";
-            panel.style.bottom = "auto";
-        });
-
-        renderLocalPanel();
     }
 
-    function renderLocalPanel(filter = "") {
-        const content = document.getElementById("avia-local-plugins-content");
-        if (!content) return;
-        content.innerHTML = "";
+    const header = document.createElement("div");
+    header.textContent = `Editing: ${plugin.name}`;
+    Object.assign(header.style, {
+        padding: "14px 16px", fontWeight: "600", fontSize: "14px",
+        background: "var(--md-sys-color-surface-container, rgba(255,255,255,0.04))",
+        borderBottom: "1px solid rgba(255,255,255,0.08)", cursor: "move",
+        color: "#fff", flex: "0 0 auto"
+    });
 
+    const closeBtn = document.createElement("div");
+    closeBtn.textContent = "✕";
+    Object.assign(closeBtn.style, {
+        position: "absolute", top: "12px", right: "16px",
+        cursor: "pointer", opacity: "0.7", color: "#fff", zIndex: "1"
+    });
+    closeBtn.onmouseenter = () => closeBtn.style.opacity = "1";
+    closeBtn.onmouseleave = () => closeBtn.style.opacity = "0.7";
+    closeBtn.onclick = () => panel.remove();
+
+    const toolbar = document.createElement("div");
+    Object.assign(toolbar.style, {
+        padding: "8px 16px", display: "flex", gap: "8px",
+        borderBottom: "1px solid rgba(255,255,255,0.08)", flex: "0 0 auto"
+    });
+
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = "💾 Save";
+    styleEditorBtn(saveBtn, "#2d6a4f");
+
+    const saveRunBtn = document.createElement("button");
+    saveRunBtn.textContent = "▶ Save & Run";
+    styleEditorBtn(saveRunBtn, "#1b4332");
+
+    toolbar.appendChild(saveBtn);
+    toolbar.appendChild(saveRunBtn);
+
+    const editorContainer = document.createElement("div");
+    editorContainer.style.flex = "1";
+
+    panel.appendChild(header);
+    panel.appendChild(closeBtn);
+    panel.appendChild(toolbar);
+    panel.appendChild(editorContainer);
+    document.body.appendChild(panel);
+
+    const editor = monaco.editor.create(editorContainer, {
+        value: plugin.code || "", language: "javascript", theme: "vs-dark",
+        automaticLayout: true, minimap: { enabled: false },
+        fontSize: 13, scrollBeyondLastLine: false, wordWrap: "on"
+    });
+
+    saveBtn.onclick = () => {
+        onSave(editor.getValue(), false);
+        saveBtn.textContent = "✓ Saved";
+        setTimeout(() => saveBtn.textContent = "💾 Save", 1200);
+    };
+
+    saveRunBtn.onclick = () => {
+        onSave(editor.getValue(), true);
+        saveRunBtn.textContent = "✓ Ran!";
+        setTimeout(() => saveRunBtn.textContent = "▶ Save & Run", 1200);
+    };
+
+    enableEditorDrag(panel, header);
+}
+
+function styleEditorBtn(btn, bg) {
+    Object.assign(btn.style, {
+        padding: "5px 14px", borderRadius: "8px", border: "none",
+        background: bg || "rgba(255,255,255,0.1)", color: "#fff",
+        cursor: "pointer", fontSize: "12px", fontWeight: "500"
+    });
+    btn.onmouseenter = () => btn.style.opacity = "0.8";
+    btn.onmouseleave = () => btn.style.opacity = "1";
+}
+
+function enableEditorDrag(panel, handle) {
+    let isDragging = false, offsetX, offsetY;
+    handle.addEventListener("mousedown", e => {
+        isDragging = true;
+        offsetX = e.clientX - panel.offsetLeft;
+        offsetY = e.clientY - panel.offsetTop;
+        document.body.style.userSelect = "none";
+    });
+    document.addEventListener("mouseup", () => { isDragging = false; document.body.style.userSelect = ""; });
+    document.addEventListener("mousemove", e => {
+        if (!isDragging) return;
+        panel.style.left = (e.clientX - offsetX) + "px";
+        panel.style.top = (e.clientY - offsetY) + "px";
+        panel.style.right = "auto";
+        panel.style.bottom = "auto";
+    });
+}
+
+function toggleLocalPanel() {
+    let panel = document.getElementById("avia-local-plugins-panel");
+    if (panel) {
+        if (panel.style.display === "none") { panel.style.display = "flex"; renderLocalPanel(); }
+        else panel.style.display = "none";
+        return;
+    }
+
+    panel = document.createElement("div");
+    panel.id = "avia-local-plugins-panel";
+    if(window.outerWidth<508){
+        Object.assign(panel.style, {
+            position: "fixed",
+            bottom: "24px",
+            right: "24px", 
+            width: `${window.outerWidth-52}px`,
+            height: `${window.outerWidth-72}px`,
+             background: "var(--md-sys-color-surface, #1e1e1e)",
+            color: "var(--md-sys-color-on-surface, #fff)",
+            borderRadius: "16px",
+            boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
+            zIndex: "999999",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(12px)"
+        });
+    }else{
+        Object.assign(panel.style, {
+            position: "fixed",
+            bottom: "24px",
+            right: "560px", 
+            width: "520px",
+            height: "460px",
+            background: "var(--md-sys-color-surface, #1e1e1e)",
+            color: "var(--md-sys-color-on-surface, #fff)",
+            borderRadius: "16px",
+            boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
+            zIndex: "999999",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(12px)"
+        });
+    }
+
+    const header = document.createElement("div");
+    Object.assign(header.style, {
+        padding: "14px 16px", fontWeight: "600", fontSize: "14px",
+        background: "var(--md-sys-color-surface-container, rgba(255,255,255,0.04))",
+        borderBottom: "1px solid rgba(255,255,255,0.08)", cursor: "move",
+        display: "flex", alignItems: "center", justifyContent: "space-between", flex: "0 0 auto"
+    });
+
+    const headerTitle = document.createElement("span");
+    headerTitle.textContent = "Local Plugins";
+
+    const closeBtn = document.createElement("div");
+    closeBtn.textContent = "✕";
+    Object.assign(closeBtn.style, { cursor: "pointer", opacity: "0.7", fontSize: "15px", lineHeight: "1", padding: "2px 4px" });
+    closeBtn.onmouseenter = () => closeBtn.style.opacity = "1";
+    closeBtn.onmouseleave = () => closeBtn.style.opacity = "0.7";
+    closeBtn.onclick = () => panel.style.display = "none";
+
+    header.appendChild(headerTitle);
+    header.appendChild(closeBtn);
+
+    const controlsBar = document.createElement("div");
+    Object.assign(controlsBar.style, {
+        padding: "12px 16px", display: "flex", gap: "8px", alignItems: "center",
+        borderBottom: "1px solid rgba(255,255,255,0.08)", flex: "0 0 auto"
+    });
+
+    const nameInput = document.createElement("input");
+    nameInput.placeholder = "Plugin name";
+    styleLocalInput(nameInput);
+    nameInput.style.flex = "1";
+
+    const addBtn = document.createElement("button");
+    addBtn.textContent = "+ New";
+    styleLocalBtn(addBtn);
+    addBtn.onclick = () => {
+        const name = nameInput.value.trim();
+        if (!name) return;
         const plugins = getLocalPlugins();
-        const runSnap = { ...runningLocalPlugins };
-        const errSnap = { ...localPluginErrors };
+        const newPlugin = { id: "local_" + Date.now(), name, code: "", enabled: false };
+        plugins.push(newPlugin);
+        setLocalPlugins(plugins);
+        nameInput.value = "";
+        renderLocalPanel(searchInput.value.toLowerCase());
+    };
 
-        const filtered = filter
-            ? plugins.filter(p => p.name.toLowerCase().includes(filter))
-            : plugins;
+    const importBtn = document.createElement("button");
+    importBtn.textContent = "Import";
+    styleLocalBtn(importBtn, "#2d6a4f");
+    importBtn.onmouseenter = () => importBtn.style.opacity = "0.75";
+    importBtn.onmouseleave = () => importBtn.style.opacity = "1";
 
-        const visible = [...filtered].reverse();
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = ".js";
+    fileInput.multiple = true;
+    fileInput.style.display = "none";
 
-        if (visible.length === 0) {
-            const empty = document.createElement("div");
-            empty.textContent = plugins.length === 0
-                ? "No local plugins yet. Add one above."
-                : "No plugins match your search.";
-            Object.assign(empty.style, { opacity: "0.4", fontSize: "13px", textAlign: "center", padding: "24px 0" });
-            content.appendChild(empty);
-            return;
+    importBtn.onclick = () => fileInput.click();
+    fileInput.onchange = async () => {
+        const files = [...fileInput.files];
+        if (!files.length) return;
+        const plugins = getLocalPlugins();
+        for (const file of files) {
+            const text = await file.text();
+            const name = file.name.replace(/\.js$/i, "");
+            plugins.push({ id: "local_" + Date.now() + "_" + Math.random(), name, code: text, enabled: false });
         }
+        setLocalPlugins(plugins);
+        fileInput.value = "";
+        renderLocalPanel(searchInput.value.toLowerCase());
+    };
 
-        const sectionLabel = document.createElement("div");
-        sectionLabel.textContent = `Local Plugins: ${visible.length}`;
-        Object.assign(sectionLabel.style, {
-            fontSize: "11px",
-            fontWeight: "700",
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            color: "rgba(255,255,255,0.35)",
-            marginBottom: "10px"
+    controlsBar.appendChild(nameInput);
+    controlsBar.appendChild(addBtn);
+    controlsBar.appendChild(importBtn);
+    controlsBar.appendChild(fileInput);
+
+    const searchBar = document.createElement("div");
+    Object.assign(searchBar.style, { padding: "10px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)", flex: "0 0 auto" });
+
+    const searchInput = document.createElement("input");
+    searchInput.placeholder = "Search plugins…";
+    styleLocalInput(searchInput);
+    searchInput.style.width = "100%";
+    searchInput.oninput = () => renderLocalPanel(searchInput.value.toLowerCase());
+    searchBar.appendChild(searchInput);
+
+    const content = document.createElement("div");
+    content.id = "avia-local-plugins-content";
+    Object.assign(content.style, {
+        flex: "1", overflowY: "auto", padding: "12px 16px 16px",
+        scrollbarWidth: "none", msOverflowStyle: "none"
+    });
+
+    if (!document.getElementById("avia-local-scrollbar-hide")) {
+        const s = document.createElement("style");
+        s.id = "avia-local-scrollbar-hide";
+        s.textContent = "#avia-local-plugins-content::-webkit-scrollbar{display:none}";
+        document.head.appendChild(s);
+    }
+
+    panel.appendChild(header);
+    panel.appendChild(controlsBar);
+    panel.appendChild(searchBar);
+    panel.appendChild(content);
+
+    const dropOverlay = document.createElement("div");
+    dropOverlay.textContent = "Import JS files";
+    Object.assign(dropOverlay.style, {
+        position: "absolute", inset: "0", background: "rgba(0,0,0,0.6)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: "18px", fontWeight: "600", color: "#fff", opacity: "0",
+        pointerEvents: "none", transition: "opacity 0.15s ease", borderRadius: "16px"
+    });
+    panel.appendChild(dropOverlay);
+    document.body.appendChild(panel);
+
+    let dragDepth = 0;
+    panel.addEventListener("dragenter", e => { e.preventDefault(); e.stopPropagation(); dragDepth++; dropOverlay.style.opacity = "1"; panel.style.border = "1px dashed rgba(255,255,255,0.4)"; });
+    panel.addEventListener("dragover", e => { e.preventDefault(); e.stopPropagation(); });
+    panel.addEventListener("dragleave", e => { e.preventDefault(); e.stopPropagation(); dragDepth--; if (dragDepth <= 0) { dropOverlay.style.opacity = "0"; panel.style.border = "1px solid rgba(255,255,255,0.08)"; dragDepth = 0; } });
+    panel.addEventListener("drop", async e => {
+        e.preventDefault(); e.stopPropagation();
+        dropOverlay.style.opacity = "0"; panel.style.border = "1px solid rgba(255,255,255,0.08)"; dragDepth = 0;
+        const files = [...e.dataTransfer.files].filter(f => f.name.endsWith(".js"));
+        if (!files.length) return;
+        const plugins = getLocalPlugins();
+        for (const file of files) {
+            const text = await file.text();
+            const name = file.name.replace(/\.js$/i, "");
+            plugins.push({ id: "local_" + Date.now() + "_" + Math.random(), name, code: text, enabled: false });
+        }
+        setLocalPlugins(plugins);
+        renderLocalPanel(searchInput.value.toLowerCase());
+    });
+
+    let isDragging = false, offsetX, offsetY;
+    header.addEventListener("mousedown", e => { isDragging = true; offsetX = e.clientX - panel.offsetLeft; offsetY = e.clientY - panel.offsetTop; document.body.style.userSelect = "none"; });
+    document.addEventListener("mouseup", () => { isDragging = false; document.body.style.userSelect = ""; });
+    document.addEventListener("mousemove", e => { if (!isDragging) return; panel.style.left = (e.clientX - offsetX) + "px"; panel.style.top = (e.clientY - offsetY) + "px"; panel.style.right = "auto"; panel.style.bottom = "auto"; });
+
+    renderLocalPanel();
+}
+
+function renderLocalPanel(filter = "") {
+    const content = document.getElementById("avia-local-plugins-content");
+    if (!content) return;
+    content.innerHTML = "";
+
+    const plugins = getLocalPlugins();
+    const runSnap = { ...runningLocalPlugins };
+    const errSnap = { ...localPluginErrors };
+
+    const filtered = filter ? plugins.filter(p => p.name.toLowerCase().includes(filter)) : plugins;
+    const visible = [...filtered].reverse();
+
+    if (visible.length === 0) {
+        const empty = document.createElement("div");
+        empty.textContent = plugins.length === 0 ? "No local plugins yet. Add one above." : "No plugins match your search.";
+        Object.assign(empty.style, { opacity: "0.4", fontSize: "13px", textAlign: "center", padding: "24px 0" });
+        content.appendChild(empty);
+        return;
+    }
+
+    const sectionLabel = document.createElement("div");
+    sectionLabel.textContent = `Local Plugins: ${visible.length}`;
+    Object.assign(sectionLabel.style, {
+        fontSize: "11px", fontWeight: "700", letterSpacing: "0.06em",
+        textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: "10px"
+    });
+    content.appendChild(sectionLabel);
+
+    const grid = document.createElement("div");
+    Object.assign(grid.style, { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "10px" });
+
+    visible.forEach((plugin) => {
+        const isRunning = !!runSnap[plugin.id];
+        const hasError = !!errSnap[plugin.id];
+
+        const card = document.createElement("div");
+        Object.assign(card.style, {
+            background: "rgba(255,255,255,0.04)",
+            border: `1px solid ${hasError ? "rgba(255,77,77,0.3)" : isRunning ? "rgba(77,255,136,0.25)" : "rgba(255,255,255,0.06)"}`,
+            borderRadius: "10px", padding: "12px", display: "flex", flexDirection: "column", gap: "8px"
         });
-        content.appendChild(sectionLabel);
+        card.onmouseenter = () => { if (!hasError && !isRunning) card.style.borderColor = "rgba(255,255,255,0.13)"; };
+        card.onmouseleave = () => { card.style.borderColor = hasError ? "rgba(255,77,77,0.3)" : isRunning ? "rgba(77,255,136,0.25)" : "rgba(255,255,255,0.06)"; };
 
-        const grid = document.createElement("div");
-        Object.assign(grid.style, {
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-            gap: "10px"
+        const topRow = document.createElement("div");
+        Object.assign(topRow.style, { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" });
+
+        const nameWrap = document.createElement("div");
+        Object.assign(nameWrap.style, { display: "flex", alignItems: "center", gap: "7px", minWidth: "0", flex: "1" });
+
+        const dot = document.createElement("div");
+        Object.assign(dot.style, {
+            width: "8px", height: "8px", borderRadius: "50%", flexShrink: "0",
+            background: hasError ? "#ff4d4d" : isRunning ? "#4dff88" : "#555",
+            boxShadow: hasError ? "0 0 5px #ff4d4d" : isRunning ? "0 0 5px #4dff88" : "none"
         });
 
-        visible.forEach((plugin) => {
-            const realIndex = plugins.indexOf(plugin);
-            const isRunning = !!runSnap[plugin.id];
-            const hasError = !!errSnap[plugin.id];
+        const nameEl = document.createElement("div");
+        nameEl.textContent = plugin.name;
+        Object.assign(nameEl.style, { fontSize: "13px", fontWeight: "600", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" });
 
-            const card = document.createElement("div");
-            Object.assign(card.style, {
-                background: "rgba(255,255,255,0.04)",
-                border: `1px solid ${hasError ? "rgba(255,77,77,0.3)" : isRunning ? "rgba(77,255,136,0.25)" : "rgba(255,255,255,0.06)"}`,
-                borderRadius: "10px",
-                padding: "12px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px"
-            });
-            card.onmouseenter = () => {
-                if (!hasError && !isRunning) card.style.borderColor = "rgba(255,255,255,0.13)";
-            };
-            card.onmouseleave = () => {
-                card.style.borderColor = hasError ? "rgba(255,77,77,0.3)" : isRunning ? "rgba(77,255,136,0.25)" : "rgba(255,255,255,0.06)";
-            };
+        nameWrap.appendChild(dot);
+        nameWrap.appendChild(nameEl);
 
-            const topRow = document.createElement("div");
-            Object.assign(topRow.style, {
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "8px"
-            });
+        const switchWrap = document.createElement("div");
+        Object.assign(switchWrap.style, { position: "relative", width: "36px", height: "20px", flexShrink: "0", cursor: "pointer" });
 
-            const nameWrap = document.createElement("div");
-            Object.assign(nameWrap.style, { display: "flex", alignItems: "center", gap: "7px", minWidth: "0", flex: "1" });
+        const track = document.createElement("div");
+        Object.assign(track.style, { position: "absolute", inset: "0", borderRadius: "10px", background: plugin.enabled ? "rgba(100,160,255,0.6)" : "rgba(255,255,255,0.15)", transition: "background 0.2s" });
 
-            const dot = document.createElement("div");
-            Object.assign(dot.style, {
-                width: "8px",
-                height: "8px",
-                borderRadius: "50%",
-                flexShrink: "0",
-                background: hasError ? "#ff4d4d" : isRunning ? "#4dff88" : "#555",
-                boxShadow: hasError ? "0 0 5px #ff4d4d" : isRunning ? "0 0 5px #4dff88" : "none"
-            });
+        const thumb = document.createElement("div");
+        Object.assign(thumb.style, { position: "absolute", top: "3px", left: plugin.enabled ? "19px" : "3px", width: "14px", height: "14px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", pointerEvents: "none" });
 
-            const nameEl = document.createElement("div");
-            nameEl.textContent = plugin.name;
-            Object.assign(nameEl.style, {
-                fontSize: "13px",
-                fontWeight: "600",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap"
-            });
+        switchWrap.appendChild(track);
+        switchWrap.appendChild(thumb);
+        switchWrap.onclick = () => {
+            const all = getLocalPlugins();
+            const target = all.find(p => p.id === plugin.id);
+            if (!target) return;
+            target.enabled = !target.enabled;
+            plugin.enabled = target.enabled;
+            setLocalPlugins(all);
+            if (target.enabled) runLocalPlugin(plugin);
+            else stopLocalPlugin(plugin);
+            renderLocalPanel(filter);
+        };
 
-            nameWrap.appendChild(dot);
-            nameWrap.appendChild(nameEl);
+        topRow.appendChild(nameWrap);
+        topRow.appendChild(switchWrap);
 
-            const switchWrap = document.createElement("div");
-            Object.assign(switchWrap.style, {
-                position: "relative",
-                width: "36px",
-                height: "20px",
-                flexShrink: "0",
-                cursor: "pointer"
-            });
+        const footer = document.createElement("div");
+        Object.assign(footer.style, { display: "flex", gap: "6px", marginTop: "auto", paddingTop: "2px" });
 
-            const track = document.createElement("div");
-            Object.assign(track.style, {
-                position: "absolute",
-                inset: "0",
-                borderRadius: "10px",
-                background: plugin.enabled ? "rgba(100,160,255,0.6)" : "rgba(255,255,255,0.15)",
-                transition: "background 0.2s"
-            });
+        const updateIconBtn = document.createElement("button");
+        updateIconBtn.title = "Check for update";
+        updateIconBtn.type = "button";
+        Object.assign(updateIconBtn.style, {
+            padding: "5px 8px", borderRadius: "8px", border: "none",
+            background: "rgba(255,255,255,0.06)", color: "#fff",
+            cursor: "pointer", fontSize: "12px", display: "flex",
+            alignItems: "center", justifyContent: "center", flexShrink: "0"
+        });
+        updateIconBtn.onmouseenter = () => updateIconBtn.style.opacity = "0.75";
+        updateIconBtn.onmouseleave = () => updateIconBtn.style.opacity = "1";
 
-            const thumb = document.createElement("div");
-            Object.assign(thumb.style, {
-                position: "absolute",
-                top: "3px",
-                left: plugin.enabled ? "19px" : "3px",
-                width: "14px",
-                height: "14px",
-                borderRadius: "50%",
-                background: "#fff",
-                transition: "left 0.2s",
-                pointerEvents: "none"
-            });
+        const updateIcon = document.createElement("span");
+        updateIcon.className = "material-symbols-outlined";
+        updateIcon.textContent = "update";
+        updateIcon.style.cssText = "font-size:16px;display:block;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;";
+        updateIconBtn.appendChild(updateIcon);
+        updateIconBtn.onclick = () => checkPluginUpdate(plugin, updateIconBtn);
 
-            switchWrap.appendChild(track);
-            switchWrap.appendChild(thumb);
+        const exportBtn = document.createElement("button");
+        exportBtn.textContent = "Export";
+        styleLocalBtn(exportBtn, "rgba(80,200,120,0.15)");
+        exportBtn.title = "Download as .js file";
+        exportBtn.onclick = () => exportPlugin(plugin);
 
-            switchWrap.onclick = () => {
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "✏ Edit";
+        styleLocalBtn(editBtn, "rgba(100,140,255,0.2)");
+        editBtn.style.flex = "1";
+        editBtn.onclick = () => {
+            openEditorPanel(plugin, (newCode, andRun) => {
                 const all = getLocalPlugins();
                 const target = all.find(p => p.id === plugin.id);
-                if (!target) return;
-                target.enabled = !target.enabled;
-                plugin.enabled = target.enabled;
-                setLocalPlugins(all);
-                if (target.enabled) runLocalPlugin(plugin);
-                else stopLocalPlugin(plugin);
-                renderLocalPanel(filter);
-            };
-
-            topRow.appendChild(nameWrap);
-            topRow.appendChild(switchWrap);
-
-            const footer = document.createElement("div");
-            Object.assign(footer.style, { display: "flex", gap: "6px", marginTop: "auto", paddingTop: "2px" });
-
-            const editBtn = document.createElement("button");
-            editBtn.textContent = "✏ Edit";
-            styleLocalBtn(editBtn, "rgba(100,140,255,0.2)");
-            editBtn.style.flex = "1";
-            editBtn.onclick = () => {
-                openEditorPanel(plugin, (newCode, andRun) => {
-                    const all = getLocalPlugins();
-                    const target = all.find(p => p.id === plugin.id);
-                    if (target) {
-                        target.code = newCode;
-                        plugin.code = newCode;
-                        setLocalPlugins(all);
-                    }
-                    if (andRun) {
-                        plugin.enabled = true;
-                        if (target) target.enabled = true;
-                        setLocalPlugins(getLocalPlugins().map(p => p.id === plugin.id ? { ...p, code: newCode, enabled: true } : p));
-                        runLocalPlugin(plugin);
-                    }
-                    renderLocalPanel(filter);
-                });
-            };
-
-            const removeBtn = document.createElement("button");
-            removeBtn.textContent = "✕";
-            styleLocalBtn(removeBtn, "rgba(255,80,80,0.15)");
-            removeBtn.onclick = () => {
-                stopLocalPlugin(plugin);
-                const editorPanel = document.getElementById("avia-local-editor-panel");
-                if (editorPanel) editorPanel.remove();
-                const all = getLocalPlugins();
-                all.splice(all.findIndex(p => p.id === plugin.id), 1);
-                setLocalPlugins(all);
-                renderLocalPanel(filter);
-            };
-
-            footer.appendChild(editBtn);
-            footer.appendChild(removeBtn);
-
-            card.appendChild(topRow);
-            card.appendChild(footer);
-            grid.appendChild(card);
-        });
-
-        content.appendChild(grid);
-    }
-
-    function styleLocalInput(input) {
-        Object.assign(input.style, {
-            padding: "6px 8px",
-            borderRadius: "8px",
-            border: "1px solid rgba(255,255,255,0.1)",
-            background: "rgba(255,255,255,0.05)",
-            color: "#fff",
-            fontSize: "13px"
-        });
-    }
-
-    function styleLocalBtn(btn, bg) {
-        Object.assign(btn.style, {
-            padding: "5px 12px",
-            borderRadius: "8px",
-            border: "none",
-            background: bg || "rgba(255,255,255,0.08)",
-            color: "#fff",
-            cursor: "pointer",
-            fontSize: "12px",
-            whiteSpace: "nowrap"
-        });
-        btn.onmouseenter = () => btn.style.opacity = "0.75";
-        btn.onmouseleave = () => btn.style.opacity = "1";
-    }
-
-    function injectLocalButton() {
-        if (document.getElementById("avia-local-plugins-btn")) return;
-        const appearanceBtn = [...document.querySelectorAll("a")]
-            .find(a => a.textContent.trim() === "Appearance");
-        if (!appearanceBtn) return;
-
-        const aviaPluginsBtn = document.getElementById("stoat-fake-plugins");
-        if (!aviaPluginsBtn) return;
-
-        const localBtn = appearanceBtn.cloneNode(true);
-        localBtn.id = "avia-local-plugins-btn";
-
-        const textNode = [...localBtn.querySelectorAll("div")]
-            .find(d => d.children.length === 0 && d.textContent.trim() === "Appearance");
-        if (textNode) textNode.textContent = "(Avia) Local Plugins";
-
-        const oldSvg = localBtn.querySelector("svg");
-        if (oldSvg) oldSvg.remove();
-        const svgNS = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(svgNS, "svg");
-        svg.setAttribute("viewBox", "0 0 24 24");
-        svg.setAttribute("width", "20");
-        svg.setAttribute("height", "20");
-        svg.setAttribute("fill", "currentColor");
-        svg.style.marginRight = "8px";
-        const path = document.createElementNS(svgNS, "path");
-        path.setAttribute("d", "M20.5 11H19V7a2 2 0 00-2-2h-4V3.5a2.5 2.5 0 00-5 0V5H4a2 2 0 00-2 2v3.8h1.5c1.5 0 2.7 1.2 2.7 2.7S5 16.2 3.5 16.2H2V20a2 2 0 002 2h3.8v-1.5c0-1.5 1.2-2.7 2.7-2.7s2.7 1.2 2.7 2.7V22H17a2 2 0 002-2v-4h1.5a2.5 2.5 0 000-5z");
-        svg.appendChild(path);
-        localBtn.insertBefore(svg, localBtn.firstChild);
-
-        localBtn.addEventListener("click", toggleLocalPanel);
-        aviaPluginsBtn.parentElement.insertBefore(localBtn, aviaPluginsBtn.nextSibling);
-    }
-
-
-    function registerWithAviaMenu() {
-        if (window.AviaMenu) {
-            window.AviaMenu.register({ id: "avia_plugins_local", name: "Local Plugins", icon: "extension", onClick: toggleLocalPanel });
-        } else {
-            const interval = setInterval(() => {
-                if (window.AviaMenu) {
-                    clearInterval(interval);
-                    window.AviaMenu.register({ id: "avia_plugins_local", name: "Local Plugins", icon: "extension", onClick: toggleLocalPanel });
+                if (target) { target.code = newCode; plugin.code = newCode; setLocalPlugins(all); }
+                if (andRun) {
+                    plugin.enabled = true;
+                    setLocalPlugins(getLocalPlugins().map(p => p.id === plugin.id ? { ...p, code: newCode, enabled: true } : p));
+                    runLocalPlugin(plugin);
                 }
-            }, 100);
-        }
-    }
-    function waitForBody(callback) {
-        if (document.body) callback();
-        else new MutationObserver((obs) => {
-            if (document.body) { obs.disconnect(); callback(); }
-        }).observe(document.documentElement, { childList: true });
-    }
+                renderLocalPanel(filter);
+            });
+        };
 
-    waitForBody(() => {
-        const observer = new MutationObserver(() => injectLocalButton());
-        observer.observe(document.body, { childList: true, subtree: true });
-        injectLocalButton();
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "✕";
+        styleLocalBtn(removeBtn, "rgba(255,80,80,0.15)");
+        removeBtn.onclick = () => {
+            stopLocalPlugin(plugin);
+            const editorPanel = document.getElementById("avia-local-editor-panel");
+            if (editorPanel) editorPanel.remove();
+            const all = getLocalPlugins();
+            all.splice(all.findIndex(p => p.id === plugin.id), 1);
+            setLocalPlugins(all);
+            renderLocalPanel(filter);
+        };
+
+        footer.appendChild(updateIconBtn);
+        footer.appendChild(exportBtn);
+        footer.appendChild(editBtn);
+        footer.appendChild(removeBtn);
+
+        card.appendChild(topRow);
+        card.appendChild(footer);
+        grid.appendChild(card);
     });
 
-    getLocalPlugins().forEach(plugin => {
-        if (plugin.enabled) runLocalPlugin(plugin);
+    content.appendChild(grid);
+}
+
+function styleLocalInput(input) {
+    Object.assign(input.style, {
+        padding: "6px 8px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)",
+        background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: "13px"
     });
+}
 
-    preloadMonaco();
+function styleLocalBtn(btn, bg) {
+    Object.assign(btn.style, {
+        padding: "5px 12px", borderRadius: "8px", border: "none",
+        background: bg || "rgba(255,255,255,0.08)", color: "#fff",
+        cursor: "pointer", fontSize: "12px", whiteSpace: "nowrap"
+    });
+    btn.onmouseenter = () => btn.style.opacity = "0.75";
+    btn.onmouseleave = () => btn.style.opacity = "1";
+}
 
-    registerWithAviaMenu();
+function injectLocalButton() {
+    if (document.getElementById("avia-local-plugins-btn")) return;
+    const appearanceBtn = [...document.querySelectorAll("a")].find(a => a.textContent.trim() === "Appearance");
+    if (!appearanceBtn) return;
+    const aviaPluginsBtn = document.getElementById("stoat-fake-plugins");
+    if (!aviaPluginsBtn) return;
+
+    const localBtn = appearanceBtn.cloneNode(true);
+    localBtn.id = "avia-local-plugins-btn";
+    const textNode = [...localBtn.querySelectorAll("div")].find(d => d.children.length === 0 && d.textContent.trim() === "Appearance");
+    if (textNode) textNode.textContent = "(Avia) Local Plugins";
+
+    const oldSvg = localBtn.querySelector("svg");
+    if (oldSvg) oldSvg.remove();
+
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("width", "20");
+    svg.setAttribute("height", "20");
+    svg.setAttribute("fill", "currentColor");
+    svg.style.marginRight = "8px";
+    const path = document.createElementNS(svgNS, "path");
+    path.setAttribute("d", "M20.5 11H19V7a2 2 0 00-2-2h-4V3.5a2.5 2.5 0 00-5 0V5H4a2 2 0 00-2 2v3.8h1.5c1.5 0 2.7 1.2 2.7 2.7S5 16.2 3.5 16.2H2V20a2 2 0 002 2h3.8v-1.5c0-1.5 1.2-2.7 2.7-2.7s2.7 1.2 2.7 2.7V22H17a2 2 0 002-2v-4h1.5a2.5 2.5 0 000-5z");
+    svg.appendChild(path);
+    localBtn.insertBefore(svg, localBtn.firstChild);
+    localBtn.addEventListener("click", toggleLocalPanel);
+    aviaPluginsBtn.parentElement.insertBefore(localBtn, aviaPluginsBtn.nextSibling);
+}
+
+function registerWithAviaMenu() {
+    const reg = () => window.AviaMenu && window.AviaMenu.register({ id: "avia_plugins_local", name: "Local Plugins", icon: "extension", onClick: toggleLocalPanel });
+    if (window.AviaMenu) reg();
+    else { const iv = setInterval(() => { if (window.AviaMenu) { clearInterval(iv); reg(); } }, 100); }
+}
+
+function waitForBody(callback) {
+    if (document.body) callback();
+    else new MutationObserver((obs) => { if (document.body) { obs.disconnect(); callback(); } }).observe(document.documentElement, { childList: true });
+}
+
+waitForBody(() => {
+    const observer = new MutationObserver(() => injectLocalButton());
+    observer.observe(document.body, { childList: true, subtree: true });
+    injectLocalButton();
+});
+
+getLocalPlugins().forEach(plugin => { if (plugin.enabled) runLocalPlugin(plugin); });
+preloadMonaco();
+registerWithAviaMenu();
 
 })();
 
@@ -3867,11 +4592,26 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
 
     const ITEM_HEIGHT = 32;
     const MAX_VISIBLE = 12;
+    const SUBMENU_MAX_VISIBLE = 8;
     const PIN_STORAGE_KEY = "avia_menu_pins";
 
     const registeredItems = [];
+    const submenuParents = [];
+    const submenuItems = [];
+
     let menuEl = null;
     let menuOpen = false;
+    let activeSubmenuEl = null;
+    let activeSubmenuParentBtn = null;
+    let submenuHoverTimeout = null;
+
+    function allIds() {
+        return [
+            ...registeredItems.map(i => i.id),
+            ...submenuParents.map(i => i.id),
+            ...submenuItems.map(i => i.id)
+        ];
+    }
 
     function getPins() {
         try { return JSON.parse(localStorage.getItem(PIN_STORAGE_KEY) || "[]"); }
@@ -3896,38 +4636,34 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
         return getPins().includes(id);
     }
 
-    function getSortedItems() {
+    function getSortedMainItems() {
         const pins = getPins();
+        const all = [...registeredItems, ...submenuParents];
         const pinned = [];
         for (const id of pins) {
-            const found = registeredItems.find(i => i.id === id);
+            const found = all.find(i => i.id === id);
             if (found) pinned.push(found);
         }
-        const unpinned = registeredItems.filter(i => !isPinned(i.id));
+        const unpinned = all.filter(i => !isPinned(i.id));
         return [...pinned, ...unpinned];
     }
 
     window.AviaMenu = {
         register: function (item) {
             if (!item || typeof item !== "object") {
-                console.error("[AviaMenu] Registration failed: item must be an object, got", typeof item);
-                return;
+                console.error("[AviaMenu] register: item must be an object, got", typeof item); return;
             }
             if (typeof item.id !== "string" || !item.id.trim()) {
-                console.error("[AviaMenu] Registration failed: item.id must be a non-empty string, got", item.id);
-                return;
+                console.error("[AviaMenu] register: item.id must be a non-empty string, got", item.id); return;
             }
             if (!item.name || typeof item.name !== "string") {
-                console.error("[AviaMenu] Registration failed for id '%s': item.name must be a non-empty string, got", item.id, item.name);
-                return;
+                console.error("[AviaMenu] register failed for id '%s': item.name must be a non-empty string, got", item.id, item.name); return;
             }
             if (typeof item.onClick !== "function") {
-                console.error("[AviaMenu] Registration failed for id '%s': item.onClick must be a function, got", item.id, typeof item.onClick);
-                return;
+                console.error("[AviaMenu] register failed for id '%s': item.onClick must be a function, got", item.id, typeof item.onClick); return;
             }
-            if (registeredItems.find(i => i.id === item.id.trim())) {
-                console.error("[AviaMenu] Registration failed: an item with id '%s' is already registered", item.id.trim());
-                return;
+            if (allIds().includes(item.id.trim())) {
+                console.error("[AviaMenu] register: id '%s' is already registered", item.id.trim()); return;
             }
             registeredItems.push({
                 id: item.id.trim(),
@@ -3936,15 +4672,288 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
                 icon: typeof item.icon === "string" && item.icon.trim() ? item.icon.trim() : null
             });
             if (menuEl) rebuildMenu();
+        },
+
+        submenuregister: function (item) {
+            if (!item || typeof item !== "object") {
+                console.error("[AviaMenu] submenuregister: item must be an object, got", typeof item); return;
+            }
+            if (typeof item.id !== "string" || !item.id.trim()) {
+                console.error("[AviaMenu] submenuregister: item.id must be a non-empty string, got", item.id); return;
+            }
+            if (!item.name || typeof item.name !== "string") {
+                console.error("[AviaMenu] submenuregister failed for id '%s': item.name must be a non-empty string, got", item.id, item.name); return;
+            }
+            if (allIds().includes(item.id.trim())) {
+                console.error("[AviaMenu] submenuregister: id '%s' is already registered", item.id.trim()); return;
+            }
+            submenuParents.push({
+                id: item.id.trim(),
+                name: item.name,
+                icon: typeof item.icon === "string" && item.icon.trim() ? item.icon.trim() : null
+            });
+            if (menuEl) rebuildMenu();
+        },
+
+        submenu: function (item) {
+            if (!item || typeof item !== "object") {
+                console.error("[AviaMenu] submenu: item must be an object, got", typeof item); return;
+            }
+            if (typeof item.parent !== "string" || !item.parent.trim()) {
+                console.error("[AviaMenu] submenu: item.parent must be a non-empty string, got", item.parent); return;
+            }
+            if (typeof item.id !== "string" || !item.id.trim()) {
+                console.error("[AviaMenu] submenu: item.id must be a non-empty string, got", item.id); return;
+            }
+            if (!item.name || typeof item.name !== "string") {
+                console.error("[AviaMenu] submenu failed for id '%s': item.name must be a non-empty string, got", item.id, item.name); return;
+            }
+            if (typeof item.onClick !== "function") {
+                console.error("[AviaMenu] submenu failed for id '%s': item.onClick must be a function, got", item.id, typeof item.onClick); return;
+            }
+            if (!submenuParents.find(p => p.id === item.parent.trim())) {
+                console.error("[AviaMenu] submenu: no submenuregister found with id '%s'", item.parent.trim()); return;
+            }
+            if (allIds().includes(item.id.trim())) {
+                console.error("[AviaMenu] submenu: id '%s' is already registered", item.id.trim()); return;
+            }
+            submenuItems.push({
+                parent: item.parent.trim(),
+                id: item.id.trim(),
+                name: item.name,
+                onClick: item.onClick,
+                icon: typeof item.icon === "string" && item.icon.trim() ? item.icon.trim() : null
+            });
+            if (menuEl) rebuildMenu();
+        },
+
+        updatesubmenu: function (item) {
+            if (!item || typeof item !== "object") {
+                console.error("[AviaMenu] updatesubmenu: item must be an object, got", typeof item); return;
+            }
+            if (typeof item.parent !== "string" || !item.parent.trim()) {
+                console.error("[AviaMenu] updatesubmenu: item.parent must be a non-empty string, got", item.parent); return;
+            }
+            if (typeof item.id !== "string" || !item.id.trim()) {
+                console.error("[AviaMenu] updatesubmenu: item.id must be a non-empty string, got", item.id); return;
+            }
+            const entry = submenuItems.find(i => i.parent === item.parent.trim() && i.id === item.id.trim());
+            if (!entry) {
+                console.error("[AviaMenu] updatesubmenu: no submenu item found with parent '%s' and id '%s'", item.parent.trim(), item.id.trim()); return;
+            }
+            if (typeof item.text === "string" && item.text.trim()) {
+                entry.name = item.text.trim();
+            }
+            if (typeof item.icon === "string") {
+                entry.icon = item.icon.trim() || null;
+            }
+            if (activeSubmenuEl && activeSubmenuParentBtn) {
+                const parentEntry = submenuParents.find(p => p.id === item.parent.trim());
+                if (parentEntry) openSubmenu(parentEntry, activeSubmenuParentBtn);
+            }
+        },
+
+        unregister: function (item) {
+            if (!item || typeof item.id !== "string" || !item.id.trim()) {
+                console.error("[AviaMenu] unregister: item.id must be a non-empty string, got", item?.id); return;
+            }
+            const id = item.id.trim();
+
+            const rIdx = registeredItems.findIndex(i => i.id === id);
+            if (rIdx !== -1) {
+                registeredItems.splice(rIdx, 1);
+                if (menuEl) rebuildMenu();
+                return;
+            }
+
+            const pIdx = submenuParents.findIndex(i => i.id === id);
+            if (pIdx !== -1) {
+                submenuParents.splice(pIdx, 1);
+                const children = submenuItems.filter(i => i.parent === id);
+                children.forEach(c => {
+                    const cIdx = submenuItems.findIndex(s => s.id === c.id);
+                    if (cIdx !== -1) submenuItems.splice(cIdx, 1);
+                });
+                closeSubmenu();
+                if (menuEl) rebuildMenu();
+                return;
+            }
+
+            const sIdx = submenuItems.findIndex(i => i.id === id);
+            if (sIdx !== -1) {
+                const parentId = submenuItems[sIdx].parent;
+                submenuItems.splice(sIdx, 1);
+                const remaining = submenuItems.filter(i => i.parent === parentId);
+                if (remaining.length === 0) {
+                    const pIdx2 = submenuParents.findIndex(i => i.id === parentId);
+                    if (pIdx2 !== -1) submenuParents.splice(pIdx2, 1);
+                    closeSubmenu();
+                }
+                if (menuEl) rebuildMenu();
+                return;
+            }
+
+            console.error("[AviaMenu] unregister: no item with id '%s' found", id);
         }
     };
 
+    function closeSubmenu() {
+        if (activeSubmenuEl) {
+            activeSubmenuEl.remove();
+            activeSubmenuEl = null;
+        }
+        activeSubmenuParentBtn = null;
+        clearTimeout(submenuHoverTimeout);
+    }
+
     function closeMenu() {
+        closeSubmenu();
         if (menuEl) {
             menuEl.remove();
             menuEl = null;
         }
         menuOpen = false;
+    }
+
+    function openSubmenu(parentItem, anchorBtn) {
+        if (activeSubmenuParentBtn === anchorBtn) return;
+        closeSubmenu();
+        activeSubmenuParentBtn = anchorBtn;
+
+        const items = submenuItems.filter(i => i.parent === parentItem.id);
+        if (items.length === 0) return;
+
+        const sub = document.createElement("div");
+        activeSubmenuEl = sub;
+        Object.assign(sub.style, {
+            position: "fixed",
+            zIndex: "9999999",
+            background: "var(--md-sys-color-surface, #1e1e1e)",
+            borderRadius: "16px",
+            boxShadow: "0 8px 28px rgba(0,0,0,0.4)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(12px)",
+            overflow: "hidden",
+            minWidth: "180px",
+            display: "flex",
+            flexDirection: "column"
+        });
+
+        const subList = document.createElement("div");
+        Object.assign(subList.style, {
+            display: "flex",
+            flexDirection: "column",
+            padding: "8px",
+            boxSizing: "border-box",
+            maxHeight: (SUBMENU_MAX_VISIBLE * ITEM_HEIGHT + 16) + "px",
+            overflowY: items.length > SUBMENU_MAX_VISIBLE ? "auto" : "hidden",
+            scrollbarWidth: "none"
+        });
+
+        for (const subItem of items) {
+            const btn = document.createElement("div");
+            Object.assign(btn.style, {
+                padding: "0 12px",
+                height: ITEM_HEIGHT + "px",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                fontSize: "13px",
+                fontWeight: "500",
+                color: "var(--md-sys-color-on-surface, #fff)",
+                cursor: "pointer",
+                borderRadius: "10px",
+                transition: "background 0.12s",
+                userSelect: "none",
+                flexShrink: "0"
+            });
+
+            if (subItem.icon) {
+                const iconEl = document.createElement("span");
+                iconEl.className = "material-symbols-outlined";
+                iconEl.textContent = subItem.icon;
+                iconEl.style.cssText = "font-size:20px;display:block;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;flex-shrink:0;opacity:0.85;";
+                btn.appendChild(iconEl);
+            }
+
+            const label = document.createElement("span");
+            label.textContent = subItem.name;
+            label.style.flex = "1";
+            btn.appendChild(label);
+
+            btn.addEventListener("mouseenter", () => { btn.style.background = "rgba(255,255,255,0.07)"; });
+            btn.addEventListener("mouseleave", () => { btn.style.background = "transparent"; });
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                closeMenu();
+                try { subItem.onClick(); } catch (err) { console.error("[AviaMenu]", err); }
+            });
+
+            subList.appendChild(btn);
+        }
+
+        sub.appendChild(subList);
+        document.body.appendChild(sub);
+
+        if (items.length > SUBMENU_MAX_VISIBLE) {
+            function makeSubArrow(id, rotation) {
+                const el = document.createElement("div");
+                el.id = id;
+                Object.assign(el.style, {
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "20px",
+                    pointerEvents: "none",
+                    flexShrink: "0",
+                    visibility: "hidden"
+                });
+                const icon = document.createElement("span");
+                icon.className = "material-symbols-outlined";
+                icon.textContent = "arrow_back_2";
+                icon.style.cssText = `font-size:16px;display:block;transform:rotate(${rotation}deg);color:var(--md-sys-color-on-surface,#fff);opacity:0.5;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;`;
+                el.appendChild(icon);
+                return el;
+            }
+
+            const subArrowTop = makeSubArrow("avia-submenu-scroll-top", 90);
+            const subArrowBot = makeSubArrow("avia-submenu-scroll-bot", 270);
+            subArrowBot.style.display = "none";
+            subArrowBot.style.visibility = "visible";
+
+            sub.insertBefore(subArrowTop, subList);
+            sub.insertBefore(subArrowBot, subList.nextSibling);
+
+            function updateSubArrows() {
+                const canUp = subList.scrollTop > 0;
+                const canDown = subList.scrollTop + subList.clientHeight < subList.scrollHeight - 1;
+                subArrowTop.style.visibility = canUp ? "visible" : "hidden";
+                subArrowBot.style.display = canDown ? "flex" : "none";
+            }
+
+            subList.addEventListener("scroll", updateSubArrows);
+            updateSubArrows();
+        }
+
+        const anchorRect = anchorBtn.getBoundingClientRect();
+        const subRect = sub.getBoundingClientRect();
+        let top = anchorRect.top;
+        let left = anchorRect.left - subRect.width - 6;
+
+        if (left < 8) left = anchorRect.right + 6;
+        if (top + subRect.height > window.innerHeight - 8) {
+            top = window.innerHeight - subRect.height - 8;
+        }
+
+        sub.style.top = top + "px";
+        sub.style.left = left + "px";
+
+        sub.addEventListener("mouseleave", () => {
+            submenuHoverTimeout = setTimeout(closeSubmenu, 120);
+        });
+        sub.addEventListener("mouseenter", () => {
+            clearTimeout(submenuHoverTimeout);
+        });
     }
 
     function rebuildMenu() {
@@ -3953,7 +4962,9 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
         if (!list) return;
         list.innerHTML = "";
 
-        if (registeredItems.length === 0) {
+        const sorted = getSortedMainItems();
+
+        if (sorted.length === 0) {
             const empty = document.createElement("div");
             empty.textContent = "No buttons registered";
             Object.assign(empty.style, {
@@ -3970,9 +4981,8 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
             return;
         }
 
-        const sorted = getSortedItems();
-
         for (const item of sorted) {
+            const isParent = submenuParents.some(p => p.id === item.id);
             const pinned = isPinned(item.id);
 
             const btn = document.createElement("div");
@@ -4029,35 +5039,99 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
             });
             pinBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
-                if (isPinned(item.id)) {
-                    unpinItem(item.id);
-                } else {
-                    pinItem(item.id);
-                }
+                if (isPinned(item.id)) unpinItem(item.id);
+                else pinItem(item.id);
                 rebuildMenu();
             });
 
             btn.appendChild(pinBtn);
 
-            btn.addEventListener("mouseenter", () => {
-                btn.style.background = "rgba(255,255,255,0.07)";
-            });
-            btn.addEventListener("mouseleave", () => {
-                btn.style.background = "transparent";
-            });
-            btn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                closeMenu();
-                try { item.onClick(); } catch (err) { console.error("[AviaMenu]", err); }
-            });
+            if (isParent) {
+                const chevron = document.createElement("span");
+                chevron.className = "material-symbols-outlined";
+                chevron.textContent = "arrow_back_2";
+                chevron.style.cssText = "font-size:14px;display:block;transform:rotate(180deg);flex-shrink:0;opacity:0.5;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;";
+                btn.insertBefore(chevron, pinBtn);
+
+                btn.addEventListener("mouseenter", () => {
+                    btn.style.background = "rgba(255,255,255,0.07)";
+                    clearTimeout(submenuHoverTimeout);
+                    openSubmenu(item, btn);
+                });
+                btn.addEventListener("mouseleave", () => {
+                    btn.style.background = "transparent";
+                    submenuHoverTimeout = setTimeout(() => {
+                        if (activeSubmenuParentBtn === btn) closeSubmenu();
+                    }, 120);
+                });
+            } else {
+                btn.addEventListener("mouseenter", () => {
+                    btn.style.background = "rgba(255,255,255,0.07)";
+                    clearTimeout(submenuHoverTimeout);
+                    if (activeSubmenuEl) closeSubmenu();
+                });
+                btn.addEventListener("mouseleave", () => {
+                    btn.style.background = "transparent";
+                });
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    closeMenu();
+                    try { item.onClick(); } catch (err) { console.error("[AviaMenu]", err); }
+                });
+            }
 
             list.appendChild(btn);
         }
 
-        const total = getSortedItems().length;
-        list.style.maxHeight = (MAX_VISIBLE * ITEM_HEIGHT) + "px";
+        const total = sorted.length;
+        list.style.maxHeight = (MAX_VISIBLE * ITEM_HEIGHT + 16) + "px";
         list.style.overflowY = total > MAX_VISIBLE ? "auto" : "hidden";
         list.style.scrollbarWidth = "none";
+
+        const existingTop = menuEl.querySelector("#avia-scroll-top");
+        const existingBot = menuEl.querySelector("#avia-scroll-bot");
+        if (existingTop) existingTop.remove();
+        if (existingBot) existingBot.remove();
+
+        if (total > MAX_VISIBLE) {
+            function makeArrow(id, rotation) {
+                const el = document.createElement("div");
+                el.id = id;
+                Object.assign(el.style, {
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "20px",
+                    pointerEvents: "none",
+                    flexShrink: "0",
+                    visibility: "hidden"
+                });
+                const icon = document.createElement("span");
+                icon.className = "material-symbols-outlined";
+                icon.textContent = "arrow_back_2";
+                icon.style.cssText = `font-size:16px;display:block;transform:rotate(${rotation}deg);color:var(--md-sys-color-on-surface,#fff);opacity:0.5;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0;`;
+                el.appendChild(icon);
+                return el;
+            }
+
+            const arrowTop = makeArrow("avia-scroll-top", 90);
+            const arrowBot = makeArrow("avia-scroll-bot", 270);
+            arrowBot.style.display = "none";
+            arrowBot.style.visibility = "visible";
+
+            menuEl.insertBefore(arrowTop, list);
+            menuEl.insertBefore(arrowBot, list.nextSibling);
+
+            function updateArrows() {
+                const canUp = list.scrollTop > 0;
+                const canDown = list.scrollTop + list.clientHeight < list.scrollHeight - 1;
+                arrowTop.style.visibility = canUp ? "visible" : "hidden";
+                arrowBot.style.display = canDown ? "flex" : "none";
+            }
+
+            list.addEventListener("scroll", updateArrows);
+            updateArrows();
+        }
     }
 
     function openMenu(anchorEl) {
@@ -4115,7 +5189,7 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
     }
 
     function onOutsideClick(e) {
-        if (menuEl && !menuEl.contains(e.target)) {
+        if (menuEl && !menuEl.contains(e.target) && (!activeSubmenuEl || !activeSubmenuEl.contains(e.target))) {
             closeMenu();
         }
     }
@@ -4123,7 +5197,10 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
     function injectToolbarButton() {
         if (document.getElementById("avia-menu-toolbar-btn")) return;
 
-        const pinBtn = document.querySelector('button[aria-label="View pinned messages"]');
+        const pinBtn = document.querySelector(
+            `.app_body > div > div:first-child
+                > button[aria-label]:has(> svg > path[d^='m640-480 80 80v80H520v240l-40'])`
+        );
         if (!pinBtn) return;
 
         const btn = pinBtn.cloneNode(false);
@@ -4155,73 +5232,6 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
 
     observer.observe(document.body, { childList: true, subtree: true });
     injectToolbarButton();
-})();
-
-
-/* --- MessageContextMenuFix.js --- */
-if(window.__US_BUILDER_MESSAGECONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_MESSAGECONTEXTMENUFIX_JS__=true;
-
-(function () {
-  if (window.__MESSAGE_CONTEXT_MENU_FIX__) return;
-  window.__MESSAGE_CONTEXT_MENU_FIX__ = true;
-
-  function messageContextMenuFix() {
-    const messages = [...document.querySelectorAll(`div[id][class*='group']`)].filter(e=>e.parentElement?.tagName=='DIV')
-    for(const message of messages){
-        const originalbar = message.querySelector(`div[class='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar']`)
-        const bar = document.createElement('div')
-        bar.className='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar'
-        const dots = document.createElement('div')
-        dots.className='cursor_pointer pos_relative p_var(--gap-sm)'
-        const ripple = document.createElement('md-ripple')
-        ripple.ariaHidden = true
-        const svg = document.createElement('svg')
-        dots.appendChild(ripple)
-        dots.appendChild(svg)
-        svg.outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2m0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2"></path></svg>`
-        bar.appendChild(dots)
-
-        bar.onclick = function(){
-            const rect = message.getBoundingClientRect();
-
-            const contextMenuX = rect.left + rect.width / 2;
-            const contextMenuY = rect.top + rect.height / 2;
-
-            const contextMenuEvent = new MouseEvent('contextmenu', {
-                bubbles: true,
-                cancelable: true,
-                clientX: contextMenuX,
-                clientY: contextMenuY
-            });
-            setTimeout(() => {
-                message.dispatchEvent(contextMenuEvent);
-            }, 100);
-        }
-
-        if(!message.dataset.contextmenupatched&&!originalbar){
-            message.appendChild(bar)
-            message.dataset.contextmenupatched=true
-        }
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    messageContextMenuFix();
-  });
-
-  function init() {
-    messageContextMenuFix();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
 })();
 
 
@@ -4928,6 +5938,63 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
             const footer = document.createElement('div');
             Object.assign(footer.style, { display: 'flex', gap: '6px', marginTop: 'auto', paddingTop: '2px' });
 
+            const LOCAL_KEY = "avia_local_plugins";
+            const getLocals = () => JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]");
+
+            const toLocalBtn = document.createElement('button');
+            styleBtn(toLocalBtn, 'rgba(80,200,120,0.15)');
+            toLocalBtn.style.flex = '1';
+            const alreadyLocal = getLocals().some(p => p.name === plugin.name);
+            if (alreadyLocal) {
+                toLocalBtn.textContent = 'In Local';
+                toLocalBtn.disabled = true;
+                toLocalBtn.style.opacity = '0.45';
+                toLocalBtn.onmouseenter = null;
+                toLocalBtn.onmouseleave = null;
+            } else {
+                toLocalBtn.textContent = 'To Local';
+            }
+
+            toLocalBtn.onclick = async () => {
+                if (toLocalBtn.disabled) return;
+                toLocalBtn.textContent = '…';
+                toLocalBtn.disabled = true;
+
+                let code = null;
+                const scriptEl = runningPlugins[plugin.url];
+                if (scriptEl && scriptEl.textContent) code = scriptEl.textContent;
+
+                if (!code) {
+                    try {
+                        const res = await fetch(normalizePluginUrl(plugin.url));
+                        if (!res.ok) throw new Error("HTTP " + res.status);
+                        code = await res.text();
+                    } catch {
+                        toLocalBtn.textContent = 'Failed';
+                        setTimeout(() => { toLocalBtn.textContent = 'Local'; toLocalBtn.disabled = false; }, 2000);
+                        return;
+                    }
+                }
+
+                const locals = getLocals();
+                if (locals.some(p => p.name === plugin.name)) {
+                    toLocalBtn.textContent = 'In Local';
+                    return;
+                }
+                locals.push({
+                    id: "local_" + Date.now() + "_" + Math.random().toString(36).slice(2),
+                    name: plugin.name,
+                    code,
+                    enabled: plugin.enabled
+                });
+                localStorage.setItem(LOCAL_KEY, JSON.stringify(locals));
+                window.dispatchEvent(new Event("avia-local-plugin-list-changed"));
+                stopPlugin(plugin);
+                plugins.splice(realIndex, 1);
+                setPlugins(plugins);
+                renderPanel(filter);
+            };
+
             const viewBtn = document.createElement('button');
             viewBtn.textContent = 'View';
             styleBtn(viewBtn, 'rgba(100,160,255,0.15)');
@@ -4944,6 +6011,7 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
                 renderPanel(filter);
             };
 
+            footer.appendChild(toLocalBtn);
             footer.appendChild(viewBtn);
             footer.appendChild(removeBtn);
 
@@ -5451,11 +6519,11 @@ function renderRepo(data, filter = "") {
     currentRepoData = data.plugins;
     repoContent.innerHTML = "";
 
-    const filtered = currentRepoData.filter(p =>
+    const filtered = [...currentRepoData].filter(p =>
         (p.name + " " + (p.author || "") + " " + (p.description || ""))
             .toLowerCase()
             .includes(filter.toLowerCase())
-    );
+    ).reverse()
 
     if (filtered.length === 0) {
         repoContent.innerHTML = `<div style="opacity:0.5;text-align:center;margin-top:30px;">No plugins found.</div>`;
@@ -5771,7 +6839,7 @@ function openWindow() {
     }
 
     const header = document.createElement("div");
-   Object.assign(header.style, {
+    Object.assign(header.style, {
         padding: "13px 16px",
         fontWeight: "600",
         fontSize: "14px",
@@ -6149,7 +7217,9 @@ if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SE
   }
 
   function inject() {
-    const sidebar = document.getElementsByClassName('d_flex flex-d_column fill_var(--md-sys-color-on-surface)').item(0)
+    const apphref = document.querySelector(`a[href='/app']`)
+    if(!apphref) return;
+    const sidebar = apphref.parentElement.parentElement
     if(!sidebar) return;
     const sidebarclone = sidebar.cloneNode()
     Object.assign(sidebarclone.style,{
