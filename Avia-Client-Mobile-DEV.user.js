@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile DEV
 // @namespace   userscript.builder
-// @version     1.9
+// @version     1.9.1
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.8.2 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-07-30T23:16:37.428Z';
+'@preserve - Built on 2026-07-31T15:03:24.870Z';
 window.__USERSCRIPT_VERSION__ = "1.9";
 
 /* --- 3TapRely.js --- */
@@ -2718,12 +2718,10 @@ if(window.__US_BUILDER_HIDEUNSENTMESSAGES_JS__){return;}window.__US_BUILDER_HIDE
     }
 
     function hideUnsentMessages(){
-        const unsentmessages = document.getElementsByClassName('group pos_relative d_flex flex-d_column p_2px_0 bg_transparent bdr_var(--borderRadius-md) min-h_1em trs_background-color_var(--transitions-fast) [&_a:hover]:td_underline [&:hover_.Toolbar]:d_flex mt_var(--message-group-spacing)! [&:hover]:bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-error)')
-        if(unsentmessages.item(0)){
+        if(localStorage.getItem('hideunsentmessages')=='true'){
+            const unsentmessages = [...document.querySelectorAll(`div[class*='group']`)].filter(e=>!e.id)
             for(const message of unsentmessages){
-                if(localStorage.getItem('hideunsentmessages')=='true'){
-                    message.style.display='none'
-                }
+                message.style.display='none'
             }
         }
     }
@@ -5299,73 +5297,6 @@ if(window.__US_BUILDER_MENU_JS__){return;}window.__US_BUILDER_MENU_JS__=true;
 })();
 
 
-/* --- MessageContextMenuFix.js --- */
-if(window.__US_BUILDER_MESSAGECONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_MESSAGECONTEXTMENUFIX_JS__=true;
-
-(function () {
-  if (window.__MESSAGE_CONTEXT_MENU_FIX__) return;
-  window.__MESSAGE_CONTEXT_MENU_FIX__ = true;
-
-  function messageContextMenuFix() {
-    const messages = [...document.querySelectorAll(`div[id][class*='group']`)].filter(e=>e.parentElement?.tagName=='DIV')
-    for(const message of messages){
-        const originalbar = message.querySelector(`div[class='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar']`)
-        const bar = document.createElement('div')
-        bar.className='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar'
-        const dots = document.createElement('div')
-        dots.className='cursor_pointer pos_relative p_var(--gap-sm)'
-        const ripple = document.createElement('md-ripple')
-        ripple.ariaHidden = true
-        const svg = document.createElement('svg')
-        dots.appendChild(ripple)
-        dots.appendChild(svg)
-        svg.outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2m0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2"></path></svg>`
-        bar.appendChild(dots)
-
-        bar.onclick = function(){
-            const rect = message.getBoundingClientRect();
-
-            const contextMenuX = rect.left + rect.width / 2;
-            const contextMenuY = rect.top + rect.height / 2;
-
-            const contextMenuEvent = new MouseEvent('contextmenu', {
-                bubbles: true,
-                cancelable: true,
-                clientX: contextMenuX,
-                clientY: contextMenuY
-            });
-            setTimeout(() => {
-                message.dispatchEvent(contextMenuEvent);
-            }, 100);
-        }
-
-        if(!message.dataset.contextmenupatched&&!originalbar){
-            message.appendChild(bar)
-            message.dataset.contextmenupatched=true
-        }
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    messageContextMenuFix();
-  });
-
-  function init() {
-    messageContextMenuFix();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
 /* --- MoveChannelSettingsButton.js --- */
 if(window.__US_BUILDER_MOVECHANNELSETTINGSBUTTON_JS__){return;}window.__US_BUILDER_MOVECHANNELSETTINGSBUTTON_JS__=true;
 
@@ -7382,6 +7313,7 @@ if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SE
     if(!document.getElementById('serverlistscrolllock')){
       sidebarclone.appendChild(clone)
       sidebar.parentElement.insertBefore(sidebarclone,sidebar.nextSibling)
+      apphref.dataset.scrollLockPatched=true
     }
 
     window.addEventListener('resize', () => {
@@ -7393,7 +7325,7 @@ if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SE
   }
 
   const observer = new MutationObserver(() => {
-    const target = document.getElementsByClassName('d_flex flex-d_column fill_var(--md-sys-color-on-surface)').item(0).firstChild.firstChild
+    const target = document.querySelector(`a[href='/app']`)
     if (target && !target.dataset.scrollLockPatched) {
       inject();
     }
