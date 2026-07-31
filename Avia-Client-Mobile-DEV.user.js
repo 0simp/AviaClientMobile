@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile DEV
 // @namespace   userscript.builder
-// @version     1.9.1
+// @version     1.9.2
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.8.2 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-07-31T15:03:24.870Z';
+'@preserve - Built on 2026-07-31T17:55:53.360Z';
 window.__USERSCRIPT_VERSION__ = "1.9";
 
 /* --- 3TapRely.js --- */
@@ -1351,92 +1351,6 @@ if(window.__US_BUILDER_AVIAFAVSYSTEM_USER_JS__){return;}window.__US_BUILDER_AVIA
 })();
 
 
-/* --- aviaserverbutton.js --- */
-if(window.__US_BUILDER_AVIASERVERBUTTON_JS__){return;}window.__US_BUILDER_AVIASERVERBUTTON_JS__=true;
-
-(function(){
-
-  if (window.__AVIA_SERVER_BUTTON__) return;
-  window.__AVIA_SERVER_BUTTON__ = true;
-
-  const AVIA_INVITE = "https://stt.gg/0MPSAx8x";
-
-  function apply(){
-    const homebuttons = document.getElementsByClassName('gap_8px p_8px d_flex bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface-variant) bg_var(--md-sys-color-surface-variant)')
-      .item(0)
-      if(!homebuttons) return;
-      const server = document.querySelector(`a[href*='/server/01KKQHXPKHSFBJNA2DY4XMP0DB']`)
-      const button = [...homebuttons.children[0].children].find(e=>e.querySelector(`path[d="M16.24 13.65c-1.17-.52-2.61-.9-4.24-.9s-3.07.39-4.24.9A2.99 2.99 0 0 0 6 16.39V18h12v-1.61c0-1.18-.68-2.26-1.76-2.74m-15.02.93A2.01 2.01 0 0 0 0 16.43V18h4.5v-1.61c0-.83.23-1.61.63-2.29-.37-.06-.74-.1-1.13-.1-.99 0-1.93.21-2.78.58m21.56 0A6.95 6.95 0 0 0 20 14c-.39 0-.76.04-1.13.1.4.68.63 1.46.63 2.29V18H24v-1.57c0-.81-.48-1.53-1.22-1.85M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3M1.497 11 4 8.497 6.503 11 4 13.503zM20 9l-2.5 4h5z"]`))
-      if(button){
-        const title = button.querySelector("div.flex-g_1 > div");
-        if(!title.textContent.includes('ACM Server')){
-          if(server){
-            title.textContent='Go to the ACM Server'
-          }else{
-            title.textContent='Join the ACM Server'
-          }
-          button.addEventListener('click',(e)=>{
-            e.preventDefault();
-            e.stopPropagation()
-            if(server){
-              server.click()
-            }else{
-              window.open(AVIA_INVITE,'_blank')
-            }
-          },true)
-        }
-      }else{
-        const fakebutton = document.createElement('a')
-        fakebutton.className='pos_relative gap_16px p_13px bdr_var(--borderRadius-md) us_none cursor_pointer trs_background-color_0.1s_ease-in-out d_flex ai_center flex-d_row c_var(--color) fill_var(--color) bg_var(--md-sys-color-secondary-container) --color_var(--md-sys-color-on-secondary-container)'
-
-        const mdripple = document.createElement('md-ripple')
-        mdripple.ariaHidden=true
-
-        const idkwhattocallthis = document.createElement('div')
-        idkwhattocallthis.className='fill_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-dim) w_36px h_36px d_flex flex-sh_0 ai_center jc_center bdr_var(--borderRadius-full)'
-        idkwhattocallthis.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M16.24 13.65c-1.17-.52-2.61-.9-4.24-.9s-3.07.39-4.24.9A2.99 2.99 0 0 0 6 16.39V18h12v-1.61c0-1.18-.68-2.26-1.76-2.74m-15.02.93A2.01 2.01 0 0 0 0 16.43V18h4.5v-1.61c0-.83.23-1.61.63-2.29-.37-.06-.74-.1-1.13-.1-.99 0-1.93.21-2.78.58m21.56 0A6.95 6.95 0 0 0 20 14c-.39 0-.76.04-1.13.1.4.68.63 1.46.63 2.29V18H24v-1.57c0-.81-.48-1.53-1.22-1.85M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3M1.497 11 4 8.497 6.503 11 4 13.503zM20 9l-2.5 4h5z"></path></svg>`
-
-        const textparent = document.createElement('div')
-        textparent.className='d_flex flex-g_1 flex-d_column fw_500 fs_14px gap_2px white-space_nowrap ov_hidden tov_ellipsis'
-
-        const title = document.createElement('div')
-        title.className='ov_hidden white-space_nowrap tov_ellipsis [&_*]:ov_hidden [&_*]:white-space_nowrap [&_*]:tov_ellipsis'
-        if(server){
-          title.textContent=`Go to the ACM Server`
-        }else{
-          title.textContent=`Join the ACM Server`
-        }
-
-        const text = document.createElement('span')
-        text.className='lh_1rem fs_0.75rem ls_0.03125rem fw_500 tw_wrap [&_a:hover]:td_underline'
-        text.textContent='You can report issues and discuss improvements with us directly here.'
-
-        fakebutton.appendChild(mdripple)
-        fakebutton.appendChild(idkwhattocallthis)
-        fakebutton.appendChild(textparent)
-        textparent.appendChild(title)
-        textparent.appendChild(text)
-        homebuttons.children[0].insertBefore(fakebutton,homebuttons.children[0].lastChild)
-
-        fakebutton.addEventListener('click',(e)=>{
-          e.preventDefault();
-          e.stopPropagation()
-          if(server){
-            server.click()
-          }else{
-            window.open(AVIA_INVITE,'_blank')
-          }
-        });
-      }
-  }
-
-  const observer = new MutationObserver(apply);
-  observer.observe(document.body,{childList:true,subtree:true});
-
-  apply();
-})();
-
-
 /* --- badges.js --- */
 if(window.__US_BUILDER_BADGES_JS__){return;}window.__US_BUILDER_BADGES_JS__=true;
 
@@ -1702,30 +1616,6 @@ if(window.__US_BUILDER_BADGES_JS__){return;}window.__US_BUILDER_BADGES_JS__=true
         childList: true,
         subtree: true
     });
-})();
-
-
-/* --- BettersSwiping.js --- */
-if(window.__US_BUILDER_BETTERSSWIPING_JS__){return;}window.__US_BUILDER_BETTERSSWIPING_JS__=true;
-
-(function () {
-  if (window.__BETTER_SWIPING__) return;
-  window.__BETTER_SWIPING__ = true;
-  let startselection = null;
-  let newselection =null;
-
-  document.addEventListener('touchstart',(e)=>{
-    startselection = document.getSelection().toString()
-  });
-
-  document.addEventListener('touchmove',(e)=>{
-    newselection = document.getSelection().toString()
-    if(startselection!=newselection){
-        e.preventDefault()
-        e.stopImmediatePropagation()
-        e.stopPropagation()
-    }
-  });
 })();
 
 
@@ -2034,6 +1924,15 @@ if(window.__US_BUILDER_CLIENTBACKUP_JS__){return;}window.__US_BUILDER_CLIENTBACK
   const TARGET_TEXT = "Plugins v2 Placeholder";
   const CLONE_KEY   = "data-lsbackup-cloned";
 
+  function hexToRgb(hex) {
+    let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+  }
+
   function exportLS() {
     const data = {};
     for (let i = 0; i < localStorage.length; i++) {
@@ -2067,18 +1966,18 @@ if(window.__US_BUILDER_CLIENTBACKUP_JS__){return;}window.__US_BUILDER_CLIENTBACK
     reader.readAsText(file);
   }
 
-  function buildPanel() {
+   function buildPanel() {
     const panel = document.createElement("div");
     panel.style.cssText = `
-      display: none;
-      flex-direction: column;
-      gap: 8px;
-      padding: 10px 12px;
-      border-radius: 8px;
-      background: var(--md-sys-color-surface-container-highest);
-      border: 1px solid var(--md-sys-color-outline-variant);
-      font-size: 12px;
-      color: var(--md-sys-color-on-surface);
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: var(--md-sys-color-surface-container-highest);
+        border: 1px solid var(--md-sys-color-outline-variant);
+        font-size: 12px;
+        color: var(--md-sys-color-on-surface);
     `;
 
     const btnStyle = `
@@ -2095,10 +1994,7 @@ if(window.__US_BUILDER_CLIENTBACKUP_JS__){return;}window.__US_BUILDER_CLIENTBACK
 
     const exportBtn = document.createElement("button");
     exportBtn.textContent = "⬇ Export localStorage";
-    exportBtn.style.cssText = btnStyle + `
-      background: var(--md-sys-color-primary);
-      color: var(--md-sys-color-on-primary);
-    `;
+    exportBtn.style.cssText = btnStyle + `background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);`;
     exportBtn.addEventListener("click", e => {
       e.preventDefault();
       e.stopPropagation();
@@ -2107,7 +2003,7 @@ if(window.__US_BUILDER_CLIENTBACKUP_JS__){return;}window.__US_BUILDER_CLIENTBACK
     });
 
     const fileInput = document.createElement("input");
-    fileInput.type   = "file";
+    fileInput.type = "file";
     fileInput.accept = ".json";
     fileInput.style.cssText = "display: none;";
     fileInput.addEventListener("change", e => {
@@ -2125,11 +2021,7 @@ if(window.__US_BUILDER_CLIENTBACKUP_JS__){return;}window.__US_BUILDER_CLIENTBACK
 
     const importBtn = document.createElement("button");
     importBtn.textContent = "⬆ Import localStorage";
-    importBtn.style.cssText = btnStyle + `
-      background: var(--md-sys-color-surface-container);
-      color: var(--md-sys-color-on-surface);
-      border: 1px solid var(--md-sys-color-outline-variant);
-    `;
+    importBtn.style.cssText = btnStyle + `background: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface); border: 1px solid var(--md-sys-color-outline-variant);`;
     importBtn.addEventListener("click", e => {
       e.preventDefault();
       e.stopPropagation();
@@ -2144,63 +2036,45 @@ if(window.__US_BUILDER_CLIENTBACKUP_JS__){return;}window.__US_BUILDER_CLIENTBACK
   }
 
   function tryInject() {
-    document.querySelectorAll("a.pos_relative").forEach(btn => {
-      if (
-        btn.hasAttribute(CLONE_KEY) ||
-        btn.hasAttribute("data-lsbackup-entry") ||
-        !btn.innerText.includes(TARGET_TEXT)
-      ) return;
+    if (document.querySelector(`[${CLONE_KEY}]`)) return;
 
-      btn.setAttribute(CLONE_KEY, "true");
+    const selectedbuttoncolour = getComputedStyle(document.body).getPropertyValue('--md-sys-color-primary-container')
+    const selectedbuttoncolourrgb = hexToRgb(selectedbuttoncolour)
 
-      const clone = btn.cloneNode(true);
-      clone.removeAttribute(CLONE_KEY);
-      clone.setAttribute("data-lsbackup-entry", "true");
+    const selectedbtn = [...document.querySelectorAll(`a[class*='button']:has(div>svg)`)]
+    .find(b=>getComputedStyle(b).getPropertyValue('background').includes(`rgb(${selectedbuttoncolourrgb.r}, ${selectedbuttoncolourrgb.g}, ${selectedbuttoncolourrgb.b})`))
+    if (!selectedbtn) return;
+    const icon = selectedbtn.querySelector(`path`)?.getAttribute('d')
+    if(!icon||icon!='M13 11.33 18 18H6l5-6.67V6h2m2.96-2H8.04c-.42 0-.65.48-.39.81L9 6.5v4.17L3.2 18.4c-.49.66-.02 1.6.8 1.6h16c.82 0 1.29-.94.8-1.6L15 10.67V6.5l1.35-1.69c.26-.33.03-.81-.39-.81') return;
 
-      const title = clone.querySelector("div.d_flex.flex-g_1.flex-d_column > div");
-      if (title) title.textContent = "AviaClient Backup";
+    const btn = document.querySelector(`mdui-checkbox`)?.parentElement.parentElement.lastChild.lastChild
+    if(!btn) return;
+    const clone = btn.cloneNode(true);
+    clone.setAttribute(CLONE_KEY,'true')
+    clone.children[2].firstChild.textContent='AviaClient Backup'
+    clone.children[2].lastChild.textContent='Backup or Restore all client data'
 
-      const desc = clone.querySelector("div.d_flex.flex-g_1.flex-d_column > span");
-      if (desc) desc.textContent = "Backup or Restore all client data";
+    const panel = buildPanel()
 
-      const iconBtn = document.createElement("div");
-      iconBtn.title = "LocalStorage Backup";
-      iconBtn.style.cssText = "cursor: pointer; z-index: 10; flex-shrink: 0;";
-      iconBtn.innerHTML = `
-        <div class="fill_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-dim) w_36px h_36px d_flex flex-sh_0 ai_center jc_center bdr_var(--borderRadius-full)">
-          <span aria-hidden="true" class="material-symbols-outlined fs_inherit fw_undefined!" style="display: block; font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0;">database</span>
-        </div>
-      `;
-
-      const existingIcon = clone.querySelector("div.fill_var\\(--md-sys-color-on-surface\\)");
-      if (existingIcon) {
-        existingIcon.replaceWith(iconBtn);
-      } else {
-        clone.prepend(iconBtn);
-      }
-
-      clone.addEventListener("click", e => {
-        e.preventDefault();
-        e.stopPropagation();
-        panel.style.display = panel.style.display === "flex" ? "none" : "flex";
-      });
-
-      const wrapper = document.createElement("div");
-      wrapper.style.cssText = "display: flex; flex-direction: column;";
-
-      const panel = buildPanel();
-
-      wrapper.appendChild(clone);
-      wrapper.appendChild(panel);
-
-      btn.parentNode.insertBefore(wrapper, btn.nextSibling);
+    clone.addEventListener('click',e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      panel.style.display = panel.style.display === "flex" ? "none" : "flex";
     });
+
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "display: flex; flex-direction: column;";
+    wrapper.appendChild(clone);
+    wrapper.appendChild(panel);
+
+    btn.parentElement.appendChild(wrapper)
   }
 
   tryInject();
 
-  const observer = new MutationObserver(() => tryInject());
-  observer.observe(document.body, { childList: true, subtree: true });
+  setInterval(() => {
+    tryInject();
+  }, 1);
 })();
 
 
@@ -2620,50 +2494,6 @@ if(window.__US_BUILDER_HIDESEARCHBARBUTTON_JS__){return;}window.__US_BUILDER_HID
 
   function init() {
     hideSearchbarButton();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
-/* --- HideServerList.js --- */
-if(window.__US_BUILDER_HIDESERVERLIST_JS__){return;}window.__US_BUILDER_HIDESERVERLIST_JS__=true;
-
-(function () {
-  if (window.__HIDE_SERVER_LIST__||window.outerHeight>window.outerWidth) return;
-  window.__HIDE_SERVER_LIST__ = true;
-
-  function hideServerList() {
-        const button = document.querySelector('div[aria-label=\'Toggle main sidebar\']')
-        if(button){
-          const sidebar = document.getElementsByClassName('d_flex h_100% min-w_0 c_var(--md-sys-color-outline) bg_var(--md-sys-color-surface-container-high)')
-          .item(0).firstChild
-          if(sidebar.children[1]){
-            button.$$click = function(){
-              if(sidebar.style.display=='none'){
-                sidebar.style.display='flex'
-              }else{
-                sidebar.style.display='none'
-              }
-            }
-          }
-        }
-  }
-
-  const observer = new MutationObserver(() => {
-      hideServerList();
-  });
-
-  function init() {
-    hideServerList();
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
@@ -5308,11 +5138,11 @@ if(window.__US_BUILDER_MOVECHANNELSETTINGSBUTTON_JS__){return;}window.__US_BUILD
         const settingsbutton = document.querySelector(`[aria-label='Channel Settings']`)
         if(settingsbutton){
             settingsbutton.style.display='none'
-            const channelinfo = [...document.getElementsByClassName('p_24px min-w_280px max-w_560px bdr_28px d_flex flex-d_column c_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-container-high)')]
+            const channelinfo = [...document.getElementsByClassName('dialog')]
             .find(e=>e.textContent.includes('#')&&!e.querySelector('img'))
 
             if(channelinfo&&!channelinfo.dataset.patched){
-                const clone = channelinfo.lastChild.firstChild.cloneNode(true)
+                const clone = channelinfo.lastChild.lastChild.firstChild.cloneNode(true)
                 clone.textContent='Settings'
                 clone.onclick = function(){
                     clone.nextSibling.click()
@@ -5321,7 +5151,7 @@ if(window.__US_BUILDER_MOVECHANNELSETTINGSBUTTON_JS__){return;}window.__US_BUILD
                     }, 100);
                 }
 
-                channelinfo.lastChild.insertBefore(clone,channelinfo.lastChild.firstChild)
+                channelinfo.lastChild.lastChild.insertBefore(clone,channelinfo.lastChild.lastChild.firstChild)
                 channelinfo.dataset.patched=true
             }
         }
@@ -5337,6 +5167,11 @@ if(window.__US_BUILDER_MOVECHANNELSETTINGSBUTTON_JS__){return;}window.__US_BUILD
 /* --- NoAnnoyingTooltips.js --- */
 if(window.__US_BUILDER_NOANNOYINGTOOLTIPS_JS__){return;}window.__US_BUILDER_NOANNOYINGTOOLTIPS_JS__=true;
 
+/*
+  @UPDATEURL: https://codeberg.org/0simp/AviaPlugins/raw/branch/main/NoAnnoyingTooltips.js
+  @VERSION: 1.0
+*/
+
 (function () {
   'use strict';
 
@@ -5344,8 +5179,16 @@ if(window.__US_BUILDER_NOANNOYINGTOOLTIPS_JS__){return;}window.__US_BUILDER_NOAN
   window.__NO_ANNOYING_TOOLTIPS__ = true;
 
   function removeTooltip() {
+    const homebutton = document.querySelector(`a[href='/app']`)
+    if(!homebutton) return;
+    const username = homebutton.nextSibling.ariaLabel
+    const regex = /[0-9][0-9]\/[0-9][0-9]/;
     [...document.querySelectorAll(`div[style*='z-index: 999;']`)]
-    .filter(el=>!el.firstChild.firstChild.tagName).forEach(el=>{
+    .filter(el=>document.querySelector(`[aria-label='${el.textContent.trim()}']`)
+    ||!el.firstChild.firstChild.tagName
+    ||el.firstChild.firstChild.alt
+    ||regex.test(el.textContent)
+    ||el.textContent.includes(username)).forEach(el=>{
       el.remove()
     });
   }
@@ -8429,7 +8272,9 @@ if(window.__US_BUILDER_UPDATECHECKER_JS__){return;}window.__US_BUILDER_UPDATECHE
         const icon = selectedbtn.querySelector(`path`)?.getAttribute('d')
         if(!icon||icon!='M13 11.33 18 18H6l5-6.67V6h2m2.96-2H8.04c-.42 0-.65.48-.39.81L9 6.5v4.17L3.2 18.4c-.49.66-.02 1.6.8 1.6h16c.82 0 1.29-.94.8-1.6L15 10.67V6.5l1.35-1.69c.26-.33.03-.81-.39-.81') return;
 
-        const btn = document.querySelector(`mdui-checkbox`)?.parentElement.parentElement.lastChild.lastChild
+        let btn = document.querySelector(`mdui-checkbox`)?.parentElement.parentElement.lastChild.lastChild
+        if(!btn) return;
+        if(btn.tagName!='A') btn = btn.querySelector(`a`)
         if(!btn) return;
         const clone = btn.cloneNode(true);
         clone.setAttribute("data-update-checker-entry", "true");
@@ -8915,7 +8760,7 @@ if(window.__US_BUILDER_WHATSNEW_JS__){return;}window.__US_BUILDER_WHATSNEW_JS__=
 
 /* --- Embedded Themes --- */
 const __BUILDER_THEMES__ = [
-  {id:"CSS_CSS",name:"css.css",css:"/*Fixs Attachment files with text showing inside to only show half way*/\n.d_grid[style*=\"width: 420px\"]:has(pre code) {\n  width: 100% !important;\n  max-width: 100% !important;\n  height: auto !important;\n}\n\n/* Fix bio overflow, showing the full bio */\n#floating div.will-change_transform > div > div.ov_hidden:last-child {\n    aspect-ratio: unset;\n}\n\n/* Makes scrolling server and channel lists without accidentally reordering them possible */\n.scr-bar-w_none {\n    scrollbar-width: thin;\n    overflow-x:hidden;\n}\n\n/* Align Voice Call button to top right */\n[class=\"top_var(--gap-md) p_var(--gap-md) w_100% pos_absolute z_2 us_none d_flex ai_center flex-d_column\"] {\n    align-items: end;\n}\n\n/*Make Voice Call button smaller*/\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px {\n\n  width: 240px !important;   /* was 360px */ /*Now 240*/\n  height: 80px !important;   /* was 120px */ /*Now 80*/\n\n  border-radius: 12px;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px span {\n  \n  font-size: 0.85rem !important;\n  line-height: 1.1 !important;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px .material-symbols-outlined {\n  \n  font-size: 18px !important;\n}\n/*Normal Version*/\n\n/* Shrink placeholder text */\n.cm-placeholder {\n    font-size: 10px !important;\n}\n\n/*Shrink text in chat bar */\n[class='cm-line']{\n    font-size : 10px;\n}\n\n/*Shrink search bar placeholder text*/\n[class='h_40px w_240px px_16px bdr_var(--borderRadius-full) bg_var(--md-sys-color-surface-container-high)']{\n    font-size:10px;\n}\n\n/*Shrink channel names*/\n[class='white-space_nowrap [&_*]:white-space_nowrap lh_1.5rem fs_1rem ls_0.009375rem fw_550']{\n    font-size:10px;\n}\n[class='gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0']{\n    font-size:10px;\n}\n\nimg[class='cursor_pointer']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\na[href]{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\nvideo{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\npre[class='d_flex ov_auto scr-bar-w_thin flex-d_column']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\n/* Remove Rounded Edges*/\nmain.bdr_var\\(--borderRadius-xl\\) {\n    border-radius: 0 !important;\n    margin: 0 !important;\n}\n\n/* Make The Status Card Not Clip When User Has Long Status */\ndiv.asp_1\\/1:has(> span.us_text),\ndiv.asp_1\\/1:has(> div > span.us_text) {\n    aspect-ratio: auto !important;\n    height: fit-content !important;\n    overflow: visible !important;\n}\n\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)']{\n    overflow-y :auto;\n}\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg) ov-y_scroll! ov-x_hidden!']{\n    overflow-y :auto;\n}\n\n/*Make emoji picker scrollable horizontally*/\ndiv[class='will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll flex-g_1']:has(div[class*='virtual-container']){\n    overflow-x:scroll;\n}",enabled:true},
+  {id:"CSS_CSS",name:"css.css",css:"/*Fixs Attachment files with text showing inside to only show half way*/\n.d_grid[style*=\"width: 420px\"]:has(pre code) {\n  width: 100% !important;\n  max-width: 100% !important;\n  height: auto !important;\n}\n\n/* Fix bio overflow, showing the full bio */\n#floating div.will-change_transform > div > div.ov_hidden:last-child {\n    aspect-ratio: unset;\n}\n\n/* Makes scrolling server and channel lists without accidentally reordering them possible */\n.scr-bar-w_none {\n    scrollbar-width: thin;\n    overflow-x:hidden;\n}\n\n/* Align Voice Call button to top right */\n[class=\"top_var(--gap-md) p_var(--gap-md) w_100% pos_absolute z_2 us_none d_flex ai_center flex-d_column\"] {\n    align-items: end;\n}\n\n/*Make Voice Call button smaller*/\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px {\n\n  width: 240px !important;   /* was 360px */ /*Now 240*/\n  height: 80px !important;   /* was 120px */ /*Now 80*/\n\n  border-radius: 12px;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px span {\n  \n  font-size: 0.85rem !important;\n  line-height: 1.1 !important;\n}\n\n.pointer-events_all.max-w_100\\%.trs_var\\(--transitions-fast\\)_all.trs-tmf_ease-in-out.bdr_var\\(--borderRadius-lg\\).bg_var\\(--md-sys-color-secondary-container\\).w_360px.h_120px .material-symbols-outlined {\n  \n  font-size: 18px !important;\n}\n/*Normal Version*/\n\n/* Shrink placeholder text */\n.cm-placeholder {\n    font-size: 10px !important;\n}\n\n/*Shrink text in chat bar */\n[class='cm-line']{\n    font-size : 10px;\n}\n\n/*Shrink search bar placeholder text*/\n[class='h_40px w_240px px_16px bdr_var(--borderRadius-full) bg_var(--md-sys-color-surface-container-high)']{\n    font-size:10px;\n}\n\n/*Shrink channel names*/\n[class='white-space_nowrap [&_*]:white-space_nowrap lh_1.5rem fs_1rem ls_0.009375rem fw_550']{\n    font-size:10px;\n}\n[class='gap_10px flex_0_auto d_flex flex-sh_0 p_0_16px ai_center fw_600 us_none ov_hidden h_48px bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bg-s_cover! bg-p_center! [&_svg]:flex-sh_0 m_var(--gap-md)_var(--gap-md)_var(--gap-md)_0']{\n    font-size:10px;\n}\n\nimg[class='cursor_pointer']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\na[href]{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\nvideo{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\npre[class='d_flex ov_auto scr-bar-w_thin flex-d_column']{\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    user-select: none;\n}\n\n/* Remove Rounded Edges*/\nmain.bdr_var\\(--borderRadius-xl\\) {\n    border-radius: 0 !important;\n    margin: 0 !important;\n}\n\n/* Make The Status Card Not Clip When User Has Long Status */\ndiv.asp_1\\/1:has(> span.us_text),\ndiv.asp_1\\/1:has(> div > span.us_text) {\n    aspect-ratio: auto !important;\n    height: fit-content !important;\n    overflow: visible !important;\n}\n\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)']{\n    overflow-y :auto;\n}\n[class='will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg) ov-y_scroll! ov-x_hidden!']{\n    overflow-y :auto;\n}",enabled:true},
 ];
 ;(function(){
   try{
