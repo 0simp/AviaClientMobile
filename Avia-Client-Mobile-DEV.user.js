@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Avia Client Mobile DEV
 // @namespace   userscript.builder
-// @version     1.9.2
+// @version     1.9.3
 // @description Avia Client Mobile by 0simp. Based on Avia Client 1.8.2 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
@@ -9,7 +9,7 @@
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-07-31T17:55:53.360Z';
+'@preserve - Built on 2026-08-01T23:42:02.235Z';
 window.__USERSCRIPT_VERSION__ = "1.9";
 
 /* --- 3TapRely.js --- */
@@ -626,180 +626,6 @@ if(window.__US_BUILDER_ACCOUNTSWITCHER_JS__){return;}window.__US_BUILDER_ACCOUNT
     observer.observe(document.body, { childList: true, subtree: true });
     registerWithAviaMenu();
 
-})();
-
-
-/* --- AttachmentContextMenuFix.js --- */
-if(window.__US_BUILDER_ATTACHMENTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_ATTACHMENTCONTEXTMENUFIX_JS__=true;
-
-(function () {
-  if (window.__ATTACHMENT_CONTEXT_MENU_FIX__) return;
-  window.__ATTACHMENT_CONTEXT_MENU_FIX__ = true;
-
-  function attachmentContextMenuFix() {
-    const time = 250
-    const videos = document.querySelectorAll('video')
-    const images = document.querySelectorAll('img[class=\'cursor_pointer\']')
-    const other = document.querySelectorAll(`pre[class='d_flex ov_auto scr-bar-w_thin flex-d_column']`)
-    if(videos){
-        videos.forEach(video=>{
-            let timer;
-            let long = false;
-
-            function start() {
-                timer = setTimeout(() => {
-                long = true
-                }, time);
-            }
-
-            function stop() {
-                clearTimeout(timer);
-                long = false
-            }
-
-            if(!video.dataset.patched){
-                video.addEventListener('touchstart', function(e){
-                    start()
-                });
-
-                video.addEventListener('touchend', function(e){
-                    if(long){
-                        const rect = video.getBoundingClientRect();
-
-                        const contextMenuX = rect.left + rect.width / 2;
-                        const contextMenuY = rect.top + rect.height / 2;
-
-                        const contextMenuEvent = new MouseEvent('contextmenu', {
-                            bubbles: true,
-                            cancelable: true,
-                            clientX: contextMenuX,
-                            clientY: contextMenuY
-                        });
-                        video.dispatchEvent(contextMenuEvent);
-                    }
-                    stop()
-                });
-
-                video.addEventListener('touchcancel',stop);
-                video.addEventListener('touchmove',stop);
-                video.dataset.patched=true
-            }
-        })
-    }
-
-    if(images){
-        images.forEach(image=>{
-            let timer;
-            let long = false;
-
-            function start() {
-                timer = setTimeout(() => {
-                long = true
-                }, time);
-            }
-
-            function stop() {
-                clearTimeout(timer);
-                long = false
-            }
-
-            if(!image.dataset.patched){
-                image.addEventListener('touchstart', function(e){
-                    start()
-                });
-
-                image.addEventListener('touchend', function(e){
-                    if(long){
-                        const rect = image.getBoundingClientRect();
-
-                        const contextMenuX = rect.left + rect.width / 2;
-                        const contextMenuY = rect.top + rect.height / 2;
-
-                        const contextMenuEvent = new MouseEvent('contextmenu', {
-                            bubbles: true,
-                            cancelable: true,
-                            clientX: contextMenuX,
-                            clientY: contextMenuY
-                        });
-                        image.dispatchEvent(contextMenuEvent);
-                    }
-                    stop()
-                });
-
-                image.addEventListener('touchcancel',stop);
-                image.addEventListener('touchmove',stop);
-                image.dataset.patched=true
-            }
-        })
-    }
-
-    if(other){
-        other.forEach(thing=>{
-            let timer;
-            let long = false;
-
-            function start() {
-                timer = setTimeout(() => {
-                long = true
-                }, time);
-            }
-
-            function stop() {
-                clearTimeout(timer);
-                long = false
-            }
-
-            if(!thing.dataset.patched){
-                thing.addEventListener('touchstart', function(e){
-                    start()
-                });
-
-                thing.addEventListener('touchend', function(e){
-                    if(long){
-                        const rect = thing.getBoundingClientRect();
-
-                        const contextMenuX = rect.left + rect.width / 2;
-                        const contextMenuY = rect.top + rect.height / 2;
-
-                        const contextMenuEvent = new MouseEvent('contextmenu', {
-                            bubbles: true,
-                            cancelable: true,
-                            clientX: contextMenuX,
-                            clientY: contextMenuY
-                        });
-
-                        setTimeout(() => {
-                            thing.dispatchEvent(contextMenuEvent);
-                        }, 100);
-                    }
-                    stop()
-                });
-
-                thing.addEventListener('touchcancel',stop);
-                thing.addEventListener('touchmove',stop);
-                thing.dataset.patched=true
-            }
-        })
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    attachmentContextMenuFix();
-  });
-
-  function init() {
-    attachmentContextMenuFix();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
 })();
 
 
@@ -1670,215 +1496,6 @@ if(window.__US_BUILDER_BUTTONFIX_JS__){return;}window.__US_BUILDER_BUTTONFIX_JS_
 })();
 
 
-/* --- ChannelContextMenuFix.js --- */
-if(window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_CHANNELCONTEXTMENUFIX_JS__=true;
-
-(function () {
-  if (window.__CHANNEL_CONTEXT_MENU_FIX__) return;
-  window.__CHANNEL_CONTEXT_MENU_FIX__ = true;
-
-  function channelContextMenuFix() {
-    const balls = new Event('contextmenu',{
-        bubbles:true,
-        button:2
-    });
-
-    const time = 250
-
-    let channelList = document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll').item(1)
-    if(!channelList) return;
-    channelList = channelList.children[0]
-    if(channelList.querySelector('a[href=\'/app\']')){
-      for(const child of channelList.lastChild.children){
-        let timer;
-        let long = false;
-
-        function start() {
-          timer = setTimeout(() => {
-            long = true
-          }, time);
-        }
-
-        function stop() {
-            clearTimeout(timer);
-            long = false
-        }
-
-        if(!child.dataset.patched){
-          child.addEventListener('touchstart', function(e){
-                start()
-          });
-          child.addEventListener('touchend', function(e){
-            if(long){
-                const rect = child.getBoundingClientRect();
-
-                const contextMenuX = rect.left + rect.width / 2;
-                const contextMenuY = rect.top + rect.height / 2;
-
-                const contextMenuEvent = new MouseEvent('contextmenu', {
-                    bubbles: true,
-                    cancelable: true,
-                    clientX: contextMenuX,
-                    clientY: contextMenuY
-                });
-                setTimeout(() => {
-                  child.firstChild.firstChild.dispatchEvent(contextMenuEvent)
-                }, 100);
-            }
-            stop()
-          });
-          child.addEventListener('touchcancel',stop);
-          child.addEventListener('touchmove',stop);
-          child.dataset.patched=true
-        }
-      }
-    }else{
-      const categories = document.getElementsByClassName('d_flex ai_center gap_var(--gap-sm) p_0_var(--gap-sm) pl_calc(var(--gap-lg)_+_5px) pt_10px cursor_pointer us_none trs_var(--transitions-fast)_all --color_var(--md-sys-color-on-surface) c_var(--color) fill_var(--color) lh_0.875rem fs_13px ls_0.03125rem fw_500 [&:hover]:--color_var(--md-sys-color-on-surface-variant) [&_svg]:trs_var(--transitions-fast)_transform [&_svg]:trf_rotateZ(90deg)')
-      if(categories.item(0)){
-        for(const category of categories){
-          let timer;
-          let long = false;
-
-          function start() {
-            timer = setTimeout(() => {
-              long = true
-            }, time);
-          }
-
-          function stop() {
-              clearTimeout(timer);
-              long = false
-          }
-          if(!category.dataset.patched){
-            category.addEventListener('touchstart',function (e){
-              start()
-            });
-
-            category.addEventListener('touchend',function(e){
-              if(long){
-                e.preventDefault()
-                const rect = category.getBoundingClientRect();
-                const contextMenuX = rect.left + rect.width / 2;
-                const contextMenuY = rect.top + rect.height / 2;
-                const contextMenuEvent = new MouseEvent('contextmenu', {
-                    bubbles: true,
-                    cancelable: true,
-                    clientX: contextMenuX,
-                    clientY: contextMenuY
-                });
-                setTimeout(() => {
-                  category.dispatchEvent(contextMenuEvent)
-                }, 100);
-              }
-              stop()
-            });
-
-            category.addEventListener('touchcancel',stop)
-            category.addEventListener('touchmove',stop)
-            category.dataset.patched=true
-          }
-        }
-      }
-
-      for(const child of channelList.children){
-        let timer;
-        let long = false;
-
-        function start() {
-          timer = setTimeout(() => {
-            long = true
-          }, time);
-        }
-
-        function stop() {
-            clearTimeout(timer);
-            long = false
-        }
-
-        if(!child.dataset.patched){
-          child.addEventListener('touchstart', function(e){
-                start()
-          });
-          child.addEventListener('touchend', function(e){
-          if(e.target!=child) return;
-          if(long){
-              setTimeout(() => {
-                child.dispatchEvent(balls)
-              }, 100);
-          }
-          stop()
-          });
-          child.addEventListener('touchcancel',stop);
-          child.addEventListener('touchmove',stop);
-          child.dataset.patched=true
-        }
-
-        if(child.children[1]?.clientHeight!=0){
-            let cum;
-            if(child.firstChild.getAttribute('role')){
-                cum = child.firstChild
-            }else{
-                cum = child.children[1]
-            }
-
-            for(const child2 of cum.children){
-                let timer;
-                let long = false;
-
-                function start() {
-                  timer = setTimeout(() => {
-                    long = true
-                  }, time);
-                }
-
-                function stop() {
-                    clearTimeout(timer);
-                    long = false
-                }
-
-                if(!child2.dataset.patched){
-                  child2.firstChild.addEventListener('touchstart', function(e){
-                        start()
-                  });
-                  child2.firstChild.addEventListener('touchend', function(e){
-                  if(long){
-                    e.preventDefault()
-                      setTimeout(() => {
-                        child2.firstChild.dispatchEvent(balls)
-                      }, 100);
-                  }
-                  stop()
-                  });
-                  child2.firstChild.addEventListener('touchcancel',stop);
-                  child2.firstChild.addEventListener('touchmove',stop);
-                  child2.dataset.patched=true
-                }
-            }
-        }
-      }
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    channelContextMenuFix();
-  });
-
-  function init() {
-    channelContextMenuFix();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
 /* --- ChunkyMembers.js --- */
 if(window.__US_BUILDER_CHUNKYMEMBERS_JS__){return;}window.__US_BUILDER_CHUNKYMEMBERS_JS__=true;
 
@@ -1887,7 +1504,9 @@ if(window.__US_BUILDER_CHUNKYMEMBERS_JS__){return;}window.__US_BUILDER_CHUNKYMEM
   window.__CHUNKY_MEMBERS__ = true;
 
   function chunkyMembers() {
-    const memberlist = document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0)
+    const memberlistvirtualcontainer = document.querySelector(`div[class*='virtual-container']:has(div>div>svg>circle[fill*='var(--brand-presence'])`)
+    if(!memberlistvirtualcontainer) return;
+    const memberlist = memberlistvirtualcontainer.offsetParent
     if(!memberlist) return;
     if(!memberlist.style.width||Number(memberlist.style.width.replace('px',''))<memberlist.previousSibling.clientWidth){
       memberlist.style.width = `${memberlist.clientWidth+memberlist.previousSibling.clientWidth}px`
@@ -2103,80 +1722,6 @@ if(window.__US_BUILDER_CUSTOMTITLE_JS__){return;}window.__US_BUILDER_CUSTOMTITLE
 
   function init() {
     customTitle();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
-/* --- EmojiFix.js --- */
-if(window.__US_BUILDER_EMOJIFIX_JS__){return;}window.__US_BUILDER_EMOJIFIX_JS__=true;
-
-(function () {
-  if (window.__EMOJI_FIX__) return;
-  window.__EMOJI_FIX__ = true;
-
-  function emojiFix() {
-    for(const element of document.getElementsByClassName('fill_var(--md-sys-color-on-surface) bg_var(--md-sys-color-surface-dim) w_36px h_36px d_flex flex-sh_0 ai_center jc_center bdr_var(--borderRadius-md)')){
-        element.replaceChild(element.firstChild.firstChild.firstChild.firstChild.firstChild,element.firstChild)
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    emojiFix();
-  });
-
-  function init() {
-    emojiFix();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
-/* --- FixBanList.js --- */
-if(window.__US_BUILDER_FIXBANLIST_JS__){return;}window.__US_BUILDER_FIXBANLIST_JS__=true;
-
-(function () {
-  if (window.__FIX_BAN_LIST__) return;
-  window.__FIX_BAN_LIST__ = true;
-
-  function fixBanList() {
-    const reasontextfield = document.querySelector(`mdui-text-field[label='Reason']`)
-    if(window.outerWidth>window.outerHeight){
-        if(reasontextfield?.style.width){
-            reasontextfield.style.removeProperty('width')
-        }
-        return;
-    }
-
-    if(reasontextfield){
-        reasontextfield.style.width='170%'
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    fixBanList();
-  });
-
-  function init() {
-    fixBanList();
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
@@ -2470,8 +2015,10 @@ if(window.__US_BUILDER_HIDESEARCHBARBUTTON_JS__){return;}window.__US_BUILDER_HID
         searchbutton.appendChild(span)
 
         searchbutton.onclick = function(e){
+            const searchresult = document.querySelector(`a[href]:has(div[id])`)
+            if(!searchresult) return;
             const searchbar = pinbutton.parentElement.lastChild
-            const searchresults = document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0)
+            const searchresults = searchresult.parentElement.parentElement
             searchbar.remove()
             searchbutton.remove()
             searchresults.remove()
@@ -2686,7 +2233,29 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
         const editorContainer = document.createElement('div');
         editorContainer.style.flex = '1';
 
+        const clearBtn = document.createElement('div');
+        clearBtn.textContent = 'Clear';
+        Object.assign(clearBtn.style,{
+            position:'absolute',
+            top:'12px',
+            right:'86px',
+            cursor:'pointer',
+            color:'#fff'
+        });
+
+        const pasteBtn = document.createElement('div');
+        pasteBtn.textContent = 'Paste';
+        Object.assign(pasteBtn.style,{
+            position:'absolute',
+            top:'12px',
+            right:'36px',
+            cursor:'pointer',
+            color:'#fff'
+        });
+
         panel.appendChild(header);
+        panel.appendChild(clearBtn);
+        panel.appendChild(pasteBtn);
         panel.appendChild(closeBtn);
         panel.appendChild(editorContainer);
         document.body.appendChild(panel);
@@ -2700,6 +2269,19 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
             fontSize: 13,
             scrollBeyondLastLine: false,
             wordWrap: 'on'
+        });
+
+        clearBtn.addEventListener('click',async ()=>{
+            const model = editor.getModel();
+            model.setValue('')
+        });
+
+        pasteBtn.addEventListener('click',async ()=>{
+            navigator.clipboard.readText().then(text=>{
+                const model = editor.getModel();
+                const value = model.getValue()
+                model.setValue(value+`\n${text}`)
+            })
         });
 
         editor.onDidChangeModelContent(() => {
@@ -3644,7 +3226,29 @@ async function openEditorPanel(plugin, onSave) {
     const editorContainer = document.createElement("div");
     editorContainer.style.flex = "1";
 
+    const clearBtn = document.createElement('div');
+    clearBtn.textContent = 'Clear';
+    Object.assign(clearBtn.style,{
+        position:'absolute',
+        top:'12px',
+        right:'86px',
+        cursor:'pointer',
+        color:'#fff'
+    });
+
+    const pasteBtn = document.createElement('div');
+    pasteBtn.textContent = 'Paste';
+    Object.assign(pasteBtn.style,{
+        position:'absolute',
+        top:'12px',
+        right:'36px',
+        cursor:'pointer',
+        color:'#fff'
+    });
+
     panel.appendChild(header);
+    panel.appendChild(clearBtn);
+    panel.appendChild(pasteBtn);
     panel.appendChild(closeBtn);
     panel.appendChild(toolbar);
     panel.appendChild(editorContainer);
@@ -3654,6 +3258,19 @@ async function openEditorPanel(plugin, onSave) {
         value: plugin.code || "", language: "javascript", theme: "vs-dark",
         automaticLayout: true, minimap: { enabled: false },
         fontSize: 13, scrollBeyondLastLine: false, wordWrap: "on"
+    });
+
+    clearBtn.addEventListener('click',async ()=>{
+        const model = editor.getModel();
+        model.setValue('')
+    });
+
+    pasteBtn.addEventListener('click',async ()=>{
+        navigator.clipboard.readText().then(text=>{
+            const model = editor.getModel();
+            const value = model.getValue()
+            model.setValue(value+`\n${text}`)
+        })
     });
 
     saveBtn.onclick = () => {
@@ -4344,123 +3961,6 @@ if(window.__US_BUILDER_MAKEAVIAPANELSDRAGGABLE_JS__){return;}window.__US_BUILDER
 
   function init() {
     makeAviaPanelsDraggable();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
-/* --- MemberListContextMenuFix.js --- */
-if(window.__US_BUILDER_MEMBERLISTCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_MEMBERLISTCONTEXTMENUFIX_JS__=true;
-
-(function () {
-  if (window.__MEMBER_LIST_CONTEXT_MENU_FIX__) return;
-  window.__MEMBER_LIST_CONTEXT_MENU_FIX__ = true;
-
-  function memberListContextMenuFix() {
-    const balls = new Event('contextmenu',{
-        bubbles:true,
-        button:2
-    });
-
-    const time = 250
-
-    const memberlist = document.getElementsByClassName('will-change_transform scr-bar-c_var(--md-sys-color-primary)_transparent ov-y_auto ov-x_hidden ov_hidden! scr-bar-g_stable flex-sh_0 w_var(--layout-width-channel-sidebar) bdr_var(--borderRadius-lg)').item(0)
-    if(!memberlist) return;
-
-    for(const member of memberlist.getElementsByClassName('flex-sh_0 fw_500 fs_15px us_none cursor_pointer pos_relative d_flex ai_center m_0_var(--gap-md) p_0_var(--gap-md) bdr_var(--borderRadius-xl) c_var(--color) fill_var(--color) [&_>_svg]:as_center [&:hover_.hover-hide,_&:not(:hover)_.hover-show]:d_none h_42px gap_var(--gap-md) --color_var(--md-sys-color-on-surface) bg_transparent')){
-        let timer;
-        let long = false;
-
-        function start() {
-            timer = setTimeout(() => {
-                long = true
-            }, time);
-        }
-
-        function stop() {
-            clearTimeout(timer);
-            long = false
-        }
-
-        if(!member.dataset.patched){
-            member.addEventListener('touchstart',function(e){
-                start()
-            });
-
-            member.addEventListener('touchend',function(e){
-                if(long){
-                    e.preventDefault()
-                    e.stopImmediatePropagation()
-                    e.stopPropagation()
-                    setTimeout(() => {
-                        member.dispatchEvent(balls)
-                    }, 100);
-                }
-                stop()
-            })
-
-            member.addEventListener('touchcancel',stop);
-            member.addEventListener('touchmove',stop);
-
-            member.dataset.patched=true
-        }
-    }
-
-    for(const offlinemember of memberlist.getElementsByClassName('flex-sh_0 fw_500 fs_15px us_none cursor_pointer pos_relative d_flex ai_center m_0_var(--gap-md) p_0_var(--gap-md) bdr_var(--borderRadius-xl) c_var(--color) fill_var(--color) [&_>_svg]:as_center [&:hover_.hover-hide,_&:not(:hover)_.hover-show]:d_none h_42px gap_var(--gap-md) --color_var(--md-sys-color-outline-variant) bg_transparent [&_img]:op_0.3')){
-        let timer;
-        let long = false;
-
-        function start() {
-            timer = setTimeout(() => {
-                long = true
-            }, time);
-        }
-
-        function stop() {
-            clearTimeout(timer);
-            long = false
-        }
-
-        if(!offlinemember.dataset.patched){
-            offlinemember.addEventListener('touchstart',function(e){
-                start()
-            });
-
-            offlinemember.addEventListener('touchend',function(e){
-                if(long){
-                    e.preventDefault()
-                    e.stopImmediatePropagation()
-                    e.stopPropagation()
-                    setTimeout(() => {
-                        offlinemember.dispatchEvent(balls)
-                    }, 100);
-                }
-                stop()
-            })
-
-            offlinemember.addEventListener('touchcancel',stop);
-            offlinemember.addEventListener('touchmove',stop);
-
-            offlinemember.dataset.patched=true
-        }
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    memberListContextMenuFix();
-  });
-
-  function init() {
-    memberListContextMenuFix();
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
@@ -5208,11 +4708,11 @@ if(window.__US_BUILDER_OFFSCREENATTACHMENTSFIX_JS__){return;}window.__US_BUILDER
   window.__OFF_SCREEN_ATTACHMENTS_FIX__ = true;
 
   function offScreenAttachmentsFix() {
-    const elements = document.querySelectorAll('div[class="d_flex flex-d_column flex-g_initial m_0 ai_initial jc_initial p_var(--gap-md) bdr_var(--borderRadius-md) c_var(--md-sys-color-inverse-on-surface) bg_var(--md-sys-color-inverse-surface) gap_var(--gap-md)"]')
-    elements.forEach(element=>{
-        if(element.children[0].children[1].children[0].textContent.includes(' ')||element.children[0].children[1].children[0].textContent.includes('_')){
-            element.children[0].children[1].children[0].textContent = element.children[0].children[1].children[0].textContent.replaceAll(' ','-').replaceAll('_','-')
-        }
+    const downloadbuttons = document.querySelectorAll(`a[download]:has(button>span)`)
+    downloadbuttons.forEach(button=>{
+      if(button.previousSibling.firstChild.textContent.includes(' ')||button.previousSibling.firstChild.textContent.includes('_')){
+        button.previousSibling.firstChild.textContent = button.previousSibling.firstChild.textContent.replaceAll(' ','-').replaceAll('_','-')
+      }
     });
   }
 
@@ -6910,86 +6410,6 @@ if(window.__US_BUILDER_REPOFRONTEND_JS__){return;}window.__US_BUILDER_REPOFRONTE
 })();
 
 
-/* --- ServerContextMenuFix.js --- */
-if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__=true;
-
-(function () {
-  if (window.__SERVER_CONTEXT_MENU_FIX__) return;
-  window.__SERVER_CONTEXT_MENU_FIX__ = true;
-
-  function serverContextMenuFix() {
-    if(!document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll flex-g_1').item(0)) return;
-    const time = 250
-    let servers;
-    for(const child of document.getElementsByClassName('will-change_transform scr-bar-w_none [&::-webkit-scrollbar]:d_none ov-y_scroll flex-g_1').item(0).children){
-      if(child.getAttribute('role')=='list'){
-        servers = child;
-      }
-    }
-
-    for(const server of servers.children){
-      let timer;
-      let long = false;
-
-      function start() {
-          timer = setTimeout(() => {
-          long = true
-          }, time);
-      }
-
-      function stop() {
-          clearTimeout(timer);
-          long = false
-      }
-
-      if(!server.dataset.patched){
-        server.addEventListener('touchstart',()=>{
-          start()
-        })
-
-        server.addEventListener('touchend',(e)=>{
-          if(long){
-            e.preventDefault()
-            const balls = new Event('contextmenu',{
-              bubbles:true,
-              button:2
-            })
-            setTimeout(() => {
-              server.children[0].children[0].dispatchEvent(balls)
-            }, 100);
-          }
-          stop()
-        });
-
-        server.addEventListener('touchcancel',()=>{
-            stop()
-        })
-
-        server.dataset.patched=true
-      }
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    serverContextMenuFix();
-  });
-
-  function init() {
-    serverContextMenuFix();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
 /* --- ServerListScrollLock.js --- */
 if(window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__){return;}window.__US_BUILDER_SERVERLISTSCROLLLOCK_JS__=true;
 
@@ -7314,33 +6734,30 @@ if(window.__US_BUILDER_SHRINKGIFPANEL_JS__){return;}window.__US_BUILDER_SHRINKGI
   window.__SHRINK_GIF_PANEL__ = true;
 
   function shrinkGifPanel() {
-    if(document.getElementsByClassName('w_400px h_400px').item(0)){
-        if(document.getElementsByClassName('w_400px h_400px').item(0).children[0].className=='w_100% h_100% us_none d_flex flex-d_column gap_var(--gap-md) ai_stretch ov_hidden p_var(--gap-md)_0 bdr_var(--borderRadius-lg) c_var(--md-sys-color-on-surface) fill_var(--md-sys-color-on-surface) bx-sh_0_0_3px_var(--md-sys-color-shadow) bg_var(--md-sys-color-surface-container)'){
-            const gifPanel = document.getElementsByClassName('w_400px h_400px').item(0)
-            gifPanel.style.setProperty('position','fixed')
-            gifPanel.style.removeProperty('left')
-            gifPanel.style.removeProperty('top')
-            gifPanel.style.setProperty('right','0px')
-            gifPanel.style.setProperty('bottom','12px')
+    const searchbar = document.querySelector(`[placeholder='Search for GIFs...'],[placeholder='Search for emojis...']`)
+    if(!searchbar) return;
+    const gifPanel = searchbar.offsetParent
+    gifPanel.style.setProperty('position','fixed')
+    gifPanel.style.removeProperty('left')
+    gifPanel.style.removeProperty('top')
+    gifPanel.style.setProperty('right','0px')
+    gifPanel.style.setProperty('bottom','12px')
 
-            if(window.outerWidth<466&&gifPanel.children[0].children[1].children[1].children[1]){
-                gifPanel.style.setProperty('width',`${window.outerWidth-66}px`)
-                gifPanel.style.setProperty('height',`${window.outerWidth-66}px`)
-            }
+    if(window.outerWidth<466&&gifPanel.children[0].children[1].children[1].children[1]){
+        gifPanel.style.setProperty('width',`${window.outerWidth-66}px`)
+        gifPanel.style.setProperty('height',`${window.outerWidth-66}px`)
+    }
 
-            const searchbar = document.querySelector(`[placeholder='Search for GIFs...'],[placeholder='Search for emojis...']`)
-            if(searchbar&&!searchbar.dataset.patched){
-                searchbar.setAttribute('contenteditable',true)
-                searchbar.addEventListener('click',()=>{
-                    if(!searchbar.focused){
-                        searchbar.focus()
-                    }else{
-                        searchbar.blur()
-                    }
-                });
-                searchbar.dataset.patched=true
+    if(!searchbar.dataset.patched){
+        searchbar.setAttribute('contenteditable',true)
+        searchbar.addEventListener('click',()=>{
+            if(!searchbar.focused){
+                searchbar.focus()
+            }else{
+                searchbar.blur()
             }
-        }
+        });
+        searchbar.dataset.patched=true
     }
   }
 
@@ -7679,7 +7096,29 @@ if(window.__US_BUILDER_THEMES_JS__){return;}window.__US_BUILDER_THEMES_JS__=true
         const editorContainer = document.createElement("div");
         editorContainer.style.flex = "1";
 
+        const clearBtn = document.createElement('div');
+        clearBtn.textContent = 'Clear';
+        Object.assign(clearBtn.style,{
+            position:'absolute',
+            top:'12px',
+            right:'86px',
+            cursor:'pointer',
+            color:'#fff'
+        });
+
+        const pasteBtn = document.createElement('div');
+        pasteBtn.textContent = 'Paste';
+        Object.assign(pasteBtn.style,{
+            position:'absolute',
+            top:'12px',
+            right:'36px',
+            cursor:'pointer',
+            color:'#fff'
+        });
+
         panel.appendChild(header);
+        panel.appendChild(clearBtn);
+        panel.appendChild(pasteBtn);
         panel.appendChild(close);
         panel.appendChild(editorContainer);
         document.body.appendChild(panel);
@@ -7696,6 +7135,19 @@ if(window.__US_BUILDER_THEMES_JS__){return;}window.__US_BUILDER_THEMES_JS__=true
         });
 
         monacoEditorInstance._aviaThemeId = themeId;
+
+        clearBtn.addEventListener('click',async ()=>{
+            const model = monacoEditorInstance.getModel();
+            model.setValue('')
+        });
+
+        pasteBtn.addEventListener('click',async ()=>{
+            navigator.clipboard.readText().then(text=>{
+                const model = monacoEditorInstance.getModel();
+                const value = model.getValue()
+                model.setValue(value+`\n${text}`)
+            })
+        });
 
         monacoEditorInstance.onDidChangeModelContent(() => {
             const id = monacoEditorInstance._aviaThemeId;
@@ -8052,72 +7504,6 @@ if(window.__US_BUILDER_THEMES_JS__){return;}window.__US_BUILDER_THEMES_JS__=true
 })();
 
 
-/* --- UnsentMessageContextMenuFix.js --- */
-if(window.__US_BUILDER_UNSENTMESSAGECONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_UNSENTMESSAGECONTEXTMENUFIX_JS__=true;
-
-(function () {
-  if (window.__UNSENT_MESSAGE_CONTEXT_MENU_FIX__) return;
-  window.__UNSENT_MESSAGE_CONTEXT_MENU_FIX__ = true;
-
-  function unsentMessageContextMenuFix() {
-    const messages = document.querySelectorAll(`[class='group pos_relative d_flex flex-d_column p_2px_0 bg_transparent bdr_var(--borderRadius-md) min-h_1em trs_background-color_var(--transitions-fast) [&_a:hover]:td_underline [&:hover_.Toolbar]:d_flex mt_var(--message-group-spacing)! [&:hover]:bg_var(--md-sys-color-surface-container) c_var(--md-sys-color-error)']`)
-    for(const message of messages){
-        const bar = document.createElement('div')
-        bar.className='top_-18px right_16px pos_absolute ai_center d_none ov_hidden bdr_var(--borderRadius-xs) bx-sh_0_0_3px_var(--md-sys-color-shadow) fill_var(--md-sys-color-on-secondary-container) bg_var(--md-sys-color-secondary-container) Toolbar'
-        const dots = document.createElement('div')
-        dots.className='cursor_pointer pos_relative p_var(--gap-sm)'
-        const ripple = document.createElement('md-ripple')
-        ripple.ariaHidden = true
-        const svg = document.createElement('svg')
-        dots.appendChild(ripple)
-        dots.appendChild(svg)
-        svg.outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2m0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2"></path></svg>`
-        bar.appendChild(dots)
-
-        bar.onclick = function(){
-            const rect = message.getBoundingClientRect();
-
-            const contextMenuX = rect.left + rect.width / 2;
-            const contextMenuY = rect.top + rect.height / 2;
-
-            const contextMenuEvent = new MouseEvent('contextmenu', {
-                bubbles: true,
-                cancelable: true,
-                clientX: contextMenuX,
-                clientY: contextMenuY
-            });
-            setTimeout(() => {
-                message.dispatchEvent(contextMenuEvent);
-            }, 100);
-        }
-
-        if(!message.dataset.patched){
-            message.appendChild(bar)
-            message.dataset.patched=true
-        }
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    unsentMessageContextMenuFix();
-  });
-
-  function init() {
-    unsentMessageContextMenuFix();
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (document.body) {
-    init();
-  } else {
-    requestAnimationFrame(init);
-  }
-})();
-
-
 /* --- UpdateChecker.js --- */
 if(window.__US_BUILDER_UPDATECHECKER_JS__){return;}window.__US_BUILDER_UPDATECHECKER_JS__=true;
 
@@ -8353,7 +7739,7 @@ if(window.__US_BUILDER_WHATSNEW_JS__){return;}window.__US_BUILDER_WHATSNEW_JS__=
 
     const LOCAL_JSON_FILE = "whatsnewbackend.json";
 
-    const version = window.native.versions.aviaClient().replaceAll('.', '-');
+    const version = window.__USERSCRIPT_VERSION__.replaceAll('.', '-');
     const BACKEND_URL = "https://raw.githubusercontent.com/0simp/AviaClientMobileWhatsnew/refs/heads/main/backend" + version + ".json";
 
     function injectStyles() {
