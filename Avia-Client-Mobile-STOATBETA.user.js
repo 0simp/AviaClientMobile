@@ -6615,7 +6615,7 @@ if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SE
   function serverContextMenuFix() {
     if(window.outerWidth<window.outerHeight) return;
     const time = 250
-    const servers = document.querySelector(`div:has(>div>a[href*='/server'])`)?.querySelector(`[role='list']`)
+    const servers = document.querySelector(`div:has(>div>div>div>a[href*='/server'])`)?.querySelector(`[role='list']`)
     if(!servers) return;
     for(const server of servers.children){
       let timer;
