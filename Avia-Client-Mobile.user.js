@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name        Avia Client Mobile
 // @namespace   userscript.builder
-// @version     1.9
-// @description Avia Client Mobile by 0simp. Based on Avia Client 1.8.2 by AvaLilac
+// @version     1.9.1
+// @description Avia Client Mobile by 0simp. Based on Avia Client 1.8.3 by AvaLilac
 // @match       https://stoat.chat/*
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
 
 (function(){
-'@preserve - Built on 2026-08-04T19:04:53.239Z';
-window.__USERSCRIPT_VERSION__ = "1.9";
+'@preserve - Built on 2026-08-12T23:08:09.035Z';
+window.__USERSCRIPT_VERSION__ = "1.9.1";
 
 /* --- AccountSwitcher.js --- */
 if(window.__US_BUILDER_ACCOUNTSWITCHER_JS__){return;}window.__US_BUILDER_ACCOUNTSWITCHER_JS__=true;
@@ -596,6 +596,119 @@ if(window.__US_BUILDER_AVIACLIENTCATEGORY_JS__){return;}window.__US_BUILDER_AVIA
 
     inject();
 
+    const categoryRegisteredItems = [];
+
+    function findCategoryTemplateButton(){
+        return [...document.querySelectorAll(
+            `.settings_sidebar .content a.button:has(
+                > div
+                > svg
+                > path[d^='M12 22C6.49 22']
+            )`
+        )].find((a) => {
+            const label = a.querySelector('div > svg + div > div');
+            if(label.textContent === "Appearance") return a;
+        });
+    }
+
+    function buildCategoryButton(item){
+        const template = findCategoryTemplateButton();
+        if(!template) return null;
+
+        const btn = template.cloneNode(true);
+        btn.removeAttribute("id");
+        btn.dataset.aviaCategoryId = item.id;
+
+        const label = [...btn.querySelectorAll("div")].find(d => d.children.length === 0);
+        if(label) label.textContent = item.name;
+
+        const oldSvg = btn.querySelector("svg");
+        if(oldSvg) oldSvg.remove();
+
+        if(item.icon){
+            const iconSpan = document.createElement("span");
+            iconSpan.className = "material-symbols-outlined";
+            const filled = item.icon.endsWith("_fill");
+            const iconName = filled ? item.icon.slice(0, -5) : item.icon;
+            iconSpan.textContent = iconName;
+            iconSpan.style.cssText = "margin-right:8px;flex-shrink:0;display:block;font-variation-settings:'FILL' " + (filled ? "1" : "0") + ",'wght' 400,'GRAD' 0;font-size:20px;";
+            const firstChild = btn.firstChild;
+            btn.insertBefore(iconSpan, firstChild);
+        }
+
+        btn.onclick = (e) => {
+            e.preventDefault();
+            try { item.onClick(); }
+            catch(err){ console.error("[AviaCategory]", err); }
+        };
+
+        return btn;
+    }
+
+    function getCategoryList(){
+        const clone = document.getElementById('avia-cloned-settings');
+        if(!clone) return null;
+        return clone.querySelector('div:last-child');
+    }
+
+    function renderCategoryItems(){
+        const list = getCategoryList();
+        if(!list) return;
+        for(const item of categoryRegisteredItems){
+            if(list.querySelector(`[data-avia-category-id="${item.id}"]`)) continue;
+            const btn = buildCategoryButton(item);
+            if(btn) list.appendChild(btn);
+        }
+    }
+
+    window.AviaCategory = {
+        register: function(item){
+            if(!item || typeof item !== "object"){
+                console.error("[AviaCategory] register: item must be an object, got", typeof item); return;
+            }
+            if(typeof item.id !== "string" || !item.id.trim()){
+                console.error("[AviaCategory] register: item.id must be a non-empty string, got", item.id); return;
+            }
+            if(!item.name || typeof item.name !== "string"){
+                console.error("[AviaCategory] register failed for id '%s': item.name must be a non-empty string, got", item.id, item.name); return;
+            }
+            if(typeof item.onClick !== "function"){
+                console.error("[AviaCategory] register failed for id '%s': item.onClick must be a function, got", item.id, typeof item.onClick); return;
+            }
+            if(categoryRegisteredItems.some(i => i.id === item.id.trim())){
+                console.error("[AviaCategory] register: id '%s' is already registered", item.id.trim()); return;
+            }
+            categoryRegisteredItems.push({
+                id: item.id.trim(),
+                name: item.name,
+                onClick: item.onClick,
+                icon: typeof item.icon === "string" && item.icon.trim() ? item.icon.trim() : null
+            });
+            renderCategoryItems();
+        },
+
+        unregister: function(item){
+            if(!item || typeof item.id !== "string" || !item.id.trim()){
+                console.error("[AviaCategory] unregister: item.id must be a non-empty string, got", item?.id); return;
+            }
+            const id = item.id.trim();
+            const idx = categoryRegisteredItems.findIndex(i => i.id === id);
+            if(idx === -1){
+                console.error("[AviaCategory] unregister: no item with id '%s' found", id); return;
+            }
+            categoryRegisteredItems.splice(idx, 1);
+            const list = getCategoryList();
+            if(list){
+                const el = list.querySelector(`[data-avia-category-id="${id}"]`);
+                if(el) el.remove();
+            }
+        }
+    };
+
+    new MutationObserver(() => {
+        renderCategoryItems();
+    }).observe(document.body, { childList: true, subtree: true });
+
 })();
 
 
@@ -1060,7 +1173,7 @@ if(window.__US_BUILDER_AVIAFAVSYSTEM_USER_JS__){return;}window.__US_BUILDER_AVIA
     function injectButton() {
         if (document.getElementById("avia-favorites-btn")) return;
         const gifSpan = [...document.querySelectorAll("span.material-symbols-outlined")]
-            .find(s => s.textContent.trim() === "emoticon");
+            .find(s => s.textContent.trim() === "mood");
         if (!gifSpan) return;
         const gifBtn = gifSpan.closest("button");
         if (!gifBtn) return;
@@ -2223,7 +2336,7 @@ if(window.__US_BUILDER_HIDEUNSENTMESSAGES_JS__){return;}window.__US_BUILDER_HIDE
     hideUnsentMessages()
 
     function injectSettingsButton(){
-        const themes = document.getElementById('avia-themes-btn')
+        const themes = document.querySelector(`a[data-avia-category-id='avia_themes']`)
         if(themes&&!document.getElementById('hideunsentmessages')){
             const settingsbutton = themes.cloneNode(true)
             settingsbutton.id='hideunsentmessages'
@@ -2233,6 +2346,8 @@ if(window.__US_BUILDER_HIDEUNSENTMESSAGES_JS__){return;}window.__US_BUILDER_HIDE
                 settingsbutton.innerHTML= settingsbutton.innerHTML.replace('Themes','Hide Unsent Messages')
             }
             setIcon(settingsbutton,'delete')
+            settingsbutton.querySelector('span').remove()
+            settingsbutton.removeAttribute('data-avia-category-id')
             settingsbutton.style.color='var(--md-sys-color-error)'
 
             settingsbutton.onclick=()=>{
@@ -2424,32 +2539,6 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
             panel.style.right = 'auto';
             panel.style.bottom = 'auto';
         });
-    }
-
-    function setIcon(button, type) {
-        const oldSvg = button.querySelector('svg');
-        if (oldSvg) oldSvg.remove();
-
-        const icons = {
-            monitor: "M3 4h18v12H3V4zm2 2v8h14V6H5zm3 12h8v2H8v-2z",
-            upload: "M5 20h14v-2H5v2zm7-18L5.33 9h3.84v4h4.66V9h3.84L12 2z",
-            refresh: "M17.65 6.35A7.95 7.95 0 0012 4V1L7 6l5 5V7a5 5 0 11-5 5H5a7 7 0 107.75-6.65z",
-            code: "M8.7 16.3L4.4 12l4.3-4.3 1.4 1.4L7.2 12l2.9 2.9-1.4 1.4zm6.6 0l-1.4-1.4L16.8 12l-2.9-2.9 1.4-1.4L19.6 12l-4.3 4.3z"
-        };
-
-        const svgNS = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(svgNS, "svg");
-        svg.setAttribute("viewBox", "0 0 24 24");
-        svg.setAttribute("width", "20");
-        svg.setAttribute("height", "20");
-        svg.setAttribute("fill", "currentColor");
-        svg.style.marginRight = "8px";
-
-        const path = document.createElementNS(svgNS, "path");
-        path.setAttribute("d", icons[type]);
-        svg.appendChild(path);
-
-        button.insertBefore(svg, button.firstChild);
     }
 
     function applyFont(src, name) {
@@ -2810,70 +2899,6 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
         renderTab();
     }
 
-    function injectButtons() {
-
-        const appearanceBtn = [...document.querySelectorAll(
-            `.settings_sidebar .content a.button:not(
-                [id^='avia-']
-            ):not(
-                [id^='stoat-fake-']
-            ):has(
-                > div
-                > svg
-                > path[d^='M12 22C6.49 22']
-            )`
-        )].find((a) => {
-            const label = a.querySelector('div > svg + div > div');
-            if (label.textContent === "Appearance") return a;
-        });
-
-        if (!appearanceBtn) return;
-
-        const aviaHeader = document.getElementById('avia-cloned-settings');
-        if (!aviaHeader) return;
-
-        const aviaContainer = aviaHeader.lastElementChild
-        if (!aviaContainer) return;
-
-        if (!document.getElementById('stoat-fake-linktree')) {
-            const linktreeBtn = appearanceBtn.cloneNode(true);
-            linktreeBtn.id = 'stoat-fake-linktree';
-            const textNode = linktreeBtn.querySelector('div > svg + div > div');
-            if (textNode) textNode.textContent = "(Avia) Ava's Linktree";
-            setIcon(linktreeBtn, "monitor");
-            linktreeBtn.addEventListener('click', () => window.open(LINKTREE_URL, "_blank"));
-            aviaContainer.appendChild(linktreeBtn);
-
-            const stoatBtn = appearanceBtn.cloneNode(true);
-            stoatBtn.id = 'stoat-fake-stoatserver';
-            const stoatTextNode = stoatBtn.querySelector('div > svg + div > div');
-            if (stoatTextNode) stoatTextNode.textContent = "(Avia) Stoat Server";
-            setIcon(stoatBtn, "monitor");
-            stoatBtn.addEventListener('click', () => window.open(STOAT_SERVER_URL, "_blank"));
-            aviaContainer.appendChild(stoatBtn);
-        }
-
-        if (!document.getElementById('stoat-fake-loadfont')) {
-            const newBtn = appearanceBtn.cloneNode(true);
-            newBtn.id = 'stoat-fake-loadfont';
-            const textNode = newBtn.querySelector('div > svg + div > div');
-            if (textNode) textNode.textContent = "(Avia) Font Loader";
-            setIcon(newBtn, "upload");
-            newBtn.addEventListener('click', showFontLoaderModal);
-            aviaContainer.appendChild(newBtn);
-        }
-
-        if (!document.getElementById('stoat-fake-quickcss')) {
-            const quickCssBtn = appearanceBtn.cloneNode(true);
-            quickCssBtn.id = 'stoat-fake-quickcss';
-            const quickCssTextNode = quickCssBtn.querySelector('div > svg + div > div');
-            if (quickCssTextNode) quickCssTextNode.textContent = "(Avia) QuickCSS";
-            setIcon(quickCssBtn, "code");
-            quickCssBtn.addEventListener('click', toggleQuickCSSPanel);
-            aviaContainer.appendChild(quickCssBtn);
-        }
-    }
-
     function applyQuickCSS(css) {
         let styleTag = document.getElementById('avia-quickcss-style');
         if (!styleTag) {
@@ -2889,14 +2914,10 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
         if (savedCSS) applyQuickCSS(savedCSS);
     })();
 
-    function waitForBody(callback) {
-        if (document.body) callback();
-        else new MutationObserver((obs) => {
-            if (document.body) {
-                obs.disconnect();
-                callback();
-            }
-        }).observe(document.documentElement, { childList: true });
+    function openLink(url) {
+        return function () {
+            window.open(url, "_blank");
+        };
     }
 
     function registerWithAviaMenu() {
@@ -2914,14 +2935,28 @@ if(window.__US_BUILDER_INJECT_USER_JS__){return;}window.__US_BUILDER_INJECT_USER
         }
     }
 
-    waitForBody(() => {
-        const observer = new MutationObserver(() => injectButtons());
-        observer.observe(document.body, { childList: true, subtree: true });
-        injectButtons();
-    });
+    function registerWithAviaCategory() {
+        if (window.AviaCategory) {
+            window.AviaCategory.register({ id: "avia_linktree", name: "Ava's Linktree", icon: "desktop_windows", onClick: openLink(LINKTREE_URL) });
+            window.AviaCategory.register({ id: "avia_stoatserver", name: "Stoat Server", icon: "desktop_windows", onClick: openLink(STOAT_SERVER_URL) });
+            window.AviaCategory.register({ id: "avia_fontloader", name: "Font Loader", icon: "upload", onClick: showFontLoaderModal });
+            window.AviaCategory.register({ id: "avia_quickcss", name: "QuickCSS", icon: "code", onClick: toggleQuickCSSPanel });
+        } else {
+            const interval = setInterval(() => {
+                if (window.AviaCategory) {
+                    clearInterval(interval);
+                    window.AviaCategory.register({ id: "avia_linktree", name: "Ava's Linktree", icon: "desktop_windows", onClick: openLink(LINKTREE_URL) });
+                    window.AviaCategory.register({ id: "avia_stoatserver", name: "Stoat Server", icon: "desktop_windows", onClick: openLink(STOAT_SERVER_URL) });
+                    window.AviaCategory.register({ id: "avia_fontloader", name: "Font Loader", icon: "upload", onClick: showFontLoaderModal });
+                    window.AviaCategory.register({ id: "avia_quickcss", name: "QuickCSS", icon: "code", onClick: toggleQuickCSSPanel });
+                }
+            }, 100);
+        }
+    }
 
     preloadMonaco();
     registerWithAviaMenu();
+    registerWithAviaCategory();
 
 })();
 
@@ -3805,69 +3840,23 @@ function styleLocalBtn(btn, bg) {
     btn.onmouseleave = () => btn.style.opacity = "1";
 }
 
-function injectLocalButton() {
-    if (document.getElementById("avia-local-plugins-btn")) return;
-    const appearanceBtn = [...document.querySelectorAll(
-            `.settings_sidebar .content a.button:not(
-                [id^='avia-']
-            ):not(
-                [id^='stoat-fake-']
-            ):has(
-                > div
-                > svg
-                > path[d^='M12 22C6.49 22']
-            )`
-        )].find((a) => {
-            const label = a.querySelector('div > svg + div > div');
-            if (label.textContent === "Appearance") return a;
-        });
-    if (!appearanceBtn) return;
-    const aviaPluginsBtn = document.getElementById("stoat-fake-plugins");
-    if (!aviaPluginsBtn) return;
-
-    const localBtn = appearanceBtn.cloneNode(true);
-    localBtn.id = "avia-local-plugins-btn";
-    const textNode = [...localBtn.querySelectorAll("div")].find(d => d.children.length === 0 && d.textContent.trim() === "Appearance");
-    if (textNode) textNode.textContent = "(Avia) Local Plugins";
-
-    const oldSvg = localBtn.querySelector("svg");
-    if (oldSvg) oldSvg.remove();
-
-    const svgNS = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(svgNS, "svg");
-    svg.setAttribute("viewBox", "0 0 24 24");
-    svg.setAttribute("width", "20");
-    svg.setAttribute("height", "20");
-    svg.setAttribute("fill", "currentColor");
-    svg.style.marginRight = "8px";
-    const path = document.createElementNS(svgNS, "path");
-    path.setAttribute("d", "M20.5 11H19V7a2 2 0 00-2-2h-4V3.5a2.5 2.5 0 00-5 0V5H4a2 2 0 00-2 2v3.8h1.5c1.5 0 2.7 1.2 2.7 2.7S5 16.2 3.5 16.2H2V20a2 2 0 002 2h3.8v-1.5c0-1.5 1.2-2.7 2.7-2.7s2.7 1.2 2.7 2.7V22H17a2 2 0 002-2v-4h1.5a2.5 2.5 0 000-5z");
-    svg.appendChild(path);
-    localBtn.insertBefore(svg, localBtn.firstChild);
-    localBtn.addEventListener("click", toggleLocalPanel);
-    aviaPluginsBtn.parentElement.insertBefore(localBtn, aviaPluginsBtn.nextSibling);
-}
-
 function registerWithAviaMenu() {
     const reg = () => window.AviaMenu && window.AviaMenu.register({ id: "avia_plugins_local", name: "Local Plugins", icon: "extension", onClick: toggleLocalPanel });
     if (window.AviaMenu) reg();
     else { const iv = setInterval(() => { if (window.AviaMenu) { clearInterval(iv); reg(); } }, 100); }
 }
 
-function waitForBody(callback) {
-    if (document.body) callback();
-    else new MutationObserver((obs) => { if (document.body) { obs.disconnect(); callback(); } }).observe(document.documentElement, { childList: true });
+function registerWithAviaCategory() {
+    const reg = () => window.AviaCategory && window.AviaCategory.register({ id: "avia_plugins_local", name: "Local Plugins", icon: "extension_fill", onClick: toggleLocalPanel });
+    if (window.AviaCategory) reg();
+    else { const iv = setInterval(() => { if (window.AviaCategory) { clearInterval(iv); reg(); } }, 100); }
 }
 
-waitForBody(() => {
-    const observer = new MutationObserver(() => injectLocalButton());
-    observer.observe(document.body, { childList: true, subtree: true });
-    injectLocalButton();
-});
 
 getLocalPlugins().forEach(plugin => { if (plugin.enabled) runLocalPlugin(plugin); });
 preloadMonaco();
 registerWithAviaMenu();
+registerWithAviaCategory();
 
 })();
 
@@ -4864,7 +4853,7 @@ if(window.__US_BUILDER_NOANNOYINGTOOLTIPS_JS__){return;}window.__US_BUILDER_NOAN
 
 /*
   @UPDATEURL: https://codeberg.org/0simp/AviaPlugins/raw/branch/main/NoAnnoyingTooltips.js
-  @VERSION: 1.0
+  @VERSION: 1.1
 */
 
 (function () {
@@ -4884,6 +4873,8 @@ if(window.__US_BUILDER_NOANNOYINGTOOLTIPS_JS__){return;}window.__US_BUILDER_NOAN
     ||el.firstChild.firstChild.alt
     ||regex.test(el.textContent)
     ||el.textContent.includes(username)).forEach(el=>{
+      if(document.querySelector(`[aria-label='${el.textContent.trim()}']`)&&
+      document.querySelector(`[aria-label='${el.textContent.trim()}']`).querySelector(`img[alt]`)) return;
       el.remove()
     });
   }
@@ -5676,54 +5667,6 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
         });
     }
 
-    function injectButtons() {
-        if (document.getElementById('stoat-fake-plugins')) return;
-        const appearanceBtn = [...document.querySelectorAll(
-            `.settings_sidebar .content a.button:not(
-                [id^='avia-']
-            ):not(
-                [id^='stoat-fake-']
-            ):has(
-                > div
-                > svg
-                > path[d^='M12 22C6.49 22']
-            )`
-        )].find((a) => {
-            const label = a.querySelector('div > svg + div > div');
-            if (label.textContent === "Appearance") return a;
-        });
-        if (!appearanceBtn) return;
-        const referenceNode = document.getElementById('stoat-fake-quickcss');
-        if (!referenceNode) return;
-        const pluginsBtn = appearanceBtn.cloneNode(true);
-        pluginsBtn.id = 'stoat-fake-plugins';
-        const textNode = [...pluginsBtn.querySelectorAll('div')]
-            .find(d => d.children.length === 0 && d.textContent.trim() === 'Appearance');
-        if (textNode) textNode.textContent = "(Avia) Plugins";
-        const svgNS = "http://www.w3.org/2000/svg";
-        const oldSvg = pluginsBtn.querySelector('svg');
-        if (oldSvg) oldSvg.remove();
-        const svg = document.createElementNS(svgNS, "svg");
-        svg.setAttribute("viewBox", "0 0 24 24");
-        svg.setAttribute("width", "20");
-        svg.setAttribute("height", "20");
-        svg.setAttribute("fill", "currentColor");
-        svg.style.marginRight = "8px";
-        const path = document.createElementNS(svgNS, "path");
-        path.setAttribute("d", "M20.5 11H19V7a2 2 0 00-2-2h-4V3.5a2.5 2.5 0 00-5 0V5H4a2 2 0 00-2 2v3.8h1.5c1.5 0 2.7 1.2 2.7 2.7S5 16.2 3.5 16.2H2V20a2 2 0 002 2h3.8v-1.5c0-1.5 1.2-2.7 2.7-2.7s2.7 1.2 2.7 2.7V22H17a2 2 0 002-2v-4h1.5a2.5 2.5 0 000-5z");
-        svg.appendChild(path);
-        pluginsBtn.insertBefore(svg, pluginsBtn.firstChild);
-        pluginsBtn.addEventListener('click', togglePluginsPanel);
-        referenceNode.parentElement.insertBefore(pluginsBtn, referenceNode.nextSibling);
-    }
-
-    function waitForBody(callback) {
-        if (document.body) callback();
-        else new MutationObserver((obs) => {
-            if (document.body) { obs.disconnect(); callback(); }
-        }).observe(document.documentElement, { childList: true });
-    }
-
     function registerWithAviaMenu() {
         if (window.AviaMenu) {
             window.AviaMenu.register({ id: "avia_plugins_online", name: "Plugins", icon: "extension", onClick: togglePluginsPanel });
@@ -5737,18 +5680,25 @@ if(window.__US_BUILDER_PLUGINSUPPORT_USER_JS__){return;}window.__US_BUILDER_PLUG
         }
     }
 
-    waitForBody(() => {
-        const observer = new MutationObserver(() => injectButtons());
-        observer.observe(document.body, { childList: true, subtree: true });
-        injectButtons();
-        preloadMonaco();
-    });
+     function registerWithAviaCategory() {
+        if (window.AviaCategory) {
+            window.AviaCategory.register({ id: "avia_plugins_online", name: "Plugins", icon: "extension_fill", onClick: togglePluginsPanel });
+        } else {
+            const interval = setInterval(() => {
+                if (window.AviaCategory) {
+                    clearInterval(interval);
+                    window.AviaCategory.register({ id: "avia_plugins_online", name: "Plugins", icon: "extension_fill", onClick: togglePluginsPanel });
+                }
+            }, 100);
+        }
+    }
 
     getPlugins().forEach(plugin => {
         if (plugin.enabled) queuePlugin(plugin);
     });
 
     registerWithAviaMenu();
+    registerWithAviaCategory();
 
 })();
 
@@ -6539,40 +6489,17 @@ if(window.__US_BUILDER_REPOFRONTEND_JS__){return;}window.__US_BUILDER_REPOFRONTE
         refetchPlugins();
     }
 
-    function injectSettingsButton() {
-        if (document.getElementById("avia-official-repo-btn-settings")) return;
-
-        const appearanceBtn = [...document.querySelectorAll(
-            `.settings_sidebar .content a.button:not(
-                [id^='avia-']
-            ):not(
-                [id^='stoat-fake-']
-            ):has(
-                > div
-                > svg
-                > path[d^='M12 22C6.49 22']
-            )`
-        )].find((a) => {
-            const label = a.querySelector('div > svg + div > div');
-            if (label.textContent === "Appearance") return a;
-        });
-        const referenceNode = document.getElementById("stoat-fake-quickcss");
-        if (!appearanceBtn || !referenceNode) return;
-
-        const clone = appearanceBtn.cloneNode(true);
-        clone.id = "avia-official-repo-btn-settings";
-
-        const label = [...clone.querySelectorAll("div")].find(d => d.children.length === 0);
-        if (label) label.textContent = "(Avia)  Plugins/Themes Repo";
-
-        const iconSpan = clone.querySelector("span.material-symbols-outlined");
-        if (iconSpan) {
-            iconSpan.textContent = "extension";
-            iconSpan.style.fontVariationSettings = "'FILL' 0,'wght' 400,'GRAD' 0";
+    function registerWithAviaCategory() {
+        if (window.AviaCategory) {
+            window.AviaCategory.register({ id: "avia_official_repo", name: "Plugins & Themes Repo", icon: "palette", onClick: openWindow });
+        } else {
+            const interval = setInterval(() => {
+                if (window.AviaCategory) {
+                    clearInterval(interval);
+                    window.AviaCategory.register({ id: "avia_official_repo", name: "Plugins & Themes Repo", icon: "palette", onClick: openWindow });
+                }
+            }, 100);
         }
-
-        clone.onclick = openWindow;
-        referenceNode.parentElement.insertBefore(clone, referenceNode.nextSibling);
     }
 
     function registerWithAviaMenu() {
@@ -6596,10 +6523,7 @@ if(window.__US_BUILDER_REPOFRONTEND_JS__){return;}window.__US_BUILDER_REPOFRONTE
         if (document.getElementById("avia-official-repo-window")) updateInstallStates();
     });
 
-    new MutationObserver(() => injectSettingsButton())
-        .observe(document.body, { childList: true, subtree: true });
-
-    injectSettingsButton();
+    registerWithAviaCategory();
     registerWithAviaMenu();
 
 })();
@@ -6615,7 +6539,7 @@ if(window.__US_BUILDER_SERVERCONTEXTMENUFIX_JS__){return;}window.__US_BUILDER_SE
   function serverContextMenuFix() {
     if(window.outerWidth<window.outerHeight) return;
     const time = 250
-    const servers = document.querySelector(`div:has(>div>a[href*='/server'])`)?.querySelector(`[role='list']`)
+    const servers = document.querySelector(`div:has(>div>div>div>a[href*='/server'])`)?.querySelector(`[role='list']`)
     if(!servers) return;
     for(const server of servers.children){
       let timer;
@@ -7769,32 +7693,6 @@ if(window.__US_BUILDER_THEMES_JS__){return;}window.__US_BUILDER_THEMES_JS__=true
         render();
     }
 
-    function injectButton() {
-        if (document.getElementById("avia-themes-btn")) return;
-        const appearanceBtn = [...document.querySelectorAll(
-            `.settings_sidebar .content a.button:not(
-                [id^='avia-']
-            ):not(
-                [id^='stoat-fake-']
-            ):has(
-                > div
-                > svg
-                > path[d^='M12 22C6.49 22']
-            )`
-        )].find((a) => {
-            const label = a.querySelector('div > svg + div > div');
-            if (label.textContent === "Appearance") return a;
-        });
-        const quickCSS = document.getElementById("stoat-fake-quickcss");
-        if (!appearanceBtn || !quickCSS) return;
-        const clone = appearanceBtn.cloneNode(true);
-        clone.id = "avia-themes-btn";
-        const text = [...clone.querySelectorAll("div")].find(d => d.children.length === 0);
-        if (text) text.textContent = "(Avia) Themes";
-        clone.onclick = toggleThemesPanel;
-        quickCSS.parentElement.insertBefore(clone, quickCSS.nextSibling);
-    }
-
     function registerWithAviaMenu() {
         if (window.AviaMenu) {
             window.AviaMenu.register({ id: "avia_themes", name: "Themes", icon: "palette", onClick: toggleThemesPanel });
@@ -7808,11 +7706,23 @@ if(window.__US_BUILDER_THEMES_JS__){return;}window.__US_BUILDER_THEMES_JS__=true
         }
     }
 
-    new MutationObserver(injectButton).observe(document.body, { childList: true, subtree: true });
-    injectButton();
+    function registerWithAviaCategory() {
+        if (window.AviaCategory) {
+            window.AviaCategory.register({ id: "avia_themes", name: "Themes", icon: "palette", onClick: toggleThemesPanel });
+        } else {
+            const interval = setInterval(() => {
+                if (window.AviaCategory) {
+                    clearInterval(interval);
+                    window.AviaCategory.register({ id: "avia_themes", name: "Themes", icon: "palette", onClick: toggleThemesPanel });
+                }
+            }, 100);
+        }
+    }
+
     applyThemes();
     preloadMonaco();
     registerWithAviaMenu();
+    registerWithAviaCategory();
 
 })();
 
@@ -8474,67 +8384,21 @@ if(window.__US_BUILDER_WHATSNEW_JS__){return;}window.__US_BUILDER_WHATSNEW_JS__=
         }
     }
 
-    function injectButton() {
-        if (document.getElementById("avia-whatsnew-btn")) return;
-
-        const appearanceBtn = [...document.querySelectorAll(
-            `.settings_sidebar .content a.button:not(
-                [id^='avia-']
-            ):not(
-                [id^='stoat-fake-']
-            ):has(
-                > div
-                > svg
-                > path[d^='M12 22C6.49 22']
-            )`
-        )].find((a) => {
-            const label = a.querySelector('div > svg + div > div');
-            if (label.textContent === "Appearance") return a;
-        });
-        const referenceNode = document.getElementById("stoat-fake-quickcss");
-        if (!appearanceBtn || !referenceNode) return;
-
-        const btn = appearanceBtn.cloneNode(true);
-        btn.id = "avia-whatsnew-btn";
-
-        const label = [...btn.querySelectorAll("div")].find(d => d.children.length === 0);
-        if (label) label.textContent = "(Avia) What's New";
-
-        const iconSpan = btn.querySelector("span.material-symbols-outlined");
-        if (iconSpan) iconSpan.remove();
-
-        const oldSvg = btn.querySelector("svg");
-        if (oldSvg) oldSvg.remove();
-
-        const svgNS = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(svgNS, "svg");
-        svg.setAttribute("viewBox", "0 0 24 24");
-        svg.setAttribute("width", "20");
-        svg.setAttribute("height", "20");
-        svg.setAttribute("fill", "currentColor");
-        svg.style.cssText = "margin-right:8px;flex-shrink:0;";
-        const path = document.createElementNS(svgNS, "path");
-        path.setAttribute("d", "M18 11v2h4v-2zm-2 6.61c.96.71 2.21 1.65 3.2 2.39.4-.53.8-1.07 1.2-1.6-.99-.74-2.24-1.68-3.2-2.4-.4.54-.8 1.08-1.2 1.61M20.4 5.6c-.4-.53-.8-1.07-1.2-1.6-.99.74-2.24 1.68-3.2 2.4.4.53.8 1.07 1.2 1.6.96-.72 2.21-1.65 3.2-2.4M4 9c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1v4h2v-4h1l5 3V6L8 9zm5.03 1.71L11 9.53v4.94l-1.97-1.18-.48-.29H4v-2h4.55zM15.5 12c0-1.33-.58-2.53-1.5-3.35v6.69c.92-.81 1.5-2.01 1.5-3.34");
-        svg.appendChild(path);
-
-        const firstChild = btn.firstChild;
-        btn.insertBefore(svg, firstChild);
-
-        btn.onclick = (e) => {
-            e.preventDefault();
-            fetchAndOpen();
-        };
-
-        referenceNode.parentElement.insertBefore(btn, referenceNode.nextSibling);
-    }
+    function registerWithAviaCategory() {
+        if (window.AviaCategory) {
+            window.AviaCategory.register({ id: "avia_whatsnew", name: "What's New", icon: "rss_feed", onClick: fetchAndOpen });
+        } else {
+            const interval = setInterval(() => {
+                if (window.AviaCategory) {
+                    clearInterval(interval);
+                    window.AviaCategory.register({ id: "avia_whatsnew", name: "What's New", icon: "rss_feed", onClick: fetchAndOpen });
+                }
+            }, 100);
+        }
+    }    
 
     injectStyles();
-    new MutationObserver(() => injectButton())
-        .observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-    injectButton();
+    registerWithAviaCategory();
 
 })();
 
