@@ -1,3 +1,5 @@
+**THIS SHIT IS NO LONGER MAINTAINED CUZ I CAN'T BE ASKED ANYMORE**
+
 [Avia Client](https://github.com/AvaLilac/Ava-Client/tree/main) optimised for mobile. Works on both ios and android, however the installation methods differ between the 2
 
 # OFFICAL SERVER
